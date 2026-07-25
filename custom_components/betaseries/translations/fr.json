@@ -26,5 +26,17 @@
       "reauth_successful": "Réauthentification réussie",
       "cannot_connect": "Échec de la connexion"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options BetaSeries",
+        "description": "Configurez la fréquence de rafraîchissement des données BetaSeries.",
+        "data": {
+          "member_scan_interval": "Intervalle de rafraîchissement des données membre (minutes)",
+          "planning_scan_interval": "Intervalle de rafraîchissement du planning (minutes)"
+        }
+      }
+    }
   }
 }

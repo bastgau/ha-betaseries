@@ -26,5 +26,17 @@
       "reauth_successful": "Re-authentication was successful",
       "cannot_connect": "Failed to connect"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "BetaSeries options",
+        "description": "Configure how often BetaSeries data is refreshed.",
+        "data": {
+          "member_scan_interval": "Member data refresh interval (minutes)",
+          "planning_scan_interval": "Planning refresh interval (minutes)"
+        }
+      }
+    }
   }
 }

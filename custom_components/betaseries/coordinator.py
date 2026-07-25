@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
@@ -10,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .betaseries import AuthError, Error
-from .const import DEFAULT_MEMBER_SCAN_INTERVAL, DOMAIN
+from .const import CONF_MEMBER_SCAN_INTERVAL, DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES, DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -42,12 +43,15 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
             client (Client): The BetaSeries API client used to fetch member data.
 
         """
+        scan_interval_minutes = config_entry.options.get(
+            CONF_MEMBER_SCAN_INTERVAL, DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES
+        )
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=DEFAULT_MEMBER_SCAN_INTERVAL,
+            update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self.client = client
 

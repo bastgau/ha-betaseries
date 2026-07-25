@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 from custom_components.betaseries.betaseries.exceptions import AuthError, Error
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_stats import MemberStats
-from custom_components.betaseries.const import DOMAIN
+from custom_components.betaseries.const import CONF_MEMBER_SCAN_INTERVAL, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -41,6 +42,26 @@ MEMBER_DATA = MemberData(
         favorite_genre="Drama",
     ),
 )
+
+
+async def test_uses_default_scan_interval(hass: HomeAssistant) -> None:
+    """Default to 15 minutes when no member_scan_interval option is set."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
+    entry.add_to_hass(hass)
+
+    coordinator = MemberCoordinator(hass, entry, AsyncMock())
+
+    assert coordinator.update_interval == timedelta(minutes=15)
+
+
+async def test_uses_configured_scan_interval(hass: HomeAssistant) -> None:
+    """Use the member_scan_interval option when set."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", options={CONF_MEMBER_SCAN_INTERVAL: 30})
+    entry.add_to_hass(hass)
+
+    coordinator = MemberCoordinator(hass, entry, AsyncMock())
+
+    assert coordinator.update_interval == timedelta(minutes=30)
 
 
 async def test_update_success(hass: HomeAssistant) -> None:

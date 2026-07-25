@@ -15,8 +15,14 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # Aliased: bare "Auth" would be ambiguous next to homeassistant.auth in this file.
@@ -26,11 +32,23 @@ from .betaseries import (
     AuthTimeoutError as BetaSeriesAuthTimeoutError,
     DeviceCodeData,
 )
-from .const import DOMAIN
+from .const import (
+    CONF_MEMBER_SCAN_INTERVAL,
+    CONF_PLANNING_SCAN_INTERVAL,
+    DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES,
+    DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+    MAX_MEMBER_SCAN_INTERVAL_MINUTES,
+    MAX_PLANNING_SCAN_INTERVAL_MINUTES,
+    MIN_MEMBER_SCAN_INTERVAL_MINUTES,
+    MIN_PLANNING_SCAN_INTERVAL_MINUTES,
+)
 
 if TYPE_CHECKING:
     import asyncio
     from collections.abc import Mapping
+
+    from homeassistant.config_entries import ConfigEntry
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -59,6 +77,20 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
     access_token: str | None = None
     api_key: str = ""
     client_secret: str = ""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> BetaSeriesOptionsFlow:  # noqa: ARG004
+        """Get the options flow for this handler.
+
+        Args:
+            config_entry (ConfigEntry): Unused; self.config_entry is auto-populated by the flow manager.
+
+        Returns:
+            BetaSeriesOptionsFlow: The options flow handling the scan interval settings.
+
+        """
+        return BetaSeriesOptionsFlow()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Collect the BetaSeries API credentials before starting the device flow.
@@ -232,3 +264,45 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
 
         return await self.async_step_user()
+
+
+class BetaSeriesOptionsFlow(OptionsFlowWithReload):
+    """Handle the scan interval options (see CLAUDE.md §6, arbitrage #4)."""
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Let the user configure the member and planning scan intervals.
+
+        Args:
+            user_input (dict[str, Any] | None): Form data, or None to show the form.
+
+        Returns:
+            ConfigFlowResult: The created options entry, or the options form.
+
+        """
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        options_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_MEMBER_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_MEMBER_SCAN_INTERVAL, DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES
+                    ),
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=MIN_MEMBER_SCAN_INTERVAL_MINUTES, max=MAX_MEMBER_SCAN_INTERVAL_MINUTES),
+                ),
+                vol.Required(
+                    CONF_PLANNING_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_PLANNING_SCAN_INTERVAL, DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES
+                    ),
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=MIN_PLANNING_SCAN_INTERVAL_MINUTES, max=MAX_PLANNING_SCAN_INTERVAL_MINUTES),
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)
