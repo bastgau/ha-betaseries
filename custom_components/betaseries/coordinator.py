@@ -66,6 +66,7 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
             UpdateFailed: If the request fails for any other reason.
 
         """
+        _LOGGER.debug("Fetching member data from BetaSeries for %s", self.config_entry.title)
         try:
             return await self.client.fetch_member_data()
         except AuthError as err:
