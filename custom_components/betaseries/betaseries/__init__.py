@@ -9,16 +9,22 @@ this integration is ever proposed for core.
 
 from __future__ import annotations
 
-from .auth import BetaSeriesAuth
+from .auth import Auth
+from .client import Client
 from .device_code import DeviceCodeData
-from .exceptions import BetaSeriesAuthError, BetaSeriesAuthTimeoutError, BetaSeriesError
+from .exceptions import AuthError, AuthTimeoutError, Error
+from .member_data import MemberData
 from .member_identity import MemberIdentity
+from .member_stats import MemberStats
 
 __all__ = [
-    "BetaSeriesAuth",
-    "BetaSeriesAuthError",
-    "BetaSeriesAuthTimeoutError",
-    "BetaSeriesError",
+    "Auth",
+    "AuthError",
+    "AuthTimeoutError",
+    "Client",
     "DeviceCodeData",
+    "Error",
+    "MemberData",
     "MemberIdentity",
+    "MemberStats",
 ]

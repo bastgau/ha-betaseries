@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 
-class BetaSeriesError(Exception):
+class Error(Exception):
     """Base error for all BetaSeries API failures."""
 
 
-class BetaSeriesAuthError(BetaSeriesError):
+class AuthError(Error):
     """The device flow failed definitively (invalid secret, expired code, ...)."""
 
 
-class BetaSeriesAuthTimeoutError(BetaSeriesError):
+class AuthTimeoutError(Error):
     """The device flow was not completed within its expires_in window."""

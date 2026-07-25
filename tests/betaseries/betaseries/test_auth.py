@@ -1,4 +1,4 @@
-"""Tests for BetaSeriesAuth (OAuth device flow client).
+"""Tests for Auth (OAuth device flow client).
 
 aiohttp.ClientSession is mocked by hand (FakeResponse/FakeSession below)
 instead of using aioresponses: aioresponses 0.7.9 (latest published) is
@@ -12,10 +12,10 @@ import asyncio
 from typing import Any, Self
 from unittest.mock import AsyncMock
 
-from custom_components.betaseries.betaseries.auth import BetaSeriesAuth
+from custom_components.betaseries.betaseries.auth import Auth
 from custom_components.betaseries.betaseries.exceptions import (
-    BetaSeriesAuthError,
-    BetaSeriesAuthTimeoutError,
+    AuthError,
+    AuthTimeoutError,
 )
 import pytest
 
@@ -118,7 +118,7 @@ async def test_request_device_code_success() -> None:
             )
         ]
     )
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
     result = await auth.request_device_code()
 
@@ -131,16 +131,16 @@ async def test_request_device_code_success() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_request_device_code_failure(status: int) -> None:
-    """Raise BetaSeriesAuthError when the device code request fails.
+    """Raise AuthError when the device code request fails.
 
     Args:
         status (int): Non-200 HTTP status returned by the fake response.
 
     """
     session = FakeSession(post_responses=[FakeResponse(status)])
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
-    with pytest.raises(BetaSeriesAuthError):
+    with pytest.raises(AuthError):
         await auth.request_device_code()
 
 
@@ -155,7 +155,7 @@ async def test_poll_for_token_pending_then_success(monkeypatch: pytest.MonkeyPat
             FakeResponse(200, {"access_token": "token123", "token_type": "bearer"}),
         ]
     )
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
     token = await auth.poll_for_token("device-code", expires_in=1800, interval=5)
 
@@ -165,7 +165,7 @@ async def test_poll_for_token_pending_then_success(monkeypatch: pytest.MonkeyPat
 
 @pytest.mark.parametrize("error_code", [4001, 4002, 9999])
 async def test_poll_for_token_definitive_error(error_code: int) -> None:
-    """Raise BetaSeriesAuthError without retrying on a non-pending error.
+    """Raise AuthError without retrying on a non-pending error.
 
     Args:
         error_code (int): BetaSeries error code, distinct from ERROR_CODE_PENDING.
@@ -174,29 +174,29 @@ async def test_poll_for_token_definitive_error(error_code: int) -> None:
     session = FakeSession(
         post_responses=[FakeResponse(400, {"errors": [{"code": error_code, "text": "Invalid client_secret."}]})]
     )
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
-    with pytest.raises(BetaSeriesAuthError):
+    with pytest.raises(AuthError):
         await auth.poll_for_token("device-code", expires_in=1800, interval=5)
 
 
 @pytest.mark.parametrize("status", [401, 403, 500, 503])
 async def test_poll_for_token_unexpected_status(status: int) -> None:
-    """Raise BetaSeriesAuthError on a status that is neither 200 nor 400.
+    """Raise AuthError on a status that is neither 200 nor 400.
 
     Args:
         status (int): HTTP status returned by the fake response.
 
     """
     session = FakeSession(post_responses=[FakeResponse(status)])
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
-    with pytest.raises(BetaSeriesAuthError):
+    with pytest.raises(AuthError):
         await auth.poll_for_token("device-code", expires_in=1800, interval=5)
 
 
 async def test_poll_for_token_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Raise BetaSeriesAuthTimeoutError once expires_in has elapsed.
+    """Raise AuthTimeoutError once expires_in has elapsed.
 
     time.monotonic() is not mocked here: it is the same module object used
     internally by asyncio's event loop for scheduling, so patching it would
@@ -209,16 +209,16 @@ async def test_poll_for_token_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
     session = FakeSession(
         post_responses=[FakeResponse(400, {"errors": [{"code": 2001, "text": "En attente de l'identification."}]})]
     )
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
-    with pytest.raises(BetaSeriesAuthTimeoutError):
+    with pytest.raises(AuthTimeoutError):
         await auth.poll_for_token("device-code", expires_in=0, interval=5)
 
 
 async def test_fetch_member_identity_success() -> None:
     """Return a MemberIdentity built from the JSON payload on HTTP 200."""
     session = FakeSession(get_responses=[FakeResponse(200, {"member": {"id": 42, "login": "current_login"}})])
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
     identity = await auth.fetch_member_identity("token123")
 
@@ -228,14 +228,14 @@ async def test_fetch_member_identity_success() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_member_identity_failure(status: int) -> None:
-    """Raise BetaSeriesAuthError when fetching the member identity fails.
+    """Raise AuthError when fetching the member identity fails.
 
     Args:
         status (int): Non-200 HTTP status returned by the fake response.
 
     """
     session = FakeSession(get_responses=[FakeResponse(status)])
-    auth = BetaSeriesAuth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
-    with pytest.raises(BetaSeriesAuthError):
+    with pytest.raises(AuthError):
         await auth.fetch_member_identity("token123")

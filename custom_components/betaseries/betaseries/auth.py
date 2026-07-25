@@ -15,14 +15,14 @@ from .const import (
     OAUTH_TOKEN_ENDPOINT,
 )
 from .device_code import DeviceCodeData
-from .exceptions import BetaSeriesAuthError, BetaSeriesAuthTimeoutError
+from .exceptions import AuthError, AuthTimeoutError
 from .member_identity import MemberIdentity
 
 if TYPE_CHECKING:
     import aiohttp
 
 
-class BetaSeriesAuth:
+class Auth:
     """Handle the BetaSeries OAuth device flow.
 
     See CLAUDE.md §3 for the verified endpoint contract. Unlike the Tado
@@ -71,7 +71,7 @@ class BetaSeriesAuth:
             DeviceCodeData: The device code and verification details.
 
         Raises:
-            BetaSeriesAuthError: If the request fails.
+            AuthError: If the request fails.
 
         """
         async with self._session.post(
@@ -81,7 +81,7 @@ class BetaSeriesAuth:
         ) as response:
             if response.status != 200:
                 msg = f"Failed to request a device code (HTTP {response.status})"
-                raise BetaSeriesAuthError(msg)
+                raise AuthError(msg)
             payload = await response.json()
 
         return DeviceCodeData(
@@ -104,8 +104,8 @@ class BetaSeriesAuth:
             str: The access token once the device code has been validated.
 
         Raises:
-            BetaSeriesAuthError: If the device flow fails definitively.
-            BetaSeriesAuthTimeoutError: If expires_in elapses before validation.
+            AuthError: If the device flow fails definitively.
+            AuthTimeoutError: If expires_in elapses before validation.
 
         """
         deadline = time.monotonic() + expires_in
@@ -130,12 +130,12 @@ class BetaSeriesAuth:
                     if errors and errors[0].get("code") == ERROR_CODE_PENDING:
                         if time.monotonic() >= deadline:
                             msg = "Device code expired before it was validated"
-                            raise BetaSeriesAuthTimeoutError(msg)
+                            raise AuthTimeoutError(msg)
                         await asyncio.sleep(interval)
                         continue
 
                 msg = f"Failed to obtain an access token (HTTP {response.status})"
-                raise BetaSeriesAuthError(msg)
+                raise AuthError(msg)
 
     async def fetch_member_identity(self, access_token: str) -> MemberIdentity:
         """Fetch the member id and login (GET /members/infos, id/login only).
@@ -149,7 +149,7 @@ class BetaSeriesAuth:
             MemberIdentity: The member id and login.
 
         Raises:
-            BetaSeriesAuthError: If the request fails.
+            AuthError: If the request fails.
 
         """
         headers = {**self._headers, "Authorization": f"Bearer {access_token}"}
@@ -160,7 +160,7 @@ class BetaSeriesAuth:
         ) as response:
             if response.status != 200:
                 msg = f"Failed to fetch member identity (HTTP {response.status})"
-                raise BetaSeriesAuthError(msg)
+                raise AuthError(msg)
             payload = await response.json()
 
         member = payload["member"]

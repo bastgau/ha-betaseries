@@ -4,7 +4,7 @@ HA's FlowManager never loops synchronously through SHOW_PROGRESS steps: the
 first async_configure call always returns SHOW_PROGRESS (with a progress_task
 registered), and a done_callback on that task schedules a follow-up
 async_configure once it completes. Since our progress_task (poll_for_token)
-resolves near-instantly with a mocked BetaSeriesAuth, the test helper below
+resolves near-instantly with a mocked Auth, the test helper below
 awaits hass.async_block_till_done() then re-calls async_configure(flow_id)
 to retrieve the flow's actual terminal (or next) result.
 """
@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, patch
 
 from custom_components.betaseries.betaseries.device_code import DeviceCodeData
 from custom_components.betaseries.betaseries.exceptions import (
-    BetaSeriesAuthError,
-    BetaSeriesAuthTimeoutError,
+    AuthError,
+    AuthTimeoutError,
 )
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.const import DOMAIN
@@ -77,7 +77,7 @@ async def test_full_flow_success(hass: HomeAssistant, mock_setup_entry: AsyncMoc
     mock_auth.poll_for_token.return_value = "token123"
     mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await _start_device_flow(hass)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -102,9 +102,9 @@ async def test_user_step_shows_form_initially(hass: HomeAssistant) -> None:
 async def test_user_step_request_device_code_failure(hass: HomeAssistant) -> None:
     """Show the form again with an error if requesting the device code fails."""
     mock_auth = AsyncMock()
-    mock_auth.request_device_code.side_effect = BetaSeriesAuthError("boom")
+    mock_auth.request_device_code.side_effect = AuthError("boom")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await _start_device_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -116,9 +116,9 @@ async def test_device_code_timeout(hass: HomeAssistant) -> None:
     """Move to the timeout step if the device code expires before validation."""
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
-    mock_auth.poll_for_token.side_effect = BetaSeriesAuthTimeoutError("expired")
+    mock_auth.poll_for_token.side_effect = AuthTimeoutError("expired")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await _start_device_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -138,7 +138,7 @@ async def test_device_code_still_pending_shows_progress(hass: HomeAssistant) -> 
     mock_auth.poll_for_token.side_effect = _poll_for_token
     mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
         result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
 
@@ -168,7 +168,7 @@ async def test_device_code_repoll_while_still_pending(hass: HomeAssistant) -> No
     mock_auth.poll_for_token.side_effect = _poll_for_token
     mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
         result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
         assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -193,9 +193,9 @@ async def test_device_code_definitive_error_aborts(hass: HomeAssistant) -> None:
     """Abort the flow if the device flow fails definitively while polling."""
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
-    mock_auth.poll_for_token.side_effect = BetaSeriesAuthError("invalid client_secret")
+    mock_auth.poll_for_token.side_effect = AuthError("invalid client_secret")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await _start_device_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
@@ -207,9 +207,9 @@ async def test_finish_login_failure_aborts(hass: HomeAssistant) -> None:
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
     mock_auth.poll_for_token.return_value = "token123"
-    mock_auth.fetch_member_identity.side_effect = BetaSeriesAuthError("boom")
+    mock_auth.fetch_member_identity.side_effect = AuthError("boom")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await _start_device_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
@@ -220,9 +220,9 @@ async def test_timeout_step_retries(hass: HomeAssistant) -> None:
     """Restart the user step when the timeout form is submitted."""
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
-    mock_auth.poll_for_token.side_effect = BetaSeriesAuthTimeoutError("expired")
+    mock_auth.poll_for_token.side_effect = AuthTimeoutError("expired")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await _start_device_flow(hass)
         assert result["step_id"] == "timeout"
 
@@ -241,7 +241,7 @@ async def test_already_configured_aborts(hass: HomeAssistant) -> None:
     mock_auth.poll_for_token.return_value = "token123"
     mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await _start_device_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
@@ -268,7 +268,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
     mock_auth.poll_for_token.return_value = "new-token"
     mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
 
-    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+    with patch("custom_components.betaseries.config_flow.Auth", return_value=mock_auth):
         result = await entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"

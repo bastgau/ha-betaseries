@@ -9,7 +9,7 @@ from dataclasses import dataclass
 class MemberIdentity:
     """Represent a minimal member identity, used only to close the config flow.
 
-    The full member data (stats, etc.) is fetched by BetaSeriesClient,
+    The full member data (stats, etc.) is fetched by Client,
     added in a later milestone alongside the data coordinator.
 
     Attributes:
