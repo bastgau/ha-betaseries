@@ -12,17 +12,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.util import dt as dt_util
 
 from .entity import BetaSeriesEntity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from datetime import datetime
 
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .betaseries import MemberData
-    from .coordinator import BetaSeriesConfigEntry, MemberCoordinator
+    from .betaseries import MemberData, PlanningEpisode
+    from .coordinator import BetaSeriesConfigEntry, MemberCoordinator, PlanningCoordinator
 
 type StateType = int | float | str | None
 
@@ -156,6 +158,41 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(kw_only=True, frozen=True)
+class BetaSeriesPlanningSensorEntityDescription(SensorEntityDescription):
+    """Describe a BetaSeries sensor backed by PlanningCoordinator data.
+
+    Attributes:
+        value_fn (Callable[[tuple[PlanningEpisode, ...]], datetime | None]): Extracts this sensor's value.
+
+    """
+
+    value_fn: Callable[[tuple[PlanningEpisode, ...]], datetime | None]
+
+
+def _next_episode_air_datetime(episodes: tuple[PlanningEpisode, ...]) -> datetime | None:
+    """Return the air date of the earliest unseen episode as a local midnight datetime.
+
+    Args:
+        episodes (tuple[PlanningEpisode, ...]): The planning, sorted by air_date.
+
+    Returns:
+        datetime | None: The next episode's air date at local midnight, or None if there is none.
+
+    """
+    if not episodes:
+        return None
+    return dt_util.start_of_local_day(episodes[0].air_date)
+
+
+NEXT_EPISODE_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
+    key="next_episode",
+    translation_key="next_episode",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    value_fn=_next_episode_air_datetime,
+)
+
+
 async def async_setup_entry(  # pylint: disable=unused-argument
     hass: HomeAssistant,  # noqa: ARG001
     entry: BetaSeriesConfigEntry,
@@ -172,8 +209,14 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         None: Entities are registered via async_add_entities, nothing is returned.
 
     """
-    coordinator = entry.runtime_data.member
-    async_add_entities(BetaSeriesSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS)
+    member_coordinator = entry.runtime_data.member
+    planning_coordinator = entry.runtime_data.planning
+    async_add_entities(
+        [
+            *(BetaSeriesSensor(member_coordinator, description) for description in SENSOR_DESCRIPTIONS),
+            BetaSeriesPlanningSensor(planning_coordinator, NEXT_EPISODE_DESCRIPTION),
+        ]
+    )
 
 
 class BetaSeriesSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -194,6 +237,29 @@ class BetaSeriesSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[repor
 
         Returns:
             StateType: The value extracted from the coordinator's member data.
+
+        """
+        return self.entity_description.value_fn(self.coordinator.data)
+
+
+class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+    """Represent a single BetaSeries sensor derived from the planning.
+
+    Attributes:
+        entity_description (BetaSeriesPlanningSensorEntityDescription): Describes this sensor.
+        coordinator (PlanningCoordinator): The coordinator providing the planning data.
+
+    """
+
+    entity_description: BetaSeriesPlanningSensorEntityDescription  # pyright: ignore[reportIncompatibleVariableOverride]
+    coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    @property
+    def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the current value of this sensor.
+
+        Returns:
+            datetime | None: The value extracted from the coordinator's planning data.
 
         """
         return self.entity_description.value_fn(self.coordinator.data)

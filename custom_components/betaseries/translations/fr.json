@@ -57,7 +57,8 @@
       "streak_days": { "name": "Jours consécutifs" },
       "member_since_days": { "name": "Membre depuis" },
       "episodes_per_month": { "name": "Épisodes par mois" },
-      "favorite_genre": { "name": "Genre préféré" }
+      "favorite_genre": { "name": "Genre préféré" },
+      "next_episode": { "name": "Prochain épisode" }
     },
     "binary_sensor": {
       "new_episode_available": { "name": "Nouvel épisode disponible" },

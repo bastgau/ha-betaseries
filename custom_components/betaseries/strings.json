@@ -57,7 +57,8 @@
       "streak_days": { "name": "Streak days" },
       "member_since_days": { "name": "Member since" },
       "episodes_per_month": { "name": "Episodes per month" },
-      "favorite_genre": { "name": "Favorite genre" }
+      "favorite_genre": { "name": "Favorite genre" },
+      "next_episode": { "name": "Next episode" }
     },
     "binary_sensor": {
       "new_episode_available": { "name": "New episode available" },
