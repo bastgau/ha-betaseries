@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from .const import (
     API_VERSION,
     BASE_URL,
-    MEMBER_DATA_FIELDS,
     MEMBERS_INFOS_ENDPOINT,
     PLANNING_MEMBER_ENDPOINT,
     PLANNING_UNSEEN_ONLY,
@@ -78,7 +77,6 @@ class Client:
         async with self._session.get(
             f"{BASE_URL}{MEMBERS_INFOS_ENDPOINT}",
             headers=self._headers,
-            params={"fields": MEMBER_DATA_FIELDS},
         ) as response:
             if response.status == 401:
                 msg = "Access token was rejected"
@@ -116,10 +114,6 @@ class Client:
 
     async def fetch_planning(self, month: str) -> tuple[PlanningEpisode, ...]:
         """Fetch the member's unseen episodes for a given month (GET /planning/member).
-
-        "fields" is not supported by this endpoint (verified: it returns the
-        full heavy payload regardless). "unseen" and "month" are both
-        verified to filter strictly server-side.
 
         Args:
             month (str): Month to fetch the planning for, as "YYYY-MM".

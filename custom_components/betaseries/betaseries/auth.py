@@ -138,7 +138,7 @@ class Auth:
                 raise AuthError(msg)
 
     async def fetch_member_identity(self, access_token: str) -> MemberIdentity:
-        """Fetch the member id and login (GET /members/infos, id/login only).
+        """Fetch the member id and login (GET /members/infos).
 
         Used solely to close the config flow.
 
@@ -156,7 +156,6 @@ class Auth:
         async with self._session.get(
             f"{BASE_URL}{MEMBERS_INFOS_ENDPOINT}",
             headers=headers,
-            params={"fields": "id,login"},
         ) as response:
             if response.status != 200:
                 msg = f"Failed to fetch member identity (HTTP {response.status})"

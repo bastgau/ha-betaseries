@@ -15,19 +15,6 @@ API_VERSION = "3.0"
 # device code has not been validated yet on their website.
 ERROR_CODE_PENDING = 2001
 
-# Fields requested from GET /members/infos to feed the v1 sensors/binary_sensors
-# (see CLAUDE.md §5). Keeps the payload light instead of fetching everything.
-MEMBER_DATA_FIELDS = (
-    "id,login,xp,"
-    "stats.episodes_to_watch,stats.time_to_spend,stats.progress,"
-    "stats.shows_to_watch,stats.movies_to_watch,stats.shows_current,"
-    "stats.badges,stats.shows,stats.shows_finished,stats.episodes,"
-    "stats.time_on_tv,stats.movies,stats.streak_days,stats.member_since_days,"
-    "stats.episodes_per_month,stats.favorite_genre"
-)
-
-# GET /planning/member does not support "fields" (verified: it returns the
-# full heavy payload - characters, crew, description, ... - regardless).
-# It does support "unseen" and "month" (YYYY-MM), both verified to filter
-# strictly server-side and to combine as an intersection.
+# GET /planning/member supports "unseen" and "month" (YYYY-MM) as query
+# params, combined as an intersection.
 PLANNING_UNSEEN_ONLY = "true"
