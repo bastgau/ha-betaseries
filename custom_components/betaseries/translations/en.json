@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to BetaSeries",
+        "description": "Enter the API key and client secret from your personal BetaSeries API application (create one at https://www.betaseries.com/api/).",
+        "data": {
+          "api_key": "API key (client ID)",
+          "client_secret": "Client secret"
+        }
+      },
+      "timeout": {
+        "title": "Authentication timed out",
+        "description": "The device code expired before it was validated on the BetaSeries website. Press Submit to try again."
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate with BetaSeries",
+        "description": "Your BetaSeries authentication needs to be renewed. Press Submit to start the authentication process again."
+      }
+    },
+    "progress": {
+      "wait_for_device": "To authenticate, open the following URL and log in to BetaSeries:\n{url}\n\nThen enter this code if it is not filled in automatically:\n\n```{code}```"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "cannot_connect": "Failed to connect"
+    }
+  }
+}

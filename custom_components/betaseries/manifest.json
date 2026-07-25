@@ -1,0 +1,11 @@
+{
+  "domain": "betaseries",
+  "name": "BetaSeries",
+  "version": "0.1.0",
+  "codeowners": ["@bastgau"],
+  "config_flow": true,
+  "documentation": "https://github.com/bastgau/ha-betaseries",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": []
+}
