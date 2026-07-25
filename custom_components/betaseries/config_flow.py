@@ -19,10 +19,11 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowRe
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+# Aliased: bare "Auth" would be ambiguous next to homeassistant.auth in this file.
 from .betaseries import (
-    Auth,
-    AuthError,
-    AuthTimeoutError,
+    Auth as BetaSeriesAuth,
+    AuthError as BetaSeriesAuthError,
+    AuthTimeoutError as BetaSeriesAuthTimeoutError,
     DeviceCodeData,
 )
 from .const import DOMAIN
@@ -44,7 +45,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
 
     Attributes:
         login_task (asyncio.Task[str] | None): Task polling for the access token.
-        auth (Auth | None): Auth client created once credentials are known.
+        auth (BetaSeriesAuth | None): Auth client created once credentials are known.
         device_code_data (DeviceCodeData | None): Device code obtained from BetaSeries.
         access_token (str | None): Access token obtained once the device code is validated.
         api_key (str): BetaSeries API key (client_id) entered by the user.
@@ -53,7 +54,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
     """
 
     login_task: asyncio.Task[str] | None = None
-    auth: Auth | None = None
+    auth: BetaSeriesAuth | None = None
     device_code_data: DeviceCodeData | None = None
     access_token: str | None = None
     api_key: str = ""
@@ -74,10 +75,10 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.api_key = user_input[CONF_API_KEY]
             self.client_secret = user_input[CONF_CLIENT_SECRET]
-            self.auth = Auth(async_get_clientsession(self.hass), self.api_key, self.client_secret)
+            self.auth = BetaSeriesAuth(async_get_clientsession(self.hass), self.api_key, self.client_secret)
             try:
                 self.device_code_data = await self.auth.request_device_code()
-            except AuthError:
+            except BetaSeriesAuthError:
                 errors["base"] = "cannot_connect"
             else:
                 return await self.async_step_device_code()
@@ -119,7 +120,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.login_task.done():
             exception = self.login_task.exception()
-            if isinstance(exception, AuthTimeoutError):
+            if isinstance(exception, BetaSeriesAuthTimeoutError):
                 return self.async_show_progress_done(next_step_id="timeout")
             if exception is not None:
                 return self.async_abort(reason="cannot_connect")
@@ -159,7 +160,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             identity = await self.auth.fetch_member_identity(self.access_token)
-        except AuthError:
+        except BetaSeriesAuthError:
             return self.async_abort(reason="cannot_connect")
 
         data = {
