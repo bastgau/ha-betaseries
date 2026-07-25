@@ -16,6 +16,7 @@ from .exceptions import AuthError, AuthTimeoutError, Error
 from .member_data import MemberData
 from .member_identity import MemberIdentity
 from .member_stats import MemberStats
+from .planning_episode import PlanningEpisode
 
 __all__ = [
     "Auth",
@@ -27,4 +28,5 @@ __all__ = [
     "MemberData",
     "MemberIdentity",
     "MemberStats",
+    "PlanningEpisode",
 ]

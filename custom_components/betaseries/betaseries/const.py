@@ -6,6 +6,7 @@ BASE_URL = "https://api.betaseries.com"
 OAUTH_DEVICE_ENDPOINT = "/oauth/device"
 OAUTH_TOKEN_ENDPOINT = "/oauth/access_token"  # noqa: S105 (endpoint path, not a secret)
 MEMBERS_INFOS_ENDPOINT = "/members/infos"
+PLANNING_MEMBER_ENDPOINT = "/planning/member"
 
 # Required on every request (see api.betaseries.com docs).
 API_VERSION = "3.0"
@@ -24,3 +25,9 @@ MEMBER_DATA_FIELDS = (
     "stats.time_on_tv,stats.movies,stats.streak_days,stats.member_since_days,"
     "stats.episodes_per_month,stats.favorite_genre"
 )
+
+# GET /planning/member does not support "fields" (verified: it returns the
+# full heavy payload - characters, crew, description, ... - regardless).
+# It does support "unseen" and "month" (YYYY-MM), both verified to filter
+# strictly server-side and to combine as an intersection.
+PLANNING_UNSEEN_ONLY = "true"

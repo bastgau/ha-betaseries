@@ -65,6 +65,7 @@ class FakeSession:
     Attributes:
         post_responses (list[FakeResponse]): Responses returned by .post(), in order.
         get_responses (list[FakeResponse]): Responses returned by .get(), in order.
+        get_calls (list[tuple[tuple[Any, ...], dict[str, Any]]]): Args/kwargs of each .get() call, in order.
 
     """
 
@@ -82,6 +83,7 @@ class FakeSession:
         """
         self.post_responses = list(post_responses or [])
         self.get_responses = list(get_responses or [])
+        self.get_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 
     def post(self, *_args: object, **_kwargs: object) -> FakeResponse:
         """Return the next queued POST response.
@@ -92,13 +94,18 @@ class FakeSession:
         """
         return self.post_responses.pop(0)
 
-    def get(self, *_args: object, **_kwargs: object) -> FakeResponse:
-        """Return the next queued GET response.
+    def get(self, *args: Any, **kwargs: Any) -> FakeResponse:
+        """Return the next queued GET response, recording the call's args/kwargs.
+
+        Args:
+            *args (Any): Positional arguments the caller passed to .get().
+            **kwargs (Any): Keyword arguments the caller passed to .get().
 
         Returns:
             FakeResponse: The next queued response.
 
         """
+        self.get_calls.append((args, kwargs))
         return self.get_responses.pop(0)
 
 

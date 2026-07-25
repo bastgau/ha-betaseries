@@ -1,17 +1,18 @@
 meta {
-  name: planning-member (calendar source?)
+  name: planning-member (calendar source, unseen+month confirmed)
   type: http
   seq: 2
 }
 
 get {
-  url: {{baseUrl}}/planning/member
+  url: {{baseUrl}}/planning/member?unseen=true&month={{month}}
   body: none
   auth: none
 }
 
 params:query {
-  ~unseen: true
+  unseen: true
+  month: {{month}}
 }
 
 headers {
@@ -24,10 +25,22 @@ vars:pre-request {
   baseUrl: https://api.betaseries.com
   apiKey:
   token:
+  month: 2026-08
 }
 
 docs {
-  VERIFY #4 (most structural): does /planning/member exist in v3?
-  If 400/404 -> fall back to /episodes/list for the calendar.
-  Check whether an "unseen"-type filter is supported and the date field format.
+  VERIFIED (isolated each param separately, then combined):
+  - "fields" has NO effect on this endpoint - it always returns the full
+    heavy payload (characters, crew, description, releasesSvod, ...)
+    regardless of what's requested. Do not use it here (unlike
+    /members/infos, where it does work - see members-infos.bru).
+  - "unseen=true" strictly excludes every episode where user.seen == true.
+  - "month=YYYY-MM" strictly bounds episodes to that calendar month.
+  - Combined (unseen=true&month=YYYY-MM), the result is the exact
+    intersection of both filters - confirmed by testing all 4 combinations
+    (no params / unseen only / month only / both) and comparing counts,
+    seen values, and date ranges.
+  
+  This is the exact request used by Client.fetch_planning(month) in
+  custom_components/betaseries/betaseries/client.py.
 }
