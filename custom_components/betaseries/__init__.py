@@ -1,45 +1,22 @@
-"""The BetaSeries integration.
-
-Minimal for now: stores the credentials obtained by the config flow so the
-entry is loadable. The data coordinator and platforms (sensor, binary_sensor)
-are added in a later milestone.
-"""
+"""The BetaSeries integration."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .betaseries import Client
+from .coordinator import MemberCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-
-@dataclass
-class BetaSeriesRuntimeData:
-    """Store the credentials kept on the config entry until the coordinator is added.
-
-    Attributes:
-        api_key (str): BetaSeries API key (client_id).
-        client_secret (str): BetaSeries API client secret.
-        access_token (str): BetaSeries OAuth access token.
-
-    """
-
-    api_key: str
-    client_secret: str
-    access_token: str
+    from .coordinator import BetaSeriesConfigEntry
 
 
-type BetaSeriesConfigEntry = ConfigEntry[BetaSeriesRuntimeData]
-
-
-async def async_setup_entry(  # pylint: disable=unused-argument
-    hass: HomeAssistant,  # noqa: ARG001
-    entry: BetaSeriesConfigEntry,
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -> bool:
     """Set up BetaSeries from a config entry.
 
     Args:
@@ -50,11 +27,11 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         bool: True if setup succeeded.
 
     """
-    entry.runtime_data = BetaSeriesRuntimeData(
-        api_key=entry.data[CONF_API_KEY],
-        client_secret=entry.data[CONF_CLIENT_SECRET],
-        access_token=entry.data["access_token"],
-    )
+    client = Client(async_get_clientsession(hass), entry.data[CONF_API_KEY], entry.data["access_token"])
+    coordinator = MemberCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
     return True
 
 

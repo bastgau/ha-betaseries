@@ -217,13 +217,13 @@ async def test_poll_for_token_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
 
 async def test_fetch_member_identity_success() -> None:
     """Return a MemberIdentity built from the JSON payload on HTTP 200."""
-    session = FakeSession(get_responses=[FakeResponse(200, {"member": {"id": 42, "login": "current_login"}})])
+    session = FakeSession(get_responses=[FakeResponse(200, {"member": {"id": 42, "login": "test_user"}})])
     auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
     identity = await auth.fetch_member_identity("token123")
 
     assert identity.id == "42"
-    assert identity.login == "current_login"
+    assert identity.login == "test_user"
 
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])

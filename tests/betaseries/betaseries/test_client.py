@@ -18,7 +18,7 @@ ACCESS_TOKEN = "token123"
 MEMBER_PAYLOAD = {
     "member": {
         "id": 42,
-        "login": "bastgau",
+        "login": "test_user",
         "xp": 1337,
         "stats": {
             "episodes_to_watch": 12,
@@ -50,7 +50,7 @@ async def test_fetch_member_data_success() -> None:
     result = await client.fetch_member_data()
 
     assert result.id == "42"
-    assert result.login == "bastgau"
+    assert result.login == "test_user"
     assert result.xp == 1337
     assert result.stats.episodes_to_watch == 12
     assert result.stats.time_to_spend == 540

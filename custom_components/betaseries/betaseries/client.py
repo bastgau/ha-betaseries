@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .const import API_VERSION, BASE_URL, MEMBER_DATA_FIELDS, MEMBERS_INFOS_ENDPOINT
-from .exceptions import Error
+from .exceptions import AuthError, Error
 from .member_data import MemberData
 from .member_stats import MemberStats
 
@@ -60,7 +60,8 @@ class Client:  # pylint: disable=too-few-public-methods
             MemberData: The member's id, login, xp and viewing statistics.
 
         Raises:
-            Error: If the request fails.
+            AuthError: If the access token was rejected (HTTP 401).
+            Error: If the request fails for any other reason.
 
         """
         async with self._session.get(
@@ -68,6 +69,9 @@ class Client:  # pylint: disable=too-few-public-methods
             headers=self._headers,
             params={"fields": MEMBER_DATA_FIELDS},
         ) as response:
+            if response.status == 401:
+                msg = "Access token was rejected"
+                raise AuthError(msg)
             if response.status != 200:
                 msg = f"Failed to fetch member data (HTTP {response.status})"
                 raise Error(msg)

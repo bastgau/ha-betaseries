@@ -75,13 +75,13 @@ async def test_full_flow_success(hass: HomeAssistant, mock_setup_entry: AsyncMoc
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
     mock_auth.poll_for_token.return_value = "token123"
-    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
+    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="test_user")
 
     with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
         result = await _start_device_flow(hass)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "bastgau"
+    assert result["title"] == "test_user"
     assert result["data"] == {
         CONF_API_KEY: "test-api-key",
         CONF_CLIENT_SECRET: "test-client-secret",
@@ -136,7 +136,7 @@ async def test_device_code_still_pending_shows_progress(hass: HomeAssistant) -> 
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
     mock_auth.poll_for_token.side_effect = _poll_for_token
-    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
+    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="test_user")
 
     with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
         result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
@@ -166,7 +166,7 @@ async def test_device_code_repoll_while_still_pending(hass: HomeAssistant) -> No
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
     mock_auth.poll_for_token.side_effect = _poll_for_token
-    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
+    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="test_user")
 
     with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
         result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
@@ -239,7 +239,7 @@ async def test_already_configured_aborts(hass: HomeAssistant) -> None:
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
     mock_auth.poll_for_token.return_value = "token123"
-    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
+    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="test_user")
 
     with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
         result = await _start_device_flow(hass)
@@ -266,7 +266,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
     mock_auth.poll_for_token.return_value = "new-token"
-    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="bastgau")
+    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="42", login="test_user")
 
     with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
         result = await entry.start_reauth_flow(hass)
