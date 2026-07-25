@@ -13,7 +13,7 @@
 
 ## Description
 
-This integration connects Home Assistant to your [BetaSeries](https://www.betaseries.com/) account. It exposes your viewing stats and to-watch counts as sensors, tells you when new episodes are available, and (in later versions) shows your upcoming episodes as a calendar and lets you mark episodes watched or rate them.
+This integration connects Home Assistant to your [BetaSeries](https://www.betaseries.com/) account. It exposes your viewing stats and to-watch counts as sensors, tells you when new episodes are available, shows your upcoming episodes as a calendar, and (in a later version) will let you mark episodes watched or rate them.
 
 It is delivered in three stages:
 
@@ -62,7 +62,7 @@ During setup you will be asked for your BetaSeries `client_id` and `client_secre
 
 ## Entities
 
-All entities below are enabled by default and grouped under a single device per BetaSeries account (named "BetaSeries — " followed by your login). Values are refreshed at the "Member data refresh interval" configured in the integration options (15 minutes by default).
+All entities below are enabled by default and grouped under a single device per BetaSeries account (named "BetaSeries - " followed by your login). Values are refreshed at the "Member data refresh interval" (15 minutes by default) or the "Planning refresh interval" (60 minutes by default), both configured in the integration options.
 
 ### Sensor
 
@@ -85,6 +85,7 @@ All entities below are enabled by default and grouped under a single device per 
 | Member since | d | Number of days since account creation |
 | Episodes per month | - | Average number of episodes watched per month |
 | Favorite genre | - | Most watched genre |
+| Next episode | - | Air date of the earliest unseen upcoming episode |
 
 ### Binary sensor
 
@@ -92,6 +93,10 @@ All entities below are enabled by default and grouped under a single device per 
 |---|---|
 | New episode available | On when at least one episode is available to watch |
 | Movies to watch available | On when at least one movie is not yet watched |
+
+### Calendar
+
+One calendar entity ("Planning") lists your upcoming unseen episodes as all-day events, titled `<show> - <SxxEyy>`, for the current month and the two following months.
 
 ## Troubleshooting
 
