@@ -43,7 +43,7 @@ class BetaSeriesEntity(CoordinatorEntity["MemberCoordinator"]):
         self._attr_unique_id = f"{member_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(member_id))},
-            name=f"BetaSeries — {coordinator.config_entry.title}",
+            name=f"BetaSeries - {coordinator.config_entry.title}",
             manufacturer="BetaSeries",
             entry_type=DeviceEntryType.SERVICE,
         )

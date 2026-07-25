@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .betaseries import Client
@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
     from .coordinator import BetaSeriesConfigEntry
+
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -> bool:
@@ -32,13 +34,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(  # pylint: disable=unused-argument
-    hass: HomeAssistant,  # noqa: ARG001
-    entry: BetaSeriesConfigEntry,  # noqa: ARG001
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -> bool:
     """Unload a config entry.
 
     Args:
@@ -49,4 +49,4 @@ async def async_unload_entry(  # pylint: disable=unused-argument
         bool: True if unload succeeded.
 
     """
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -38,5 +38,30 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "episodes_to_watch": { "name": "Épisodes à voir" },
+      "time_to_spend": { "name": "Temps à consacrer" },
+      "progress": { "name": "Progression" },
+      "shows_to_watch": { "name": "Séries à voir" },
+      "movies_to_watch": { "name": "Films à voir" },
+      "shows_current": { "name": "Séries en cours" },
+      "badges": { "name": "Badges" },
+      "shows": { "name": "Séries au total" },
+      "shows_finished": { "name": "Séries terminées" },
+      "episodes": { "name": "Épisodes vus" },
+      "time_on_tv": { "name": "Temps passé" },
+      "movies": { "name": "Films au total" },
+      "xp": { "name": "XP" },
+      "streak_days": { "name": "Jours consécutifs" },
+      "member_since_days": { "name": "Membre depuis" },
+      "episodes_per_month": { "name": "Épisodes par mois" },
+      "favorite_genre": { "name": "Genre préféré" }
+    },
+    "binary_sensor": {
+      "new_episode_available": { "name": "Nouvel épisode disponible" },
+      "movies_to_watch_available": { "name": "Film à voir disponible" }
+    }
   }
 }

@@ -38,5 +38,30 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "episodes_to_watch": { "name": "Episodes to watch" },
+      "time_to_spend": { "name": "Time to spend" },
+      "progress": { "name": "Progress" },
+      "shows_to_watch": { "name": "Shows to watch" },
+      "movies_to_watch": { "name": "Movies to watch" },
+      "shows_current": { "name": "Shows current" },
+      "badges": { "name": "Badges" },
+      "shows": { "name": "Shows total" },
+      "shows_finished": { "name": "Shows finished" },
+      "episodes": { "name": "Episodes watched" },
+      "time_on_tv": { "name": "Time on TV" },
+      "movies": { "name": "Movies total" },
+      "xp": { "name": "XP" },
+      "streak_days": { "name": "Streak days" },
+      "member_since_days": { "name": "Member since" },
+      "episodes_per_month": { "name": "Episodes per month" },
+      "favorite_genre": { "name": "Favorite genre" }
+    },
+    "binary_sensor": {
+      "new_episode_available": { "name": "New episode available" },
+      "movies_to_watch_available": { "name": "Movies to watch available" }
+    }
   }
 }
