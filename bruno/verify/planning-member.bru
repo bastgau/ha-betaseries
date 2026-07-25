@@ -1,0 +1,33 @@
+meta {
+  name: planning-member (calendar source?)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/planning/member
+  body: none
+  auth: none
+}
+
+params:query {
+  ~unseen: true
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+vars:pre-request {
+  baseUrl: https://api.betaseries.com
+  apiKey:
+  token:
+}
+
+docs {
+  VERIFY #4 (most structural): does /planning/member exist in v3?
+  If 400/404 -> fall back to /episodes/list for the calendar.
+  Check whether an "unseen"-type filter is supported and the date field format.
+}

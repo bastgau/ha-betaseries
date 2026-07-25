@@ -1,0 +1,38 @@
+meta {
+  name: 1 - OAuth Device (get user_code)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/oauth/device
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+}
+
+body:form-urlencoded {
+  client_id: {{apiKey}}
+}
+
+vars:pre-request {
+  apiKey:
+  baseUrl: https://api.betaseries.com
+}
+
+script:post-response {
+  // Capture device_code so the next request can poll for the token
+  const body = res.getBody();
+  if (body && body.device_code) {
+    bru.setEnvVar("deviceCode", body.device_code);
+  }
+}
+
+docs {
+  Run first, then open verification_url and type user_code.
+  VERIFY: exact response shape (device_code / user_code / verification_url / expires_in / interval).
+}

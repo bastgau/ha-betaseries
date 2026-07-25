@@ -1,0 +1,30 @@
+meta {
+  name: shows-note POST (rate show)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/shows/note
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: {{showId}}
+  note: 4
+}
+
+vars:pre-request {
+  baseUrl: https://api.betaseries.com
+}
+
+docs {
+  VERIFY #3: confirm params (id + note 1-5).
+}

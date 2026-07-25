@@ -1,0 +1,30 @@
+meta {
+  name: seasons-watched POST (mark season)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/seasons/watched
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: {{showId}}
+  season: {{seasonNumber}}
+}
+
+vars:pre-request {
+  baseUrl: https://api.betaseries.com
+}
+
+docs {
+  VERIFY #2: exact params (id = show id? + season number?).
+}

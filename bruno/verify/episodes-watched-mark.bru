@@ -1,0 +1,30 @@
+meta {
+  name: episodes-watched POST (mark seen)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/episodes/watched
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: {{episodeId}}
+}
+
+vars:pre-request {
+  baseUrl: https://api.betaseries.com
+}
+
+docs {
+  VERIFY #1: confirm POST exists + exact param(s) (id? bulk? note?).
+  Use a throwaway episode; DELETE /episodes/watched (verified) can revert.
+}

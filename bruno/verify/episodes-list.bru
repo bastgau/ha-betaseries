@@ -1,0 +1,27 @@
+meta {
+  name: episodes-list (calendar fallback)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/episodes/list
+  body: none
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+vars:pre-request {
+  baseUrl: https://api.betaseries.com
+  apiKey:
+  token:
+}
+
+docs {
+  Verified endpoint. Inspect shape: does each item carry an air date usable for calendar events?
+}

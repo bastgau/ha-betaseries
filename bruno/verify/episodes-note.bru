@@ -1,0 +1,30 @@
+meta {
+  name: episodes-note POST (rate episode)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/episodes/note
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: {{episodeId}}
+  note: 4
+}
+
+vars:pre-request {
+  baseUrl: https://api.betaseries.com
+}
+
+docs {
+  Verified endpoint. Included to confirm the note param name/range in practice.
+}
