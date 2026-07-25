@@ -120,7 +120,7 @@ class PlanningCoordinator(DataUpdateCoordinator[tuple["PlanningEpisode", ...]]):
         """Fetch the planning for the current month and PLANNING_MONTHS_AHEAD months ahead.
 
         Returns:
-            tuple[PlanningEpisode, ...]: The member's unseen episodes, in API order.
+            tuple[PlanningEpisode, ...]: The member's unseen episodes, sorted by air_date.
 
         Raises:
             ConfigEntryAuthFailed: If the stored access token was rejected.
@@ -136,7 +136,8 @@ class PlanningCoordinator(DataUpdateCoordinator[tuple["PlanningEpisode", ...]]):
         except Error as err:
             raise UpdateFailed(str(err)) from err
 
-        return tuple(episode for episodes in episodes_by_month for episode in episodes)
+        episodes = (episode for episodes in episodes_by_month for episode in episodes)
+        return tuple(sorted(episodes, key=lambda episode: episode.air_date))
 
 
 @dataclass

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .betaseries import MemberData
-    from .coordinator import BetaSeriesConfigEntry
+    from .coordinator import BetaSeriesConfigEntry, MemberCoordinator
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -75,10 +75,12 @@ class BetaSeriesBinarySensor(BetaSeriesEntity, BinarySensorEntity):  # pyright: 
 
     Attributes:
         entity_description (BetaSeriesBinarySensorEntityDescription): Describes this binary sensor.
+        coordinator (MemberCoordinator): The coordinator providing the member data.
 
     """
 
     entity_description: BetaSeriesBinarySensorEntityDescription  # pyright: ignore[reportIncompatibleVariableOverride]
+    coordinator: MemberCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @property
     def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]

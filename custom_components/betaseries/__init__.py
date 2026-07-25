@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     from .coordinator import BetaSeriesConfigEntry
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -> bool:

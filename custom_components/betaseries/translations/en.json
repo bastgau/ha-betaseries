@@ -62,6 +62,9 @@
     "binary_sensor": {
       "new_episode_available": { "name": "New episode available" },
       "movies_to_watch_available": { "name": "Movies to watch available" }
+    },
+    "calendar": {
+      "planning": { "name": "Planning" }
     }
   }
 }

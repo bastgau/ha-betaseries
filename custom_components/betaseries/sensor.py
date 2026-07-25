@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .betaseries import MemberData
-    from .coordinator import BetaSeriesConfigEntry
+    from .coordinator import BetaSeriesConfigEntry, MemberCoordinator
 
 type StateType = int | float | str | None
 
@@ -181,10 +181,12 @@ class BetaSeriesSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[repor
 
     Attributes:
         entity_description (BetaSeriesSensorEntityDescription): Describes this sensor.
+        coordinator (MemberCoordinator): The coordinator providing the member data.
 
     """
 
     entity_description: BetaSeriesSensorEntityDescription  # pyright: ignore[reportIncompatibleVariableOverride]
+    coordinator: MemberCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @property
     def native_value(self) -> StateType:  # pyright: ignore[reportIncompatibleVariableOverride]

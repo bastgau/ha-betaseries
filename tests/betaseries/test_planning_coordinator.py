@@ -91,3 +91,30 @@ async def test_update_success_aggregates_all_months(hass: HomeAssistant) -> None
     assert coordinator.last_update_success is True
     assert coordinator.data == (EPISODE, EPISODE, EPISODE)
     assert mock_client.fetch_planning.await_count == 3
+
+
+async def test_update_success_sorts_by_air_date(hass: HomeAssistant) -> None:
+    """Sort the aggregated episodes by air_date, regardless of fetch order."""
+    later_episode = EPISODE
+    earlier_episode = PlanningEpisode(
+        id="999",
+        show_id="55",
+        show_title="Example Show",
+        season=3,
+        episode=3,
+        code="S03E03",
+        title="An Earlier Episode",
+        air_date=date(2026, 7, 20),
+        seen=False,
+        platforms=("Netflix",),
+        resource_url="https://www.betaseries.com/episode/999",
+    )
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
+    entry.add_to_hass(hass)
+    mock_client = AsyncMock()
+    mock_client.fetch_planning.side_effect = [(later_episode,), (earlier_episode,), ()]
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert coordinator.data == (earlier_episode, later_episode)

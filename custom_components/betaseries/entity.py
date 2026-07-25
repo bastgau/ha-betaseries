@@ -12,10 +12,10 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from homeassistant.helpers.entity import EntityDescription
 
-    from .coordinator import MemberCoordinator
+    from .coordinator import MemberCoordinator, PlanningCoordinator
 
 
-class BetaSeriesEntity(CoordinatorEntity["MemberCoordinator"]):
+class BetaSeriesEntity(CoordinatorEntity["MemberCoordinator | PlanningCoordinator"]):
     """Base entity sharing a single device per BetaSeries account.
 
     Attributes:
@@ -30,11 +30,13 @@ class BetaSeriesEntity(CoordinatorEntity["MemberCoordinator"]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: MemberCoordinator, entity_description: EntityDescription) -> None:
+    def __init__(
+        self, coordinator: MemberCoordinator | PlanningCoordinator, entity_description: EntityDescription
+    ) -> None:
         """Initialize the entity, deriving its unique_id and device from the config entry.
 
         Args:
-            coordinator (MemberCoordinator): The coordinator providing member data.
+            coordinator (MemberCoordinator | PlanningCoordinator): The coordinator providing this entity's data.
             entity_description (EntityDescription): Describes this specific entity.
 
         """
