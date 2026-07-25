@@ -64,7 +64,7 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         None: Entities are registered via async_add_entities, nothing is returned.
 
     """
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.member
     async_add_entities(
         BetaSeriesBinarySensor(coordinator, description) for description in BINARY_SENSOR_DESCRIPTIONS
     )

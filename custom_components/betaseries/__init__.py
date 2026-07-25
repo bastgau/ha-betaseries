@@ -8,7 +8,7 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .betaseries import Client
-from .coordinator import MemberCoordinator
+from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -30,10 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -
 
     """
     client = Client(async_get_clientsession(hass), entry.data[CONF_API_KEY], entry.data["access_token"])
-    coordinator = MemberCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    member_coordinator = MemberCoordinator(hass, entry, client)
+    planning_coordinator = PlanningCoordinator(hass, entry, client)
+    await member_coordinator.async_config_entry_first_refresh()
+    await planning_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = BetaSeriesData(member=member_coordinator, planning=planning_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

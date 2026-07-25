@@ -1,4 +1,8 @@
-"""Tests for MemberCoordinator."""
+"""Tests for MemberCoordinator.
+
+Client error handling (AuthError/Error translation) is covered by the
+shared, parametrized tests in test_coordinator_errors.py instead of here.
+"""
 
 from __future__ import annotations
 
@@ -6,15 +10,11 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
-from custom_components.betaseries.betaseries.exceptions import AuthError, Error
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import CONF_MEMBER_SCAN_INTERVAL, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -76,31 +76,3 @@ async def test_update_success(hass: HomeAssistant) -> None:
 
     assert coordinator.last_update_success is True
     assert coordinator.data == MEMBER_DATA
-
-
-async def test_update_auth_error_marks_refresh_failed(hass: HomeAssistant) -> None:
-    """Mark the refresh as failed with a ConfigEntryAuthFailed when the token is rejected."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
-    entry.add_to_hass(hass)
-    mock_client = AsyncMock()
-    mock_client.fetch_member_data.side_effect = AuthError("Access token was rejected")
-
-    coordinator = MemberCoordinator(hass, entry, mock_client)
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-    assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
-
-
-async def test_update_error_marks_refresh_failed(hass: HomeAssistant) -> None:
-    """Mark the refresh as failed with an UpdateFailed on any other client error."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
-    entry.add_to_hass(hass)
-    mock_client = AsyncMock()
-    mock_client.fetch_member_data.side_effect = Error("boom")
-
-    coordinator = MemberCoordinator(hass, entry, mock_client)
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-    assert isinstance(coordinator.last_exception, UpdateFailed)

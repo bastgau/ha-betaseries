@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import DOMAIN
-from custom_components.betaseries.coordinator import MemberCoordinator
+from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
@@ -54,13 +54,16 @@ async def test_setup_entry_creates_coordinator(hass: HomeAssistant) -> None:
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = ()
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert isinstance(entry.runtime_data, MemberCoordinator)
-    assert entry.runtime_data.data == MEMBER_DATA
+    assert isinstance(entry.runtime_data.member, MemberCoordinator)
+    assert entry.runtime_data.member.data == MEMBER_DATA
+    assert isinstance(entry.runtime_data.planning, PlanningCoordinator)
+    assert entry.runtime_data.planning.data == ()
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -74,6 +77,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = ()
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)
