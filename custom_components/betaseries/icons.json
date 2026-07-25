@@ -1,0 +1,37 @@
+{
+  "entity": {
+    "sensor": {
+      "episodes_to_watch": { "default": "mdi:television-play" },
+      "time_to_spend": { "default": "mdi:clock-outline" },
+      "progress": { "default": "mdi:progress-check" },
+      "shows_to_watch": { "default": "mdi:television-classic" },
+      "movies_to_watch": { "default": "mdi:movie-open-outline" },
+      "shows_current": { "default": "mdi:television" },
+      "badges": { "default": "mdi:medal-outline" },
+      "shows": { "default": "mdi:television-classic" },
+      "shows_finished": { "default": "mdi:television-classic" },
+      "episodes": { "default": "mdi:check-circle-outline" },
+      "time_on_tv": { "default": "mdi:clock-check-outline" },
+      "movies": { "default": "mdi:movie-outline" },
+      "xp": { "default": "mdi:star-outline" },
+      "streak_days": { "default": "mdi:fire" },
+      "member_since_days": { "default": "mdi:calendar-account-outline" },
+      "episodes_per_month": { "default": "mdi:calendar-month-outline" },
+      "favorite_genre": { "default": "mdi:tag-heart-outline" }
+    },
+    "binary_sensor": {
+      "new_episode_available": {
+        "default": "mdi:television-play",
+        "state": {
+          "off": "mdi:television-off"
+        }
+      },
+      "movies_to_watch_available": {
+        "default": "mdi:movie-open-outline",
+        "state": {
+          "off": "mdi:movie-off-outline"
+        }
+      }
+    }
+  }
+}

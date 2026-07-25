@@ -31,3 +31,5 @@ async def test_unique_id_and_device_info(hass: HomeAssistant) -> None:
     assert entity.device_info["identifiers"] == {(DOMAIN, "42")}
     assert entity.device_info["name"] == "BetaSeries - test_user"
     assert entity.device_info["manufacturer"] == "BetaSeries"
+    assert entity.device_info["model"] == "Member Account"
+    assert entity.device_info["configuration_url"] == "https://www.betaseries.com/membre/test_user"

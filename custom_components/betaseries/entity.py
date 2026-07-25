@@ -26,6 +26,8 @@ class BetaSeriesEntity(CoordinatorEntity["MemberCoordinator"]):
 
     """
 
+    _MEMBER_PROFILE_URL = "https://www.betaseries.com/membre/{login}"
+
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: MemberCoordinator, entity_description: EntityDescription) -> None:
@@ -40,10 +42,13 @@ class BetaSeriesEntity(CoordinatorEntity["MemberCoordinator"]):
         self.entity_description = entity_description
 
         member_id = coordinator.config_entry.unique_id
+        login = coordinator.config_entry.title
         self._attr_unique_id = f"{member_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(member_id))},
-            name=f"BetaSeries - {coordinator.config_entry.title}",
+            name=f"BetaSeries - {login}",
             manufacturer="BetaSeries",
+            model="Member Account",
             entry_type=DeviceEntryType.SERVICE,
+            configuration_url=self._MEMBER_PROFILE_URL.format(login=login),
         )
