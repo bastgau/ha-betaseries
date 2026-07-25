@@ -1,0 +1,89 @@
+# BetaSeries for Home Assistant
+
+[![Maintainer: bastgau](https://img.shields.io/badge/maintener-bastgau-orange?logo=github&logoColor=%23959da5&labelColor=%232d333a)](https://github.com/bastgau)
+[![Made with Python](https://img.shields.io/badge/Made_with-Python-blue?style=flat&logo=python&logoColor=%23959da5&labelColor=%232d333a)](https://www.python.org/)
+[![Made for Home Assistant](https://img.shields.io/badge/Made_for-Homeassistant-blue?style=flat&logo=homeassistant&logoColor=%23959da5&labelColor=%232d333a)](https://www.home-assistant.io/)
+[![GitHub Release](https://img.shields.io/github/v/release/bastgau/ha-betaseries?logo=github&logoColor=%23959da5&labelColor=%232d333a&color=%230e80c0)](https://github.com/bastgau/ha-betaseries/releases)
+[![HACS validation](https://github.com/bastgau/ha-betaseries/actions/workflows/validate-for-hacs.yml/badge.svg)](https://github.com/bastgau/ha-betaseries/actions/workflows/validate-for-hacs.yml)
+[![HASSFEST validation](https://github.com/bastgau/ha-betaseries/actions/workflows/validate-with-hassfest.yml/badge.svg)](https://github.com/bastgau/ha-betaseries/actions/workflows/validate-with-hassfest.yml)
+
+<p align="center" width="100%">
+    <img src="https://brands.home-assistant.io/_/betaseries/logo.png">
+</p>
+
+## Description
+
+This integration connects Home Assistant to your [BetaSeries](https://www.betaseries.com/) account. It exposes your viewing stats and to-watch counts as sensors, tells you when new episodes are available, and (in later versions) shows your upcoming episodes as a calendar and lets you mark episodes watched or rate them.
+
+It is delivered in three stages:
+
+- **v1** — `sensor` (account stats: episodes to watch, time to spend, progress, badges, etc.) and `binary_sensor` (a new episode / a movie to watch is available). Includes authentication.
+- **v2** — `calendar` (upcoming episodes of the shows you follow) and a `Next episode` sensor.
+- **v3** — `services` (mark an episode/season watched, rate an episode/show).
+
+## Requirements
+
+- Home Assistant **2026.7.0** or newer.
+- A personal **BetaSeries API key** (`client_id` + `client_secret`). Each user must create their own key at <https://www.betaseries.com/api/> — a shared key cannot be embedded in a public repository. Setup uses the OAuth **device flow**: Home Assistant shows you a code to enter on the BetaSeries website; your password is never typed into Home Assistant.
+
+## Translation
+
+The integration is translated into:
+
+- English
+- French
+
+## Installation
+
+### Installation via HACS
+
+1. Add this repository as a custom repository to HACS:
+
+[![Add Repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bastgau&repository=ha-betaseries&category=Integration)
+
+2. Use HACS to install the integration.
+3. Restart Home Assistant.
+4. Set up the integration using the UI:
+
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=betaseries)
+
+### Manual Installation
+
+1. Download the integration files from the GitHub repository.
+2. Place the `betaseries` folder in the `custom_components` directory of Home Assistant.
+3. Restart Home Assistant.
+4. Set up the integration using the UI:
+
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=betaseries)
+
+## Configuration
+
+During setup you will be asked for your BetaSeries `client_id` and `client_secret`, then shown a device code to validate on the BetaSeries website. Polling intervals (member stats / planning) can be adjusted afterwards from the integration options.
+
+## Entities
+
+<!-- The full entity table (entity_id, unit, meaning) will be documented here as each version ships. -->
+
+## Troubleshooting
+
+## Debugging
+
+To show info and debug logs for the BetaSeries integration, enable logging in `configuration.yaml`:
+
+```yaml
+logger:
+  default: warning
+  logs:
+    # Log for BetaSeries integration
+    custom_components.betaseries: debug
+```
+
+Logs are not scrubbed of sensitive information, so review what you share before posting it.
+
+## Support & Contributions
+
+If you encounter any issues or wish to contribute to improving this integration, feel free to open an issue or a pull request on the GitHub repository.
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bastgau)
+
+Enjoy!
