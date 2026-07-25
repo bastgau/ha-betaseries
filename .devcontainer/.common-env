@@ -1,0 +1,4 @@
+PROJECT_NAME=ha-betaseries
+PROJECT_ROOT_PATH=/workspaces/ha-betaseries
+INTEGRATION_DOMAIN=betaseries
+INTEGRATION_NAME=BetaSeries
