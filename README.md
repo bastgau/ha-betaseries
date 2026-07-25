@@ -17,14 +17,14 @@ This integration connects Home Assistant to your [BetaSeries](https://www.betase
 
 It is delivered in three stages:
 
-- **v1** — `sensor` (account stats: episodes to watch, time to spend, progress, badges, etc.) and `binary_sensor` (a new episode / a movie to watch is available). Includes authentication.
-- **v2** — `calendar` (upcoming episodes of the shows you follow) and a `Next episode` sensor.
-- **v3** — `services` (mark an episode/season watched, rate an episode/show).
+- **v1** - `sensor` (account stats: episodes to watch, time to spend, progress, badges, etc.) and `binary_sensor` (a new episode / a movie to watch is available). Includes authentication.
+- **v2** - `calendar` (upcoming episodes of the shows you follow) and a `Next episode` sensor.
+- **v3** - `services` (mark an episode/season watched, rate an episode/show).
 
 ## Requirements
 
 - Home Assistant **2026.7.0** or newer.
-- A personal **BetaSeries API key** (`client_id` + `client_secret`). Each user must create their own key at <https://www.betaseries.com/api/> — a shared key cannot be embedded in a public repository. Setup uses the OAuth **device flow**: Home Assistant shows you a code to enter on the BetaSeries website; your password is never typed into Home Assistant.
+- A personal **BetaSeries API key** (`client_id` + `client_secret`). Each user must create their own key at <https://www.betaseries.com/api/> - a shared key cannot be embedded in a public repository. Setup uses the OAuth **device flow**: Home Assistant shows you a code to enter on the BetaSeries website; your password is never typed into Home Assistant.
 
 ## Translation
 
@@ -62,7 +62,36 @@ During setup you will be asked for your BetaSeries `client_id` and `client_secre
 
 ## Entities
 
-<!-- The full entity table (entity_id, unit, meaning) will be documented here as each version ships. -->
+All entities below are enabled by default and grouped under a single device per BetaSeries account (named "BetaSeries — " followed by your login). Values are refreshed at the "Member data refresh interval" configured in the integration options (15 minutes by default).
+
+### Sensor
+
+| Name | Unit | Meaning |
+|---|---|---|
+| Episodes to watch | - | Number of episodes available to watch |
+| Time to spend | min | Minutes left to watch everything pending |
+| Progress | % | Overall watch progress |
+| Shows to watch | - | Number of shows with unwatched episodes |
+| Movies to watch | - | Number of movies not yet watched |
+| Shows current | - | Number of shows currently being followed |
+| Badges | - | Number of badges earned |
+| Shows total | - | Total number of shows followed |
+| Shows finished | - | Number of shows fully watched |
+| Episodes watched | - | Total number of episodes watched |
+| Time on TV | min | Total minutes spent watching episodes |
+| Movies total | - | Total number of movies watched |
+| XP | - | Member experience points |
+| Streak days | d | Current daily streak |
+| Member since | d | Number of days since account creation |
+| Episodes per month | - | Average number of episodes watched per month |
+| Favorite genre | - | Most watched genre |
+
+### Binary sensor
+
+| Name | Meaning |
+|---|---|
+| New episode available | On when at least one episode is available to watch |
+| Movies to watch available | On when at least one movie is not yet watched |
 
 ## Troubleshooting
 
