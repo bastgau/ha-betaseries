@@ -24,6 +24,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    NumberSelector,  # pyright: ignore[reportUnknownVariableType]
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 # Aliased: bare "Auth" would be ambiguous next to homeassistant.auth in this file.
 from .betaseries import (
@@ -289,18 +294,24 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                     default=self.config_entry.options.get(
                         CONF_MEMBER_SCAN_INTERVAL, DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES
                     ),
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_MEMBER_SCAN_INTERVAL_MINUTES, max=MAX_MEMBER_SCAN_INTERVAL_MINUTES),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_MEMBER_SCAN_INTERVAL_MINUTES,
+                        max=MAX_MEMBER_SCAN_INTERVAL_MINUTES,
+                        mode=NumberSelectorMode.BOX,
+                    )
                 ),
                 vol.Required(
                     CONF_PLANNING_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_PLANNING_SCAN_INTERVAL, DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES
                     ),
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_PLANNING_SCAN_INTERVAL_MINUTES, max=MAX_PLANNING_SCAN_INTERVAL_MINUTES),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_PLANNING_SCAN_INTERVAL_MINUTES,
+                        max=MAX_PLANNING_SCAN_INTERVAL_MINUTES,
+                        mode=NumberSelectorMode.BOX,
+                    )
                 ),
             }
         )
