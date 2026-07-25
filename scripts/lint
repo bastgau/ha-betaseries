@@ -72,4 +72,15 @@ else
   exit_code=1
 fi
 
+echo -e "\n${YELLOW}> Lint with docstring-linter :${NC}\n"
+
+docstring-linter $files
+docstring_linter_exit=$?
+if [ $docstring_linter_exit -eq 0 ]; then
+  echo -e "\n${BLUE}[docstring-linter]${NC} ${GREEN}✓ Done.${NC}\n"
+else
+  echo -e "\n${BLUE}[docstring-linter]${NC} ${RED}✗ Failed.${NC}\n"
+  exit_code=1
+fi
+
 exit $exit_code

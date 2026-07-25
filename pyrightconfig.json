@@ -1,4 +1,15 @@
 {
     "typeCheckingMode": "strict",
-    "reportMissingTypeStubs": false
+    "reportMissingTypeStubs": false,
+    "executionEnvironments": [
+        {
+            "root": "tests",
+            "extraPaths": ["."],
+            "reportTypedDictNotRequiredAccess": false,
+            "reportUnknownMemberType": false
+        },
+        {
+            "root": "."
+        }
+    ]
 }

@@ -24,12 +24,21 @@ version = "0.0.0"
 Changelog = "https://github.com/bastgau/ha-betaseries/releases"
 
 [tool.poetry.dependencies]
-python = ">=3.14,<3.15"
+# >=3.14.2 required transitively by homeassistant==2026.7.4
+# (pulled in by pytest-homeassistant-custom-component's dev dependency).
+python = ">=3.14.2,<3.15"
 
 [tool.poetry.group.dev.dependencies]
+docstring-linter = { url = "https://github.com/bastgau/docstring-linter/releases/download/v0.5.0/docstring_linter-0.5.0-py3-none-any.whl" }
 prek = "0.2.28"
 pylint = "4.0.4"
 pyright = "1.1.411"
+# pytest / pytest-asyncio versions are pinned by
+# pytest-homeassistant-custom-component's own exact requirements.
+pytest = "9.0.3"
+pytest-asyncio = "1.4.0"
+pytest-cov = "7.1.0"
+pytest-homeassistant-custom-component = "0.13.348"
 ruff = "0.15.1"
 
 [tool.ruff]
@@ -95,17 +104,47 @@ combine-as-imports = true
 [tool.ruff.lint.mccabe]
 max-complexity = 25
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101", # Use of `assert` detected -- standard in pytest test bodies
+  "S105", # Possible hardcoded password -- fixture credentials, not real secrets
+]
+
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
 # format - handled by ruff
 # duplicate-code - unavoidable
 # used-before-assignment - false positives with TYPE_CHECKING structures
+# wrong-import-order - pylint has no equivalent to ruff's known-first-party;
+#   homeassistant is treated as first-party by ruff/isort (see [tool.ruff.lint.isort]),
+#   which pylint's import checker cannot be configured to match.
 disable = [
   "abstract-method",
   "duplicate-code",
   "format",
   "unexpected-keyword-arg",
   "used-before-assignment",
+  "wrong-import-order",
 ]
 max-args = 6
 max-positional-arguments = 6
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# pytest-homeassistant-custom-component's autouse fixture
+# `enable_event_loop_debug` is declared with @pytest.fixture despite being
+# async, which pytest-asyncio only tolerates in "auto" mode ("strict" raises
+# PytestRemovedIn9Warning: async fixture with no plugin/hook handling it).
+asyncio_mode = "auto"
+addopts = "--cov=custom_components/betaseries --cov-branch --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["custom_components/betaseries"]
+# VSCode's Python Testing extension invokes pytest with its own --cov=.
+# argument, overriding `source` above. `omit` still applies afterwards, so
+# it keeps tests/ out of the coverage report regardless of how pytest-cov
+# was invoked (scripts/test, VSCode, CI, ...).
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
