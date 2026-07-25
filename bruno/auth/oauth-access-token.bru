@@ -29,7 +29,7 @@ vars:pre-request {
 }
 
 script:post-response {
-  // Token may come back as `access_token=xxxx` (urlencoded) OR as JSON — handle both
+  // Token may come back as `access_token=xxxx` (urlencoded) OR as JSON - handle both
   const body = res.getBody();
   let token;
   if (typeof body === "string") {
