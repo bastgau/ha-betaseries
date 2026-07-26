@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: https://api.betaseries.com/members/notifications?all=true&sort=DESC
+  url: {{baseUrl}}/members/notifications?all=true&sort=DESC
   body: none
   auth: none
 }
@@ -30,7 +30,7 @@ example {
   name: example
   
   request: {
-    url: https://api.betaseries.com/members/notifications?all=true&sort=DESC
+    url: {{baseUrl}}/members/notifications?all=true&sort=DESC
     method: GET
     mode: none
     params:query: {

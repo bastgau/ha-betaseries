@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: https://api.betaseries.com/badges/badge?id=1,64
+  url: {{baseUrl}}/badges/badge?id=1,64
   body: none
   auth: none
 }
@@ -29,7 +29,7 @@ example {
   name: example
   
   request: {
-    url: https://api.betaseries.com/badges/badge?id=1,64
+    url: {{baseUrl}}/badges/badge?id=1,64
     method: GET
     mode: none
     params:query: {

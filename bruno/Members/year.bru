@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: https://api.betaseries.com/members/year?year=2026
+  url: {{baseUrl}}/members/year?year=2026
   body: none
   auth: none
 }
@@ -29,7 +29,7 @@ example {
   name: example
   
   request: {
-    url: https://api.betaseries.com/members/year?year=2026
+    url: {{baseUrl}}/members/year?year=2026
     method: GET
     mode: none
     params:query: {
