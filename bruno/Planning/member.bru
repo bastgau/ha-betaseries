@@ -1,18 +1,17 @@
 meta {
-  name: 1 - Member
+  name: member
   type: http
   seq: 2
 }
 
 get {
-  url: {{baseUrl}}/planning/member?unseen=true&month=2026-08
+  url: {{baseUrl}}/planning/member?month=2026-07
   body: none
   auth: none
 }
 
 params:query {
-  unseen: true
-  month: 2026-08
+  month: 2026-07
 }
 
 headers {

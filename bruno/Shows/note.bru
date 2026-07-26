@@ -1,11 +1,11 @@
 meta {
-  name: 1 - Watched
+  name: note
   type: http
   seq: 1
 }
 
 post {
-  url: {{baseUrl}}/seasons/watched
+  url: {{baseUrl}}/shows/note
   body: formUrlEncoded
   auth: none
 }
@@ -18,9 +18,9 @@ headers {
 
 body:form-urlencoded {
   id: {{showId}}
-  season: {{seasonNumber}}
+  note: 4
 }
 
 docs {
-  Mark all episodes of a season as watched. Skips already watched episodes.
+  Rate a season.
 }

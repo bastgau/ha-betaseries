@@ -1,0 +1,143 @@
+meta {
+  name: list
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/episodes/list?showsLimit=1&limit=1
+  body: none
+  auth: none
+}
+
+params:query {
+  showsLimit: 1
+  limit: 1
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Fetch the list of episodes to watch, with various filters and pagination options.
+}
+
+example {
+  name: example
+  
+  request: {
+    url: {{baseUrl}}/episodes/list?showsLimit=1&limit=1
+    method: GET
+    mode: none
+    params:query: {
+      showsLimit: 1
+      limit: 1
+    }
+  
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "shows": [
+            {
+              "id": 38605,
+              "thetvdb_id": 417272,
+              "imdb_id": "tt30217222",
+              "title": "Achtsam Morden",
+              "remaining": 8,
+              "unseen": [
+                {
+                  "id": 3905073,
+                  "thetvdb_id": 11603666,
+                  "youtube_id": null,
+                  "title": "Urlaub",
+                  "season": 2,
+                  "episode": 1,
+                  "show": {
+                    "id": 38605,
+                    "thetvdb_id": 417272,
+                    "title": "Achtsam Morden",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/95dec54939de769f220aa9686fc03887.jpg",
+                    "in_account": true,
+                    "remaining": 8,
+                    "minutes_remaining": 272,
+                    "progress": 50,
+                    "status": "Continuing"
+                  },
+                  "code": "S02E01",
+                  "global": 9,
+                  "special": 0,
+                  "description": "Nicole s'embrouille les pinceaux avec ses preuves. Lors de vacances en famille en Autriche, Björn essaie de se détendre, mais un sérieux faux pas révèle qu'il y a encore du boulot.",
+                  "date": "2026-05-29",
+                  "note": {
+                    "total": 43,
+                    "mean": 3.767399999999999860023081055260263383388519287109375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "2",
+                  "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 1865,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2026-05-28",
+                      "date": "1779919200",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/62762471"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            }
+          ],
+          "total": 37,
+          "totalEpisodes": 726,
+          "totalMissingShows": 0,
+          "totalMissingEpisodes": 0,
+          "errors": []
+        }
+      '''
+    }
+  }
+}

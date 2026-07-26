@@ -1,0 +1,84 @@
+meta {
+  name: year
+  type: http
+  seq: 4
+}
+
+get {
+  url: https://api.betaseries.com/members/year?year=2026
+  body: none
+  auth: none
+}
+
+params:query {
+  year: 2026
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: example
+  
+  request: {
+    url: https://api.betaseries.com/members/year?year=2026
+    method: GET
+    mode: none
+    params:query: {
+      year: 2026
+    }
+  
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "stats": {
+            "watchedEps": 369,
+            "rewatchedEps": 0,
+            "addedShows": 13,
+            "archivedShows": 6,
+            "fiveStars": 23,
+            "xp": 480,
+            "badges": 3,
+            "comments": 0,
+            "watchedMovies": 0,
+            "rewatchedMovies": 0,
+            "favoriteShowsGenre": "Drame",
+            "favoriteMoviesGenre": null
+          },
+          "locale": "fr",
+          "errors": []
+        }
+      '''
+    }
+  }
+}

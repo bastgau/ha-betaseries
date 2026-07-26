@@ -1,0 +1,472 @@
+meta {
+  name: badges
+  type: http
+  seq: 2
+}
+
+get {
+  url: https://api.betaseries.com/members/badges?id={{userId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  id: {{userId}}
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: example
+  
+  request: {
+    url: https://api.betaseries.com/members/badges?id={{userId}}
+    method: GET
+    mode: none
+    params:query: {
+      id: {{userId}}
+    }
+  
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "badges": [
+            {
+              "id": 1,
+              "code": "debutant",
+              "name": "Débutant",
+              "description": "Vous avez regardé votre premier épisode. Bienvenue sur BetaSeries !",
+              "date": "2013-09-01 22:45:26",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 64,
+              "code": "regarde_moi",
+              "name": "Regarde-moi",
+              "description": "Un mois s'est écoulé et 30 épisodes ont été regardés, vous avez le double-clic facile.",
+              "date": "2013-09-01 22:45:26",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 99,
+              "code": "planque",
+              "name": "Planqué",
+              "description": "Ces douze dernières heures vous avez regardé 4 épisodes. Faites quelque chose de votre vie.",
+              "date": "2013-09-01 22:45:27",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 141,
+              "code": "einstein",
+              "name": "Einstein",
+              "description": "Une semaine, dix épisodes. Il va falloir relativiser le temps, et votre vie.",
+              "date": "2013-09-01 22:45:27",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 148,
+              "code": "flashmob",
+              "name": "Flashmob",
+              "description": "Vous avez regardé le même épisode que 75 personnes ce jour-là, vous êtes à la mode.",
+              "date": "2013-09-01 22:45:27",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 225,
+              "code": "jack_bauer",
+              "name": "Jack Bauer",
+              "description": "Vous avez regardé plus de 24 h d'épisodes, top chrono !",
+              "date": "2013-09-01 22:45:27",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 57,
+              "code": "rattrapage",
+              "name": "Rattrapage",
+              "description": "3 épisodes d'une même série à la suite... On a une série à rattraper, à ce que je vois.",
+              "date": "2013-09-01 22:46:58",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 50,
+              "code": "glandeur",
+              "name": "Glandeur",
+              "description": "Quand on passe sa soirée à regarder 4 épisodes, faut pas s'étonner de ce qu'on dit.",
+              "date": "2013-09-01 22:47:19",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 106,
+              "code": "marathonien",
+              "name": "Marathonien",
+              "description": "Vous avez regardé 6 épisodes en plein dimanche, c'est un grand chelem !",
+              "date": "2013-09-01 22:47:19",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 169,
+              "code": "hyperactifs",
+              "name": "Hyperactifs",
+              "description": "Vos amis ont effectué 30 actions dans les dernières 24 heures, ce sont des clients fidèles.",
+              "date": "2013-09-01 22:47:27",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 71,
+              "code": "ecole_buissoniere",
+              "name": "Ecole buissonnière",
+              "description": "Vous osez regarder encore des séries après 1 heure du matin, en pleine semaine...",
+              "date": "2013-09-06 23:41:07",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 15,
+              "code": "junior",
+              "name": "Junior",
+              "description": "Vous avez regardé 10 épisodes de 10 séries différentes, bon début.",
+              "date": "2013-12-01 16:31:37",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 134,
+              "code": "le_millier",
+              "name": "Le millier",
+              "description": "Ça y est, vous avez vu plus de 1000 épisodes de séries télé. Sale geek.",
+              "date": "2016-04-24 19:25:19",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 253,
+              "code": "mobilaute",
+              "name": "Mobilaute",
+              "description": "Même sur votre mobile, vous aimez explorer Internet, mais toujours pas Internet Explorer.",
+              "date": "2017-06-24 22:40:07",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 252,
+              "code": "android_fanboy",
+              "name": "Android Addict",
+              "description": "Vous avez installé l'application BetaSeries pour Android. Un peu de Kit Kat avec votre nougat ?",
+              "date": "2018-02-01 10:54:37",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 258,
+              "code": "bonne_annee",
+              "name": "Bonne année",
+              "description": "Vous avez regardé un épisode le jour du Nouvel an. Vous commencez bien l'année.",
+              "date": "2019-01-01 17:36:40",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 263,
+              "code": "star_wars_day",
+              "name": "Star Wars Day",
+              "description": "Vous avez regardé un épisode en ce jour sacré. Que la force soit avec vous.",
+              "date": "2019-05-04 00:27:08",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 268,
+              "code": "james_franco",
+              "name": "James Franco",
+              "description": "Vous avez regardé plus de 127 heures d'épisodes. Votre bras va bien ?",
+              "date": "2020-11-13 04:14:58",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 269,
+              "code": "danny_boyle",
+              "name": "Danny Boyle",
+              "description": "Vous avez regardé plus de 28 jours d'épisodes. Il est temps de sortir du coma…",
+              "date": "2020-11-13 04:14:58",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 275,
+              "code": "retardataire",
+              "name": "Retardataire",
+              "description": "Vous venez de finir une série terminée depuis plus de 10 ans. Mieux vaut tard que jamais.",
+              "date": "2020-11-13 04:14:58",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 276,
+              "code": "mouton",
+              "name": "Mouton",
+              "description": "Vous regardez une série suivie par plus de 50000 membres. Pas vraiment original.",
+              "date": "2020-11-13 04:14:58",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 279,
+              "code": "british",
+              "name": "British",
+              "description": "Vous prendrez bien un peu de thé avec ces 10 séries anglaises ?",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 2
+            },
+            {
+              "id": 282,
+              "code": "gi_joe",
+              "name": "G.I. Joe",
+              "description": "Vous avez regardé 50 séries américaines. Big Brother serait fier de vous.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 10
+            },
+            {
+              "id": 283,
+              "code": "serievore_du_monde",
+              "name": "Sérievore du monde",
+              "description": "Vous avez regardé des séries de 18 nationalités différentes.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 9
+            },
+            {
+              "id": 284,
+              "code": "no_life",
+              "name": "No Life",
+              "description": "Vous avez regardé plus de 2000 épisodes. N'oubliez pas de sortir de temps en temps.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 10
+            },
+            {
+              "id": 291,
+              "code": "serievore",
+              "name": "Sérievore",
+              "description": "Vous avez ajouté 140 séries à votre profil. On ne vous arrête plus !",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 7
+            },
+            {
+              "id": 292,
+              "code": "capitaine_spock",
+              "name": "Capitaine Spock",
+              "description": "Vous suivez 50 séries de science-fiction, attention aux extra-terrestres.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 10
+            },
+            {
+              "id": 293,
+              "code": "drama_queen",
+              "name": "Drama Queen",
+              "description": "50 drama dans votre compte ? Faudra prévoir les mouchoirs la prochaine fois.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 10
+            },
+            {
+              "id": 294,
+              "code": "jerry_seinfeld",
+              "name": "Jerry Seinfeld",
+              "description": "15 séries humoristiques, on a un peu peur pour vous, respirez de temps en temps.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 3
+            },
+            {
+              "id": 300,
+              "code": "surbooking",
+              "name": "Surbooking",
+              "description": "Woh, 100 badges sur votre profil, on va plus avoir la place pour d'autres.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 10
+            },
+            {
+              "id": 307,
+              "code": "vieux_briscard",
+              "name": "Vieux briscard",
+              "description": "Cela fait 10 ans que vous êtes inscrit sur BetaSeries, ça se fête.",
+              "date": "2020-11-13 04:14:58",
+              "height": null,
+              "width": null,
+              "level": 10
+            },
+            {
+              "id": 127,
+              "code": "tas_dbeaux_yeux",
+              "name": "T'as d'beaux yeux",
+              "description": "Votre magnifique trombine est maintenant sur votre profil, c'est pour la drague ?",
+              "date": "2021-08-19 00:32:28",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 285,
+              "code": "schtroumpf_lunettes",
+              "name": "Schtroumpf à lunettes",
+              "description": "Vous avez répondu à 50 sondages. On voit que vous aimez donner votre avis.",
+              "date": "2022-03-31 18:25:13",
+              "height": null,
+              "width": null,
+              "level": 5
+            },
+            {
+              "id": 261,
+              "code": "la_fheile_padraig",
+              "name": "Lá fhéile Pádraig",
+              "description": "Vous avez regardé un épisode le jour de la Saint-Patrick, sortez boire un coup maintenant.",
+              "date": "2023-03-17 18:56:44",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 274,
+              "code": "jusqu_au_dernier",
+              "name": "Jusqu'au dernier",
+              "description": "Vous avez terminé une série de plus de 150 épisodes. Félicitations, cela méritait bien un badge.",
+              "date": "2023-12-04 00:35:50",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 270,
+              "code": "jules_verne",
+              "name": "Jules Verne",
+              "description": "Vous avez regardé plus de 80 jours d'épisodes. Quel voyage hein ?",
+              "date": "2025-01-19 23:24:09",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 259,
+              "code": "punxsutawney_phil",
+              "name": "Punxsutawney Phil",
+              "description": "Vous avez regardé un épisode le Jour de la marmotte, debout les campeurs et haut les cœurs !",
+              "date": "2025-02-02 03:43:35",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 260,
+              "code": "forever_alone",
+              "name": "Forever Alone",
+              "description": "Vous avez regardé un épisode le jour de la Saint-Valentin. Mieux vaut être seul que mal accompagné.",
+              "date": "2026-02-14 22:32:18",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 264,
+              "code": "independence_day",
+              "name": "Fête de l’Indépendance",
+              "description": "Vous avez regardé un épisode le jour de la Fête de l’Indépendance, nous n’entrerons pas dans la nuit sans combattre !",
+              "date": "2026-07-04 20:50:59",
+              "height": 256,
+              "width": 256,
+              "level": null
+            },
+            {
+              "id": 265,
+              "code": "bastille",
+              "name": "Jour de la Bastille",
+              "description": "Vous avez regardé un épisode le jour de la Fête nationale française, et le défilé alors ?",
+              "date": "2026-07-14 22:55:21",
+              "height": 256,
+              "width": 256,
+              "level": null
+            }
+          ],
+          "total": 40,
+          "errors": []
+        }
+      '''
+    }
+  }
+}

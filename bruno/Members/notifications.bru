@@ -1,0 +1,206 @@
+meta {
+  name: notifications
+  type: http
+  seq: 3
+}
+
+get {
+  url: https://api.betaseries.com/members/notifications?all=true&sort=DESC
+  body: none
+  auth: none
+}
+
+params:query {
+  all: true
+  sort: DESC
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+example {
+  name: example
+  
+  request: {
+    url: https://api.betaseries.com/members/notifications?all=true&sort=DESC
+    method: GET
+    mode: none
+    params:query: {
+      all: true
+      sort: DESC
+    }
+  
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "notifications": [
+            {
+              "id": 3014512510,
+              "type": "badge",
+              "ref_id": "285",
+              "text": "Vous avez gagné le badge Schtroumpf à lunettes (niveau 5).",
+              "html": "Vous avez gagné le badge <a href=\"/membre/bastgau/badges\">Schtroumpf à lunettes (niveau 5)</a>.",
+              "date": "2026-07-26 12:18:50",
+              "seen": "2026-07-26 12:27:41",
+              "payload": {
+                "name": "Schtroumpf à lunettes (niveau 5)",
+                "picture": "https://www.betaseries.com/images/badges/schtroumpf_lunettes/5.png",
+                "url": "https://www.betaseries.com/membre/bastgau/badges"
+              }
+            },
+            {
+              "id": 3014512511,
+              "type": "xp_many",
+              "ref_id": "20",
+              "text": "Vous venez de gagner 20 nouveaux points XP !",
+              "html": "Vous venez de gagner 20 nouveaux <a href=\"/compte/xp\">points XP</a> !",
+              "date": "2026-07-26 12:18:50",
+              "seen": "2026-07-26 12:27:41",
+              "payload": {
+                "xp": 20,
+                "url": "https://www.betaseries.com/compte/xp"
+              }
+            },
+            {
+              "id": 3011097643,
+              "type": "xp_many",
+              "ref_id": "100",
+              "text": "Vous venez de gagner 100 nouveaux points XP !",
+              "html": "Vous venez de gagner 100 nouveaux <a href=\"/compte/xp\">points XP</a> !",
+              "date": "2026-07-14 22:57:25",
+              "seen": "2026-07-15 17:04:39",
+              "payload": {
+                "xp": 100,
+                "url": "https://www.betaseries.com/compte/xp"
+              }
+            },
+            {
+              "id": 3011097718,
+              "type": "badge",
+              "ref_id": "265",
+              "text": "Vous avez gagné le badge Jour de la Bastille.",
+              "html": "Vous avez gagné le badge <a href=\"/membre/bastgau/badges\">Jour de la Bastille</a>.",
+              "date": "2026-07-14 22:55:21",
+              "seen": "2026-07-15 17:04:39",
+              "payload": {
+                "name": "Jour de la Bastille",
+                "picture": "https://www.betaseries.com/images/badges/bastille.png",
+                "url": "https://www.betaseries.com/membre/bastgau/badges"
+              }
+            },
+            {
+              "id": 3011097719,
+              "type": "xp_many",
+              "ref_id": "20",
+              "text": "Vous venez de gagner 20 nouveaux points XP !",
+              "html": "Vous venez de gagner 20 nouveaux <a href=\"/compte/xp\">points XP</a> !",
+              "date": "2026-07-14 22:55:21",
+              "seen": "2026-07-15 17:04:39",
+              "payload": {
+                "xp": 20,
+                "url": "https://www.betaseries.com/compte/xp"
+              }
+            },
+            {
+              "id": 3003680203,
+              "type": "xp_many",
+              "ref_id": "100",
+              "text": "Vous venez de gagner 100 nouveaux points XP !",
+              "html": "Vous venez de gagner 100 nouveaux <a href=\"/compte/xp\">points XP</a> !",
+              "date": "2026-07-04 20:53:22",
+              "seen": "2026-07-15 17:04:39",
+              "payload": {
+                "xp": 100,
+                "url": "https://www.betaseries.com/compte/xp"
+              }
+            },
+            {
+              "id": 3003680123,
+              "type": "xp_many",
+              "ref_id": "20",
+              "text": "Vous venez de gagner 20 nouveaux points XP !",
+              "html": "Vous venez de gagner 20 nouveaux <a href=\"/compte/xp\">points XP</a> !",
+              "date": "2026-07-04 20:51:01",
+              "seen": "2026-07-04 20:53:44",
+              "payload": {
+                "xp": 20,
+                "url": "https://www.betaseries.com/compte/xp"
+              }
+            },
+            {
+              "id": 3003680122,
+              "type": "badge",
+              "ref_id": "264",
+              "text": "Vous avez gagné le badge Fête de l’Indépendance.",
+              "html": "Vous avez gagné le badge <a href=\"/membre/bastgau/badges\">Fête de l’Indépendance</a>.",
+              "date": "2026-07-04 20:50:59",
+              "seen": "2026-07-04 20:53:46",
+              "payload": {
+                "name": "Fête de l’Indépendance",
+                "picture": "https://www.betaseries.com/images/badges/independence_day.png",
+                "url": "https://www.betaseries.com/membre/bastgau/badges"
+              }
+            },
+            {
+              "id": 2999946470,
+              "type": "xp_many",
+              "ref_id": "20",
+              "text": "Vous venez de gagner 20 nouveaux points XP !",
+              "html": "Vous venez de gagner 20 nouveaux <a href=\"/compte/xp\">points XP</a> !",
+              "date": "2026-07-01 00:16:55",
+              "seen": "2026-07-04 20:53:46",
+              "payload": {
+                "xp": 20,
+                "url": "https://www.betaseries.com/compte/xp"
+              }
+            },
+            {
+              "id": 2994068865,
+              "type": "xp_many",
+              "ref_id": "20",
+              "text": "Vous venez de gagner 20 nouveaux points XP !",
+              "html": "Vous venez de gagner 20 nouveaux <a href=\"/compte/xp\">points XP</a> !",
+              "date": "2026-06-01 00:18:24",
+              "seen": "2026-07-04 20:53:46",
+              "payload": {
+                "xp": 20,
+                "url": "https://www.betaseries.com/compte/xp"
+              }
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}

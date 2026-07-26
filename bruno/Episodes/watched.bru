@@ -1,11 +1,11 @@
 meta {
-  name: 1 - Note
+  name: watched
   type: http
   seq: 2
 }
 
 post {
-  url: {{baseUrl}}/shows/note
+  url: {{baseUrl}}/episodes/watched
   body: formUrlEncoded
   auth: none
 }
@@ -17,10 +17,9 @@ headers {
 }
 
 body:form-urlencoded {
-  id: {{showId}}
-  note: 4
+  id: {{episodeId}}
 }
 
 docs {
-  Rate a season.
+  Mark one or more episodes as watched, with options to specify multiple episodes, bulk marking, and deletion of future episode marks.
 }

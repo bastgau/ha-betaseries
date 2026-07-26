@@ -1,0 +1,27 @@
+meta {
+  name: general
+  type: http
+  seq: 1
+}
+
+get {
+  url: https://api.betaseries.com/planning/general?before=0&after=7
+  body: none
+  auth: none
+}
+
+params:query {
+  before: 0
+  after: 7
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
