@@ -5,8 +5,12 @@
         "title": "Connexion à BetaSeries",
         "description": "Renseignez la clé API et le secret client de votre application API BetaSeries personnelle (à créer sur https://www.betaseries.com/api/).",
         "data": {
-          "api_key": "Clé API (client ID)",
-          "client_secret": "Secret client"
+          "api_key": "Clé API",
+          "client_secret": "Secret client",
+          "locale": "Langue préférée"
+        },
+        "data_description": {
+          "locale": "Langue dans laquelle BetaSeries renvoie ses réponses (genres, descriptions, messages d'erreur). Modifiable plus tard dans les options de l'intégration."
         }
       },
       "timeout": {
@@ -24,51 +28,105 @@
     "abort": {
       "already_configured": "Ce compte est déjà configuré",
       "reauth_successful": "Réauthentification réussie",
-      "cannot_connect": "Échec de la connexion"
+      "cannot_connect": "Échec de la connexion",
+      "unique_id_mismatch": "Ce compte BetaSeries est différent de celui déjà configuré pour cette intégration. Pour changer de compte, supprimez et recréez l'intégration."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Options BetaSeries",
-        "description": "Configurez la fréquence de rafraîchissement des données BetaSeries.",
+        "description": "Configurez la fréquence de rafraîchissement des données BetaSeries, la fenêtre du calendrier, et la langue des réponses.",
         "data": {
           "member_scan_interval": "Intervalle de rafraîchissement des données membre (minutes)",
           "planning_scan_interval": "Intervalle de rafraîchissement du planning (minutes)",
           "planning_months_behind": "Mois passés à afficher dans le calendrier",
-          "planning_months_ahead": "Mois futurs à afficher dans le calendrier"
+          "planning_months_ahead": "Mois futurs à afficher dans le calendrier",
+          "locale": "Langue préférée"
         }
       }
     }
   },
   "entity": {
     "sensor": {
-      "episodes_to_watch": { "name": "Épisodes à voir" },
-      "time_to_spend": { "name": "Temps à consacrer" },
-      "progress": { "name": "Progression" },
-      "shows_to_watch": { "name": "Séries à voir" },
-      "movies_to_watch": { "name": "Films à voir" },
-      "shows_current": { "name": "Séries en cours" },
-      "badges": { "name": "Badges" },
-      "shows": { "name": "Séries au total" },
-      "shows_finished": { "name": "Séries terminées" },
-      "episodes": { "name": "Épisodes vus" },
-      "time_on_tv": { "name": "Temps passé" },
-      "movies": { "name": "Films au total" },
-      "xp": { "name": "XP" },
-      "streak_days": { "name": "Jours consécutifs" },
-      "member_since_days": { "name": "Membre depuis" },
-      "episodes_per_month": { "name": "Épisodes par mois" },
-      "favorite_genre": { "name": "Genre préféré" },
-      "next_episode": { "name": "Prochain épisode" },
-      "calendar_event_count": { "name": "Nombre d'évènements du calendrier" }
+      "episodes_to_watch": {
+        "name": "Épisodes à voir"
+      },
+      "time_to_spend": {
+        "name": "Temps à consacrer"
+      },
+      "progress": {
+        "name": "Progression"
+      },
+      "shows_to_watch": {
+        "name": "Séries à voir"
+      },
+      "movies_to_watch": {
+        "name": "Films à voir"
+      },
+      "shows_current": {
+        "name": "Séries en cours"
+      },
+      "badges": {
+        "name": "Badges"
+      },
+      "shows": {
+        "name": "Séries au total"
+      },
+      "shows_finished": {
+        "name": "Séries terminées"
+      },
+      "episodes": {
+        "name": "Épisodes vus"
+      },
+      "time_on_tv": {
+        "name": "Temps passé"
+      },
+      "movies": {
+        "name": "Films au total"
+      },
+      "xp": {
+        "name": "XP"
+      },
+      "streak_days": {
+        "name": "Jours consécutifs"
+      },
+      "member_since_days": {
+        "name": "Membre depuis"
+      },
+      "episodes_per_month": {
+        "name": "Épisodes par mois"
+      },
+      "favorite_genre": {
+        "name": "Genre préféré"
+      },
+      "next_episode": {
+        "name": "Prochain épisode"
+      },
+      "calendar_event_count": {
+        "name": "Nombre d'évènements du calendrier"
+      }
     },
     "binary_sensor": {
-      "new_episode_available": { "name": "Nouvel épisode disponible" },
-      "movies_to_watch_available": { "name": "Film à voir disponible" }
+      "new_episode_available": {
+        "name": "Nouvel épisode disponible"
+      },
+      "movies_to_watch_available": {
+        "name": "Film à voir disponible"
+      }
     },
     "calendar": {
-      "planning": { "name": "Planning" }
+      "planning": {
+        "name": "Planning"
+      }
+    }
+  },
+  "selector": {
+    "locale": {
+      "options": {
+        "fr": "Français",
+        "en": "Anglais"
+      }
     }
   }
 }
