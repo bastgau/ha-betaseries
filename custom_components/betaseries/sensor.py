@@ -177,12 +177,13 @@ def _next_episode_air_datetime(episodes: tuple[PlanningEpisode, ...]) -> datetim
         episodes (tuple[PlanningEpisode, ...]): The planning, sorted by air_date.
 
     Returns:
-        datetime | None: The next episode's air date at local midnight, or None if there is none.
+        datetime | None: The next unseen episode's air date at local midnight, or None if there is none.
 
     """
-    if not episodes:
-        return None
-    return dt_util.start_of_local_day(episodes[0].air_date)
+    for episode in episodes:
+        if not episode.seen:
+            return dt_util.start_of_local_day(episode.air_date)
+    return None
 
 
 NEXT_EPISODE_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(

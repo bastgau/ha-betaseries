@@ -118,6 +118,60 @@ async def test_calendar_event_is_none_when_no_episodes(hass: HomeAssistant) -> N
     assert state.state == "off"
 
 
+async def test_calendar_event_skips_seen_episodes(hass: HomeAssistant) -> None:
+    """Skip already-seen episodes when picking the next event."""
+    seen_episode = PlanningEpisode(
+        id="500",
+        show_id="55",
+        show_title="Example Show",
+        season=3,
+        episode=2,
+        code="S03E02",
+        title="Already Watched",
+        description="",
+        air_date=date(2026, 7, 25),
+        seen=True,
+        platforms=(),
+        resource_url="https://www.betaseries.com/episode/500",
+    )
+    await _setup_entry_with_planning(hass, (seen_episode, EARLIER_EPISODE, LATER_EPISODE))
+
+    state = hass.states.get("calendar.betaseries_test_user_planning")
+    assert state is not None
+    assert state.attributes["message"] == "Example Show - S03E03"
+
+
+async def test_async_get_events_includes_seen_episodes(hass: HomeAssistant) -> None:
+    """Include already-seen episodes when listing events over a range."""
+    seen_episode = PlanningEpisode(
+        id="500",
+        show_id="55",
+        show_title="Example Show",
+        season=3,
+        episode=2,
+        code="S03E02",
+        title="Already Watched",
+        description="",
+        air_date=date(2026, 8, 5),
+        seen=True,
+        platforms=(),
+        resource_url="https://www.betaseries.com/episode/500",
+    )
+    entry = await _setup_entry_with_planning(hass, (seen_episode, EARLIER_EPISODE, LATER_EPISODE))
+
+    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_planning")
+    assert entity is not None
+
+    tz = dt_util.get_default_time_zone()
+    start = datetime(2026, 8, 1, tzinfo=tz)
+    end = datetime(2026, 8, 31, tzinfo=tz)
+    events = await entity.async_get_events(hass, start, end)
+
+    assert {event.uid for event in events} == {"999", "500", "1001"}
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
 async def test_async_get_events_filters_by_range(hass: HomeAssistant) -> None:
     """Return only events overlapping the requested range."""
     entry = await _setup_entry_with_planning(hass, (EARLIER_EPISODE, LATER_EPISODE))

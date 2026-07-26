@@ -14,7 +14,3 @@ API_VERSION = "3.0"
 # BetaSeries returns this numeric code (not the localized text) while the
 # device code has not been validated yet on their website.
 ERROR_CODE_PENDING = 2001
-
-# GET /planning/member supports "unseen" and "month" (YYYY-MM) as query
-# params, combined as an intersection.
-PLANNING_UNSEEN_ONLY = "true"

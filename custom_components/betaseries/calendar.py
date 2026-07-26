@@ -88,15 +88,18 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
             CalendarEvent | None: The earliest unseen episode, or None if there is none.
 
         """
-        episodes = self.coordinator.data
-        if not episodes:
-            return None
-        return _to_calendar_event(episodes[0])
+        for episode in self.coordinator.data:
+            if not episode.seen:
+                return _to_calendar_event(episode)
+        return None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range.
+
+        Includes both seen and unseen episodes, unlike the `event` property
+        (which only surfaces the next unseen one).
 
         Args:
             hass (HomeAssistant): The Home Assistant instance.

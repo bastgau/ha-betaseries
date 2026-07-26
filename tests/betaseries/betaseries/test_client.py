@@ -147,11 +147,14 @@ async def test_fetch_planning_falls_back_to_show_description() -> None:
     assert result[0].description == "A show about tests."
 
 
-async def test_fetch_planning_sends_unseen_and_month_params() -> None:
-    """Send unseen=true and the requested month as query params.
+async def test_fetch_planning_sends_month_param() -> None:
+    """Send the requested month as a query param.
 
-    Both params are verified (via Bruno) to filter strictly server-side on
+    "month" is verified (via Bruno) to filter strictly server-side on
     GET /planning/member, unlike "fields" which that endpoint ignores.
+    Unlike "unseen", it is not passed, so both seen and unseen episodes
+    are returned - filtering by seen is done client-side (calendar.py,
+    sensor.py) so the calendar can show past/watched episodes too.
     """
     session = FakeSession(get_responses=[FakeResponse(200, PLANNING_PAYLOAD)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
@@ -159,7 +162,7 @@ async def test_fetch_planning_sends_unseen_and_month_params() -> None:
     await client.fetch_planning("2026-08")
 
     _args, kwargs = session.get_calls[0]
-    assert kwargs["params"] == {"unseen": "true", "month": "2026-08"}
+    assert kwargs["params"] == {"month": "2026-08"}
 
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])

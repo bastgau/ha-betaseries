@@ -10,7 +10,6 @@ from .const import (
     BASE_URL,
     MEMBERS_INFOS_ENDPOINT,
     PLANNING_MEMBER_ENDPOINT,
-    PLANNING_UNSEEN_ONLY,
 )
 from .exceptions import AuthError, Error
 from .member_data import MemberData
@@ -113,13 +112,13 @@ class Client:
         )
 
     async def fetch_planning(self, month: str) -> tuple[PlanningEpisode, ...]:
-        """Fetch the member's unseen episodes for a given month (GET /planning/member).
+        """Fetch the member's episodes for a given month (GET /planning/member).
 
         Args:
             month (str): Month to fetch the planning for, as "YYYY-MM".
 
         Returns:
-            tuple[PlanningEpisode, ...]: The member's unseen episodes for that month, in API order.
+            tuple[PlanningEpisode, ...]: The member's episodes for that month, in API order.
 
         Raises:
             AuthError: If the access token was rejected (HTTP 401).
@@ -129,7 +128,7 @@ class Client:
         async with self._session.get(
             f"{BASE_URL}{PLANNING_MEMBER_ENDPOINT}",
             headers=self._headers,
-            params={"unseen": PLANNING_UNSEEN_ONLY, "month": month},
+            params={"month": month},
         ) as response:
             if response.status == 401:
                 msg = "Access token was rejected"

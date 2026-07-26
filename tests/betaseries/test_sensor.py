@@ -132,3 +132,50 @@ async def test_next_episode_is_unknown_when_planning_is_empty(hass: HomeAssistan
     state = hass.states.get("sensor.betaseries_test_user_next_episode")
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_next_episode_skips_seen_episodes(hass: HomeAssistant) -> None:
+    """Skip already-seen episodes when picking the next episode's air date."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
+    entry.add_to_hass(hass)
+
+    seen_episode = PlanningEpisode(
+        id="500",
+        show_id="55",
+        show_title="Example Show",
+        season=3,
+        episode=2,
+        code="S03E02",
+        title="Already Watched",
+        description="",
+        air_date=date(2026, 8, 1),
+        seen=True,
+        platforms=(),
+        resource_url="https://www.betaseries.com/episode/500",
+    )
+    unseen_episode = PlanningEpisode(
+        id="1001",
+        show_id="55",
+        show_title="Example Show",
+        season=3,
+        episode=4,
+        code="S03E04",
+        title="The One With The Tests",
+        description="A thrilling episode summary.",
+        air_date=date(2026, 8, 10),
+        seen=False,
+        platforms=("Netflix",),
+        resource_url="https://www.betaseries.com/episode/1001",
+    )
+
+    mock_client = AsyncMock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.side_effect = [(seen_episode, unseen_episode), (), ()]
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.betaseries_test_user_next_episode")
+    assert state is not None
+    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(date(2026, 8, 10))
