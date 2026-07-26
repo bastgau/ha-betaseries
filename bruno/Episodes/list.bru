@@ -1,17 +1,17 @@
 meta {
   name: list
   type: http
-  seq: 1
+  seq: 2
 }
 
 get {
-  url: {{baseUrl}}/episodes/list?showsLimit=1&limit=1
+  url: {{baseUrl}}/episodes/list?showsLimit=5&limit=1
   body: none
   auth: none
 }
 
 params:query {
-  showsLimit: 1
+  showsLimit: 5
   limit: 1
 }
 

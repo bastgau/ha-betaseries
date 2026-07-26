@@ -1,11 +1,11 @@
 meta {
-  name: display
+  name: episodes
   type: http
   seq: 2
 }
 
 get {
-  url: {{baseUrl}}/shows/display
+  url: {{baseUrl}}/pictures/episodes
   body: formUrlEncoded
   auth: none
 }
@@ -17,11 +17,11 @@ headers {
 }
 
 body:form-urlencoded {
-  id: 38605
+  id: 3965192
 }
 
 docs {
-  Display information about a series.
+  Returns a picture of the episode.
 }
 
 example {
