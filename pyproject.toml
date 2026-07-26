@@ -148,3 +148,10 @@ omit = ["tests/*"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
+
+[tool.docstring-linter]
+style = "google"
+select = ["ALL"]
+ignore_placeholder_docstrings = false
+workers = 1
+summary_max_length = 120
