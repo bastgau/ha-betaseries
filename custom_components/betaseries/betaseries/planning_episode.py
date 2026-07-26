@@ -24,6 +24,7 @@ class PlanningEpisode:  # pylint: disable=too-many-instance-attributes
         episode (int): Episode number within the season.
         code (str): Season/episode code (e.g. "S03E04").
         title (str): Episode title.
+        description (str): Episode summary, falling back to the show's summary if empty.
         air_date (date): Date the episode airs/aired.
         seen (bool): Whether the member has already watched this episode.
         platforms (tuple[str, ...]): Streaming platforms this episode is available on.
@@ -38,6 +39,7 @@ class PlanningEpisode:  # pylint: disable=too-many-instance-attributes
     episode: int
     code: str
     title: str
+    description: str
     air_date: date
     seen: bool
     platforms: tuple[str, ...]

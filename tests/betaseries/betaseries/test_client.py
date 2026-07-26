@@ -95,9 +95,10 @@ PLANNING_PAYLOAD = {
             "episode": 4,
             "code": "S03E04",
             "title": "The One With The Tests",
+            "description": "A thrilling episode summary.",
             "date": "2026-08-01",
             "user": {"seen": False},
-            "show": {"id": 55, "title": "Example Show"},
+            "show": {"id": 55, "title": "Example Show", "description": "A show about tests."},
             "platform_links": [{"platform": "Netflix"}, {"platform": "Apple TV"}],
             "resource_url": "https://www.betaseries.com/episode/1001",
         }
@@ -121,10 +122,29 @@ async def test_fetch_planning_success() -> None:
     assert episode.episode == 4
     assert episode.code == "S03E04"
     assert episode.title == "The One With The Tests"
+    assert episode.description == "A thrilling episode summary."
     assert episode.air_date == date(2026, 8, 1)
     assert episode.seen is False
     assert episode.platforms == ("Netflix", "Apple TV")
     assert episode.resource_url == "https://www.betaseries.com/episode/1001"
+
+
+async def test_fetch_planning_falls_back_to_show_description() -> None:
+    """Use the show's description when the episode's own description is empty."""
+    payload = {
+        "episodes": [
+            {
+                **PLANNING_PAYLOAD["episodes"][0],
+                "description": "",
+            }
+        ]
+    }
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_planning("2026-08")
+
+    assert result[0].description == "A show about tests."
 
 
 async def test_fetch_planning_sends_unseen_and_month_params() -> None:

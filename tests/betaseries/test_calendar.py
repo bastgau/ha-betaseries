@@ -28,6 +28,7 @@ EARLIER_EPISODE = PlanningEpisode(
     episode=3,
     code="S03E03",
     title="An Earlier Episode",
+    description="An earlier episode summary.",
     air_date=date(2026, 8, 1),
     seen=False,
     platforms=("Netflix",),
@@ -42,6 +43,7 @@ LATER_EPISODE = PlanningEpisode(
     episode=4,
     code="S03E04",
     title="The One With The Tests",
+    description="A thrilling episode summary.",
     air_date=date(2026, 8, 10),
     seen=False,
     platforms=("Netflix", "Apple TV"),
@@ -131,5 +133,35 @@ async def test_async_get_events_filters_by_range(hass: HomeAssistant) -> None:
     assert len(events) == 1
     assert events[0].summary == "Example Show - S03E04"
     assert events[0].uid == "1001"
+    assert events[0].description == (
+        "The One With The Tests\n\nA thrilling episode summary.\n\n"
+        "Netflix, Apple TV\n\nhttps://www.betaseries.com/episode/1001"
+    )
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_calendar_event_description_without_platforms_or_description(hass: HomeAssistant) -> None:
+    """Omit the summary/platforms lines when neither is known."""
+    episode = PlanningEpisode(
+        id="2002",
+        show_id="55",
+        show_title="Example Show",
+        season=1,
+        episode=1,
+        code="S01E01",
+        title="No Platforms",
+        description="",
+        air_date=date(2026, 8, 1),
+        seen=False,
+        platforms=(),
+        resource_url="https://www.betaseries.com/episode/2002",
+    )
+    entry = await _setup_entry_with_planning(hass, (episode,))
+
+    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_planning")
+    assert entity is not None
+    assert entity.event is not None
+    assert entity.event.description == "No Platforms\n\nhttps://www.betaseries.com/episode/2002"
 
     await hass.config_entries.async_unload(entry.entry_id)

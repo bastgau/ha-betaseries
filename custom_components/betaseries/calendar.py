@@ -51,11 +51,19 @@ def _to_calendar_event(episode: PlanningEpisode) -> CalendarEvent:
         CalendarEvent: The all-day event for this episode.
 
     """
+    platforms = ", ".join(episode.platforms)
+    description_lines = [episode.title]
+    if episode.description:
+        description_lines.append(episode.description)
+    if platforms:
+        description_lines.append(platforms)
+    description_lines.append(episode.resource_url)
+
     return CalendarEvent(
         start=episode.air_date,
         end=episode.air_date + timedelta(days=1),
         summary=f"{episode.show_title} - {episode.code}",
-        description=f"{episode.title}\n\n{episode.resource_url}",
+        description="\n\n".join(description_lines),
         uid=episode.id,
     )
 

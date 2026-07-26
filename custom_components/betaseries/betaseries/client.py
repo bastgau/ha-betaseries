@@ -161,6 +161,7 @@ class Client:
             episode=episode["episode"],
             code=episode["code"],
             title=episode["title"],
+            description=episode["description"] or show["description"],
             air_date=date.fromisoformat(episode["date"]),
             seen=episode["user"]["seen"],
             platforms=tuple(link["platform"] for link in episode["platform_links"]),

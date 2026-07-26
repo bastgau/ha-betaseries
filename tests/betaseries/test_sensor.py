@@ -96,6 +96,7 @@ async def test_next_episode_reflects_earliest_unseen_episode(hass: HomeAssistant
         episode=4,
         code="S03E04",
         title="The One With The Tests",
+        description="A thrilling episode summary.",
         air_date=date(2026, 8, 10),
         seen=False,
         platforms=("Netflix",),
