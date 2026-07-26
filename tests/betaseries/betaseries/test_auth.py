@@ -9,6 +9,7 @@ now requires a stream_writer keyword argument aioresponses does not pass).
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import Any, Self
 from unittest.mock import AsyncMock
 
@@ -45,6 +46,15 @@ class FakeResponse:
 
         """
         return self._payload
+
+    async def text(self) -> str:
+        """Return the raw text body (the payload, JSON-encoded).
+
+        Returns:
+            str: The configured payload, JSON-encoded.
+
+        """
+        return json.dumps(self._payload)
 
     async def __aenter__(self) -> Self:
         """Enter the async context manager.

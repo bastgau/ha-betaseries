@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 from custom_components.betaseries.betaseries.member_data import MemberData
+from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import DOMAIN
 import pytest
@@ -21,10 +22,9 @@ USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-sec
 
 def _member_data(*, episodes_to_watch: int, movies_to_watch: int) -> MemberData:
     return MemberData(
-        id="42",
-        login="test_user",
-        xp=1337,
+        identity=MemberIdentity(id="42", login="test_user"),
         stats=MemberStats(
+            xp=1337,
             episodes_to_watch=episodes_to_watch,
             time_to_spend=540,
             progress=77.4699,

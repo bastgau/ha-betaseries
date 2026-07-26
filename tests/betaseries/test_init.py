@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 from custom_components.betaseries.betaseries.member_data import MemberData
+from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
-from custom_components.betaseries.const import DOMAIN
+from custom_components.betaseries.const import CONF_LOCALE, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -19,10 +20,9 @@ if TYPE_CHECKING:
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret"}
 
 MEMBER_DATA = MemberData(
-    id="42",
-    login="test_user",
-    xp=1337,
+    identity=MemberIdentity(id="42", login="test_user"),
     stats=MemberStats(
+        xp=1337,
         episodes_to_watch=12,
         time_to_spend=540,
         progress=77.4699,
@@ -63,7 +63,48 @@ async def test_setup_entry_creates_coordinator(hass: HomeAssistant) -> None:
     assert isinstance(entry.runtime_data.member, MemberCoordinator)
     assert entry.runtime_data.member.data == MEMBER_DATA
     assert isinstance(entry.runtime_data.planning, PlanningCoordinator)
-    assert entry.runtime_data.planning.data == ()
+    assert not tuple(entry.runtime_data.planning.data)
+
+
+async def test_setup_entry_passes_default_locale_to_client(hass: HomeAssistant) -> None:
+    """Construct the Client with DEFAULT_LOCALE when the entry has no locale option set."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**USER_INPUT, "access_token": "token123"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = AsyncMock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = ()
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client) as mock_client_class:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_client_class.call_args.args[-1] == "fr"
+
+
+async def test_setup_entry_passes_configured_locale_to_client(hass: HomeAssistant) -> None:
+    """Construct the Client with the entry's configured locale option."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**USER_INPUT, "access_token": "token123"},
+        options={CONF_LOCALE: "en"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = AsyncMock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = ()
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client) as mock_client_class:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_client_class.call_args.args[-1] == "en"
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

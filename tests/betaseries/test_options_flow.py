@@ -5,10 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.betaseries.const import (
+    CONF_LOCALE,
     CONF_MEMBER_SCAN_INTERVAL,
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
+    DEFAULT_LOCALE,
     DOMAIN,
 )
 import pytest
@@ -28,6 +30,7 @@ DEFAULT_USER_INPUT = {
     CONF_PLANNING_SCAN_INTERVAL: 60,
     CONF_PLANNING_MONTHS_BEHIND: 2,
     CONF_PLANNING_MONTHS_AHEAD: 2,
+    CONF_LOCALE: DEFAULT_LOCALE,
 }
 
 
@@ -47,7 +50,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-async def test_options_flow_shows_current_defaults(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_options_flow_shows_current_defaults(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:  # pylint: disable=redefined-outer-name
     """Show the form pre-filled with the default scan intervals and months window."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -59,9 +62,10 @@ async def test_options_flow_shows_current_defaults(hass: HomeAssistant, config_e
     assert schema_defaults[CONF_PLANNING_SCAN_INTERVAL] == 60
     assert schema_defaults[CONF_PLANNING_MONTHS_BEHIND] == 2
     assert schema_defaults[CONF_PLANNING_MONTHS_AHEAD] == 2
+    assert schema_defaults[CONF_LOCALE] == DEFAULT_LOCALE
 
 
-async def test_options_flow_updates_intervals(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_options_flow_updates_intervals(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:  # pylint: disable=redefined-outer-name
     """Persist the submitted scan intervals and months window as the entry's options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -70,6 +74,7 @@ async def test_options_flow_updates_intervals(hass: HomeAssistant, config_entry:
         CONF_PLANNING_SCAN_INTERVAL: 120,
         CONF_PLANNING_MONTHS_BEHIND: 3,
         CONF_PLANNING_MONTHS_AHEAD: 1,
+        CONF_LOCALE: "en",
     }
     result = await hass.config_entries.options.async_configure(result["flow_id"], user_input)
     await hass.async_block_till_done()
@@ -78,7 +83,7 @@ async def test_options_flow_updates_intervals(hass: HomeAssistant, config_entry:
     assert config_entry.options == user_input
 
 
-async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:  # pylint: disable=redefined-outer-name
     """Pre-fill the form with previously saved options, not the defaults."""
     hass.config_entries.async_update_entry(
         config_entry,
@@ -87,6 +92,7 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
             CONF_PLANNING_SCAN_INTERVAL: 180,
             CONF_PLANNING_MONTHS_BEHIND: 1,
             CONF_PLANNING_MONTHS_AHEAD: 4,
+            CONF_LOCALE: "en",
         },
     )
 
@@ -98,6 +104,7 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
     assert schema_defaults[CONF_PLANNING_SCAN_INTERVAL] == 180
     assert schema_defaults[CONF_PLANNING_MONTHS_BEHIND] == 1
     assert schema_defaults[CONF_PLANNING_MONTHS_AHEAD] == 4
+    assert schema_defaults[CONF_LOCALE] == "en"
 
 
 @pytest.mark.parametrize(
@@ -111,18 +118,22 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
         (CONF_PLANNING_MONTHS_BEHIND, 13),
         (CONF_PLANNING_MONTHS_AHEAD, -1),
         (CONF_PLANNING_MONTHS_AHEAD, 13),
+        (CONF_LOCALE, "es"),
     ],
 )
 async def test_options_flow_rejects_out_of_range_values(
-    hass: HomeAssistant, config_entry: MockConfigEntry, field: str, value: int
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,  # pylint: disable=redefined-outer-name
+    field: str,
+    value: int | str,
 ) -> None:
-    """Reject scan interval/months window values outside their allowed range.
+    """Reject scan interval/months window values outside their allowed range, and an invalid locale.
 
     Args:
         hass (HomeAssistant): The Home Assistant test instance.
         config_entry (MockConfigEntry): The registered config entry.
         field (str): The option key being tested out of range.
-        value (int): The out-of-range value submitted for that key.
+        value (int | str): The invalid value submitted for that key.
 
     """
     result = await hass.config_entries.options.async_init(config_entry.entry_id)

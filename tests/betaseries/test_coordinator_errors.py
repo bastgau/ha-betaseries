@@ -7,6 +7,7 @@ parametrized here instead of duplicated per coordinator test file.
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
@@ -56,6 +57,45 @@ async def test_auth_error_marks_refresh_failed(
 
     assert coordinator.last_update_success is False
     assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
+
+
+@pytest.mark.parametrize(("coordinator_class", "mocked_method"), COORDINATOR_PARAMS)
+async def test_auth_error_logs_reauth_guidance(
+    hass: HomeAssistant,
+    coordinator_class: Callable[[HomeAssistant, BetaSeriesConfigEntry, AsyncMock], MemberCoordinator],
+    mocked_method: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Log a warning naming the account, the raw BetaSeries error compacted to one line, and reauthentication.
+
+    The client itself never logs (see AuthError's docstring) - it attaches
+    the response's status/body to the exception, and this asserts the
+    coordinator actually surfaces them in its own log line, collapsed to a
+    single line even though BetaSeries pretty-prints its error bodies.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant test instance.
+        coordinator_class (Callable): MemberCoordinator or PlanningCoordinator.
+        mocked_method (str): Name of the client method this coordinator calls.
+        caplog (pytest.LogCaptureFixture): Captures log records emitted during the test.
+
+    """
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="Test Account")
+    entry.add_to_hass(hass)
+    mock_client = AsyncMock()
+    getattr(mock_client, mocked_method).side_effect = AuthError(
+        "Access token was rejected",
+        status=400,
+        body='{\n    "errors": [\n        {\n            "code": 1001,\n            "text": "Mauvaise clé API."\n        }\n    ]\n}',
+    )
+
+    coordinator = coordinator_class(hass, entry, mock_client)
+    with caplog.at_level(logging.WARNING):
+        await coordinator.async_refresh()
+
+    assert "Test Account" in caplog.text
+    assert "reauthentication" in caplog.text
+    assert '{ "errors": [ { "code": 1001, "text": "Mauvaise clé API." } ] }' in caplog.text
 
 
 @pytest.mark.parametrize(("coordinator_class", "mocked_method"), COORDINATOR_PARAMS)

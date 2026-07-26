@@ -21,8 +21,10 @@ from custom_components.betaseries.betaseries.exceptions import (
     AuthTimeoutError,
 )
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
-from custom_components.betaseries.const import DOMAIN
+from custom_components.betaseries.const import CONF_LOCALE, CONF_MEMBER_SCAN_INTERVAL, DOMAIN
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
@@ -33,6 +35,11 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret"}
+# What's actually submitted to the "user" step form - USER_INPUT plus the
+# locale field the form also requires, kept separate so USER_INPUT (used to
+# seed MockConfigEntry.data in reauth tests) stays realistic: entry.data
+# never contains "locale", only entry.options does.
+USER_STEP_INPUT = {**USER_INPUT, CONF_LOCALE: "fr"}
 
 DEVICE_CODE_DATA = DeviceCodeData(
     device_code="device-code",
@@ -54,7 +61,7 @@ async def _start_device_flow(hass: HomeAssistant) -> ConfigFlowResult:
 
     """
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_STEP_INPUT)
 
     if result["type"] is FlowResultType.SHOW_PROGRESS:
         await hass.async_block_till_done()
@@ -87,6 +94,7 @@ async def test_full_flow_success(hass: HomeAssistant, mock_setup_entry: AsyncMoc
         CONF_CLIENT_SECRET: "test-client-secret",
         "access_token": "token123",
     }
+    assert result["options"] == {CONF_LOCALE: "fr"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -140,7 +148,7 @@ async def test_device_code_still_pending_shows_progress(hass: HomeAssistant) -> 
 
     with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
         result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_STEP_INPUT)
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "device_code"
@@ -170,7 +178,7 @@ async def test_device_code_repoll_while_still_pending(hass: HomeAssistant) -> No
 
     with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
         result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_STEP_INPUT)
         assert result["type"] is FlowResultType.SHOW_PROGRESS
 
         # Re-poll before the login task has settled: still the same progress,
@@ -252,7 +260,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,  # noqa: ARG001
 ) -> None:
-    """Update the existing entry's token on a successful reauth.
+    """Update the existing entry's token on a successful reauth, preserving its other options.
 
     Args:
         hass (HomeAssistant): The Home Assistant test instance.
@@ -260,7 +268,12 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
             test from the real setup triggered by the reauth reload.
 
     """
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data={**USER_INPUT, "access_token": "old-token"})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**USER_INPUT, "access_token": "old-token"},
+        options={CONF_MEMBER_SCAN_INTERVAL: 30},
+    )
     entry.add_to_hass(hass)
 
     mock_auth = AsyncMock()
@@ -277,7 +290,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_STEP_INPUT)
         if result["type"] is FlowResultType.SHOW_PROGRESS:
             await hass.async_block_till_done()
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -285,3 +298,78 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data["access_token"] == "new-token"
+    # The locale submitted during reauth is applied, without clobbering
+    # unrelated options already set (async_update_reload_and_abort's
+    # `options=` fully replaces, so config_flow.py must merge manually).
+    assert entry.options == {CONF_MEMBER_SCAN_INTERVAL: 30, CONF_LOCALE: "fr"}
+
+
+async def test_reauth_flow_wrong_account_aborts(  # pylint: disable=unused-argument
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,  # noqa: ARG001
+) -> None:
+    """Abort without touching the entry if reauth completes with a different member id.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant test instance.
+        mock_setup_entry (AsyncMock): Patched async_setup_entry, isolating this
+            test from the real setup triggered by the reauth reload.
+
+    """
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data={**USER_INPUT, "access_token": "old-token"})
+    entry.add_to_hass(hass)
+
+    mock_auth = AsyncMock()
+    mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
+    mock_auth.poll_for_token.return_value = "new-token"
+    mock_auth.fetch_member_identity.return_value = MemberIdentity(id="99", login="a_different_user")
+
+    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+        result = await entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_STEP_INPUT)
+        if result["type"] is FlowResultType.SHOW_PROGRESS:
+            await hass.async_block_till_done()
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.unique_id == "42"
+    assert entry.data["access_token"] == "old-token"
+
+
+async def test_user_step_rejects_invalid_locale(hass: HomeAssistant) -> None:
+    """Reject a locale outside the fr/en SelectSelector options."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+
+    with pytest.raises(vol.Invalid):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**USER_INPUT, CONF_LOCALE: "es"}
+        )
+
+
+async def test_reauth_flow_defaults_locale_to_entrys_current_option(hass: HomeAssistant) -> None:
+    """Pre-fill the reauth form's locale with the entry's current option, not DEFAULT_LOCALE."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**USER_INPUT, "access_token": "old-token"},
+        options={CONF_LOCALE: "en"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    # Not a dict comprehension over every key: api_key/client_secret have no
+    # default (vol.UNDEFINED, not callable), unlike the options-flow schema.
+    locale_key = next(key for key in result["data_schema"].schema if key.schema == CONF_LOCALE)
+    assert locale_key.default() == "en"

@@ -25,11 +25,9 @@ if TYPE_CHECKING:
 class Auth:
     """Handle the BetaSeries OAuth device flow.
 
-    See CLAUDE.md §3 for the verified endpoint contract. Unlike the Tado
-    integration (whose PyTado library polls internally and is synchronous),
-    this client is built directly on aiohttp: polling is native async, and
-    the expires_in guard rail has no library to rely on, so it is
-    implemented here.
+    See CLAUDE.md §3 for the verified endpoint contract. Built directly on
+    aiohttp: polling is native async, and the expires_in guard rail has no
+    underlying library to rely on, so it is implemented here.
 
     Attributes:
         _session (aiohttp.ClientSession): Injected HTTP session.
@@ -140,7 +138,8 @@ class Auth:
     async def fetch_member_identity(self, access_token: str) -> MemberIdentity:
         """Fetch the member id and login (GET /members/infos).
 
-        Used solely to close the config flow.
+        Used solely during initial authentication, once poll_for_token()
+        succeeds, before the full Client (and MemberData) is available.
 
         Args:
             access_token (str): Access token obtained from poll_for_token.

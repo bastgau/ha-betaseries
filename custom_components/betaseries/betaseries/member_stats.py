@@ -7,11 +7,15 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class MemberStats:  # pylint: disable=too-many-instance-attributes
-    """Represent the member.stats object returned by GET /members/infos.
+    """Represent the member's viewing statistics, as returned by GET /members/infos.
 
-    See CLAUDE.md §5 for the sensor spec these fields feed.
+    See CLAUDE.md §5 for the sensor spec these fields feed. Mostly mirrors the
+    member.stats payload object, with one exception: xp is a member-level
+    field in the raw API (a sibling of stats, not nested inside it), grouped
+    in here instead since it is semantically a viewing statistic too.
 
     Attributes:
+        xp (int): Member experience points.
         episodes_to_watch (int): Number of episodes available to watch.
         time_to_spend (int): Minutes left to watch everything pending.
         progress (float): Overall watch progress, in percent.
@@ -31,6 +35,7 @@ class MemberStats:  # pylint: disable=too-many-instance-attributes
 
     """
 
+    xp: int
     episodes_to_watch: int
     time_to_spend: int
     progress: float

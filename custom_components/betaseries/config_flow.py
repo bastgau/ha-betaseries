@@ -28,6 +28,9 @@ from homeassistant.helpers.selector import (
     NumberSelector,  # pyright: ignore[reportUnknownVariableType]
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectSelector,  # pyright: ignore[reportUnknownVariableType]
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 # Aliased: bare "Auth" would be ambiguous next to homeassistant.auth in this file.
@@ -38,10 +41,12 @@ from .betaseries import (
     DeviceCodeData,
 )
 from .const import (
+    CONF_LOCALE,
     CONF_MEMBER_SCAN_INTERVAL,
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
+    DEFAULT_LOCALE,
     DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES,
     DEFAULT_PLANNING_MONTHS_AHEAD,
     DEFAULT_PLANNING_MONTHS_BEHIND,
@@ -55,6 +60,7 @@ from .const import (
     MIN_PLANNING_MONTHS_AHEAD,
     MIN_PLANNING_MONTHS_BEHIND,
     MIN_PLANNING_SCAN_INTERVAL_MINUTES,
+    SUPPORTED_LOCALES,
 )
 
 if TYPE_CHECKING:
@@ -63,12 +69,28 @@ if TYPE_CHECKING:
 
     from homeassistant.config_entries import ConfigEntry
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_CLIENT_SECRET): str,
-    }
-)
+
+def _user_data_schema(default_locale: str) -> vol.Schema:
+    """Build the credentials + locale form schema for the "user" step.
+
+    Args:
+        default_locale (str): Locale pre-selected in the form (DEFAULT_LOCALE, or the entry's current option during reauth).
+
+    Returns:
+        vol.Schema: The "user" step's form schema.
+
+    """
+    return vol.Schema(
+        {
+            vol.Required(CONF_API_KEY): str,
+            vol.Required(CONF_CLIENT_SECRET): str,
+            vol.Required(CONF_LOCALE, default=default_locale): SelectSelector(
+                SelectSelectorConfig(
+                    options=SUPPORTED_LOCALES, mode=SelectSelectorMode.DROPDOWN, translation_key=CONF_LOCALE
+                )
+            ),
+        }
+    )
 
 
 class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -81,6 +103,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
         access_token (str | None): Access token obtained once the device code is validated.
         api_key (str): BetaSeries API key (client_id) entered by the user.
         client_secret (str): BetaSeries API client secret entered by the user.
+        locale (str): Preferred response language ("fr" or "en") selected by the user.
 
     """
 
@@ -90,6 +113,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
     access_token: str | None = None
     api_key: str = ""
     client_secret: str = ""
+    locale: str = DEFAULT_LOCALE
 
     @staticmethod
     @callback
@@ -120,6 +144,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.api_key = user_input[CONF_API_KEY]
             self.client_secret = user_input[CONF_CLIENT_SECRET]
+            self.locale = user_input[CONF_LOCALE]
             self.auth = BetaSeriesAuth(async_get_clientsession(self.hass), self.api_key, self.client_secret)
             try:
                 self.device_code_data = await self.auth.request_device_code()
@@ -128,9 +153,13 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_device_code()
 
+        default_locale = DEFAULT_LOCALE
+        if self.source == SOURCE_REAUTH:
+            default_locale = self._get_reauth_entry().options.get(CONF_LOCALE, DEFAULT_LOCALE)
+
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=_user_data_schema(default_locale),
             errors=errors,
         )
 
@@ -218,10 +247,15 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(self._get_reauth_entry(), data_updates=data)
+            reauth_entry = self._get_reauth_entry()
+            return self.async_update_reload_and_abort(
+                reauth_entry,
+                data_updates=data,
+                options={**reauth_entry.options, CONF_LOCALE: self.locale},
+            )
 
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=identity.login, data=data)
+        return self.async_create_entry(title=identity.login, data=data, options={CONF_LOCALE: self.locale})
 
     async def async_step_timeout(  # pylint: disable=unused-argument
         self, user_input: dict[str, Any] | None = None
@@ -280,10 +314,10 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class BetaSeriesOptionsFlow(OptionsFlowWithReload):
-    """Handle the scan interval options (see CLAUDE.md §6, arbitrage #4)."""
+    """Handle the scan interval, months window and locale options (see CLAUDE.md §6, arbitrage #4)."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Let the user configure the member and planning scan intervals.
+        """Let the user configure the scan intervals, months window and locale.
 
         Args:
             user_input (dict[str, Any] | None): Form data, or None to show the form.
@@ -343,6 +377,14 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                         min=MIN_PLANNING_MONTHS_AHEAD,
                         max=MAX_PLANNING_MONTHS_AHEAD,
                         mode=NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Required(
+                    CONF_LOCALE,
+                    default=self.config_entry.options.get(CONF_LOCALE, DEFAULT_LOCALE),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=SUPPORTED_LOCALES, mode=SelectSelectorMode.DROPDOWN, translation_key=CONF_LOCALE
                     )
                 ),
             }

@@ -6,9 +6,12 @@ from datetime import date
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
+from custom_components.betaseries.betaseries.collection_episode import CollectionEpisode
+from custom_components.betaseries.betaseries.episode import Episode
 from custom_components.betaseries.betaseries.member_data import MemberData
+from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
-from custom_components.betaseries.betaseries.planning_episode import PlanningEpisode
+from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.const import CONF_PLANNING_MONTHS_AHEAD, CONF_PLANNING_MONTHS_BEHIND, DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -24,10 +27,9 @@ if TYPE_CHECKING:
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret", "access_token": "token123"}
 
 MEMBER_DATA = MemberData(
-    id="42",
-    login="test_user",
-    xp=1337,
+    identity=MemberIdentity(id="42", login="test_user"),
     stats=MemberStats(
+        xp=1337,
         episodes_to_watch=12,
         time_to_spend=540,
         progress=77.4699,
@@ -97,12 +99,10 @@ async def test_next_episode_reflects_earliest_unseen_episode(hass: HomeAssistant
     )
     entry.add_to_hass(hass)
 
-    episode = PlanningEpisode(
+    episode = Episode(
         id="1001",
-        show_id="55",
-        show_title="Example Show",
         season=3,
-        episode=4,
+        number=4,
         code="S03E04",
         title="The One With The Tests",
         description="A thrilling episode summary.",
@@ -110,11 +110,16 @@ async def test_next_episode_reflects_earliest_unseen_episode(hass: HomeAssistant
         seen=False,
         platforms=("Netflix",),
         resource_url="https://www.betaseries.com/episode/1001",
+        show=Show(id="55", title="Example Show"),
     )
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
-    mock_client.fetch_planning.side_effect = [(episode,), (), ()]
+    mock_client.fetch_planning.side_effect = [
+        CollectionEpisode((episode,)),
+        CollectionEpisode(()),
+        CollectionEpisode(()),
+    ]
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -132,7 +137,7 @@ async def test_next_episode_is_unknown_when_planning_is_empty(hass: HomeAssistan
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
-    mock_client.fetch_planning.return_value = ()
+    mock_client.fetch_planning.return_value = CollectionEpisode(())
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -154,12 +159,10 @@ async def test_next_episode_skips_seen_episodes(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    seen_episode = PlanningEpisode(
+    seen_episode = Episode(
         id="500",
-        show_id="55",
-        show_title="Example Show",
         season=3,
-        episode=2,
+        number=2,
         code="S03E02",
         title="Already Watched",
         description="",
@@ -167,13 +170,12 @@ async def test_next_episode_skips_seen_episodes(hass: HomeAssistant) -> None:
         seen=True,
         platforms=(),
         resource_url="https://www.betaseries.com/episode/500",
+        show=Show(id="55", title="Example Show"),
     )
-    unseen_episode = PlanningEpisode(
+    unseen_episode = Episode(
         id="1001",
-        show_id="55",
-        show_title="Example Show",
         season=3,
-        episode=4,
+        number=4,
         code="S03E04",
         title="The One With The Tests",
         description="A thrilling episode summary.",
@@ -181,11 +183,16 @@ async def test_next_episode_skips_seen_episodes(hass: HomeAssistant) -> None:
         seen=False,
         platforms=("Netflix",),
         resource_url="https://www.betaseries.com/episode/1001",
+        show=Show(id="55", title="Example Show"),
     )
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
-    mock_client.fetch_planning.side_effect = [(seen_episode, unseen_episode), (), ()]
+    mock_client.fetch_planning.side_effect = [
+        CollectionEpisode((seen_episode, unseen_episode)),
+        CollectionEpisode(()),
+        CollectionEpisode(()),
+    ]
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -203,7 +210,7 @@ async def test_calendar_event_count_disabled_by_default(hass: HomeAssistant) -> 
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
-    mock_client.fetch_planning.return_value = ()
+    mock_client.fetch_planning.return_value = CollectionEpisode(())
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -231,12 +238,10 @@ async def test_calendar_event_count_reports_total_and_breakdown_by_month(
     )
     entry.add_to_hass(hass)
 
-    august_episode_1 = PlanningEpisode(
+    august_episode_1 = Episode(
         id="1001",
-        show_id="55",
-        show_title="Example Show",
         season=3,
-        episode=4,
+        number=4,
         code="S03E04",
         title="Episode A",
         description="",
@@ -244,13 +249,12 @@ async def test_calendar_event_count_reports_total_and_breakdown_by_month(
         seen=False,
         platforms=(),
         resource_url="https://www.betaseries.com/episode/1001",
+        show=Show(id="55", title="Example Show"),
     )
-    august_episode_2 = PlanningEpisode(
+    august_episode_2 = Episode(
         id="1002",
-        show_id="55",
-        show_title="Example Show",
         season=3,
-        episode=5,
+        number=5,
         code="S03E05",
         title="Episode B",
         description="",
@@ -258,13 +262,12 @@ async def test_calendar_event_count_reports_total_and_breakdown_by_month(
         seen=False,
         platforms=(),
         resource_url="https://www.betaseries.com/episode/1002",
+        show=Show(id="55", title="Example Show"),
     )
-    september_episode = PlanningEpisode(
+    september_episode = Episode(
         id="1003",
-        show_id="55",
-        show_title="Example Show",
         season=3,
-        episode=6,
+        number=6,
         code="S03E06",
         title="Episode C",
         description="",
@@ -272,15 +275,16 @@ async def test_calendar_event_count_reports_total_and_breakdown_by_month(
         seen=False,
         platforms=(),
         resource_url="https://www.betaseries.com/episode/1003",
+        show=Show(id="55", title="Example Show"),
     )
 
-    episodes_by_month: dict[str, tuple[PlanningEpisode, ...]] = {
+    episodes_by_month: dict[str, tuple[Episode, ...]] = {
         "2026-08": (august_episode_1, august_episode_2),
         "2026-09": (september_episode,),
     }
 
-    def _fetch_planning(month: str) -> tuple[PlanningEpisode, ...]:
-        return episodes_by_month.get(month, ())
+    def _fetch_planning(month: str) -> CollectionEpisode:
+        return CollectionEpisode(episodes_by_month.get(month, ()))
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
@@ -316,7 +320,7 @@ async def test_calendar_event_count_is_zero_when_planning_is_empty(hass: HomeAss
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
-    mock_client.fetch_planning.return_value = ()
+    mock_client.fetch_planning.return_value = CollectionEpisode(())
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)

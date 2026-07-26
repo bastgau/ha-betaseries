@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .betaseries import MemberData, PlanningEpisode
+    from .betaseries import CollectionEpisode, MemberData
     from .coordinator import BetaSeriesConfigEntry, MemberCoordinator, PlanningCoordinator
 
 type StateType = int | float | str | None
@@ -127,7 +127,7 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
         key="xp",
         translation_key="xp",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.xp,
+        value_fn=lambda data: data.stats.xp,
     ),
     BetaSeriesSensorEntityDescription(
         key="streak_days",
@@ -164,18 +164,18 @@ class BetaSeriesPlanningSensorEntityDescription(SensorEntityDescription):
     """Describe a BetaSeries sensor backed by PlanningCoordinator data.
 
     Attributes:
-        value_fn (Callable[[tuple[PlanningEpisode, ...]], datetime | None]): Extracts this sensor's value.
+        value_fn (Callable[[CollectionEpisode], datetime | None]): Extracts this sensor's value.
 
     """
 
-    value_fn: Callable[[tuple[PlanningEpisode, ...]], datetime | None]
+    value_fn: Callable[[CollectionEpisode], datetime | None]
 
 
-def _next_episode_air_datetime(episodes: tuple[PlanningEpisode, ...]) -> datetime | None:
+def _next_episode_air_datetime(episodes: CollectionEpisode) -> datetime | None:
     """Return the air date of the earliest unseen episode as a local midnight datetime.
 
     Args:
-        episodes (tuple[PlanningEpisode, ...]): The planning, sorted by air_date.
+        episodes (CollectionEpisode): The planning, sorted by air_date.
 
     Returns:
         datetime | None: The next unseen episode's air date at local midnight, or None if there is none.
@@ -203,11 +203,11 @@ CALENDAR_EVENT_COUNT_DESCRIPTION = SensorEntityDescription(
 )
 
 
-def _episode_counts_by_month(episodes: tuple[PlanningEpisode, ...]) -> dict[str, int]:
+def _episode_counts_by_month(episodes: CollectionEpisode) -> dict[str, int]:
     """Count episodes per "YYYY-MM" month.
 
     Args:
-        episodes (tuple[PlanningEpisode, ...]): The planning currently loaded by the coordinator.
+        episodes (CollectionEpisode): The planning currently loaded by the coordinator.
 
     Returns:
         dict[str, int]: Number of episodes for each month present in the planning, sorted by month.

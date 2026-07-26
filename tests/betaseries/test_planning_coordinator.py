@@ -10,12 +10,15 @@ from datetime import date, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
-from custom_components.betaseries.betaseries.planning_episode import PlanningEpisode
+from custom_components.betaseries.betaseries.collection_episode import CollectionEpisode
+from custom_components.betaseries.betaseries.episode import Episode
+from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.const import (
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
     DOMAIN,
+    PLANNING_STORE_KEY_PREFIX,
 )
 from custom_components.betaseries.coordinator import (
     PlanningCoordinator,
@@ -32,12 +35,10 @@ if TYPE_CHECKING:
 
     from homeassistant.core import HomeAssistant
 
-EPISODE = PlanningEpisode(
+EPISODE = Episode(
     id="1001",
-    show_id="55",
-    show_title="Example Show",
     season=3,
-    episode=4,
+    number=4,
     code="S03E04",
     title="The One With The Tests",
     description="A thrilling episode summary.",
@@ -45,6 +46,7 @@ EPISODE = PlanningEpisode(
     seen=False,
     platforms=("Netflix",),
     resource_url="https://www.betaseries.com/episode/1001",
+    show=Show(id="55", title="Example Show", description="A show about tests.", slug="example-show"),
 )
 
 
@@ -115,14 +117,14 @@ async def test_update_success_aggregates_all_months(hass: HomeAssistant) -> None
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)
     mock_client = AsyncMock()
-    mock_client.fetch_planning.return_value = (EPISODE,)
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is True
     # Default: 2 months behind + current + 2 months ahead = 5 fetches.
-    assert coordinator.data == (EPISODE, EPISODE, EPISODE, EPISODE, EPISODE)
+    assert tuple(coordinator.data) == (EPISODE, EPISODE, EPISODE, EPISODE, EPISODE)
     assert mock_client.fetch_planning.await_count == 5
 
 
@@ -142,7 +144,7 @@ async def test_update_success_with_float_months_options(hass: HomeAssistant) -> 
     )
     entry.add_to_hass(hass)
     mock_client = AsyncMock()
-    mock_client.fetch_planning.return_value = (EPISODE,)
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
@@ -154,12 +156,10 @@ async def test_update_success_with_float_months_options(hass: HomeAssistant) -> 
 async def test_update_success_sorts_by_air_date(hass: HomeAssistant) -> None:
     """Sort the aggregated episodes by air_date, regardless of fetch order."""
     later_episode = EPISODE
-    earlier_episode = PlanningEpisode(
+    earlier_episode = Episode(
         id="999",
-        show_id="55",
-        show_title="Example Show",
         season=3,
-        episode=3,
+        number=3,
         code="S03E03",
         title="An Earlier Episode",
         description="An earlier episode summary.",
@@ -167,6 +167,7 @@ async def test_update_success_sorts_by_air_date(hass: HomeAssistant) -> None:
         seen=False,
         platforms=("Netflix",),
         resource_url="https://www.betaseries.com/episode/999",
+        show=Show(id="55", title="Example Show"),
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -175,17 +176,20 @@ async def test_update_success_sorts_by_air_date(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     mock_client = AsyncMock()
-    mock_client.fetch_planning.side_effect = [(later_episode,), (earlier_episode,)]
+    mock_client.fetch_planning.side_effect = [
+        CollectionEpisode((later_episode,)),
+        CollectionEpisode((earlier_episode,)),
+    ]
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
 
-    assert coordinator.data == (earlier_episode, later_episode)
+    assert tuple(coordinator.data) == (earlier_episode, later_episode)
 
 
 async def test_past_months_are_cached_and_not_refetched(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
 ) -> None:
     """Fetch past months once, then reuse the stored copy on subsequent refreshes."""
     entry = MockConfigEntry(
@@ -195,7 +199,7 @@ async def test_past_months_are_cached_and_not_refetched(
     )
     entry.add_to_hass(hass)
     mock_client = AsyncMock()
-    mock_client.fetch_planning.return_value = (EPISODE,)
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
@@ -206,12 +210,12 @@ async def test_past_months_are_cached_and_not_refetched(
 
     # The past month is served from the store: only the current month is re-fetched.
     assert mock_client.fetch_planning.await_count == 1
-    assert coordinator.data == (EPISODE, EPISODE)
+    assert tuple(coordinator.data) == (EPISODE, EPISODE)
 
 
 async def test_past_months_persist_across_coordinator_instances(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
 ) -> None:
     """Persist the cached past months so a new coordinator instance reuses them."""
     entry = MockConfigEntry(
@@ -221,7 +225,7 @@ async def test_past_months_persist_across_coordinator_instances(
     )
     entry.add_to_hass(hass)
     mock_client = AsyncMock()
-    mock_client.fetch_planning.return_value = (EPISODE,)
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     first_coordinator = PlanningCoordinator(hass, entry, mock_client)
     await first_coordinator.async_refresh()
@@ -231,13 +235,13 @@ async def test_past_months_persist_across_coordinator_instances(
     await second_coordinator.async_refresh()
 
     assert mock_client.fetch_planning.await_count == 1  # only the current month
-    assert second_coordinator.data == (EPISODE, EPISODE)
+    assert tuple(second_coordinator.data) == (EPISODE, EPISODE)
 
 
 async def test_cache_prunes_months_that_slid_out_of_window(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
 ) -> None:
     """Drop a cached past month once it slides outside months_behind, even with nothing missing.
 
@@ -253,7 +257,7 @@ async def test_cache_prunes_months_that_slid_out_of_window(
     )
     entry.add_to_hass(hass)
     mock_client = AsyncMock()
-    mock_client.fetch_planning.return_value = (EPISODE,)
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()  # caches 2026-07
@@ -272,3 +276,66 @@ async def test_cache_prunes_months_that_slid_out_of_window(
     stored = await coordinator.store.async_load()
     assert stored is not None
     assert set(stored) == {"2027-07"}
+
+
+async def test_incompatible_cache_version_is_discarded_not_crashed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Discard a cache from an older, incompatible store version instead of crashing.
+
+    Regression test: PLANNING_STORE_VERSION was bumped after Episode's cached
+    dict shape changed ("episode" -> "number" - see coordinator._episode_to_dict).
+    Without _PastMonthsStore's discard-on-migrate, an existing cache from
+    before that rename made _episode_from_dict raise KeyError: 'number',
+    permanently failing PlanningCoordinator's setup for any pre-existing user.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant test instance.
+        freezer (FrozenDateTimeFactory): Time-freezing fixture, for a stable "today".
+        hass_storage (dict[str, Any]): The in-memory Store backing, pre-seeded with old data.
+
+    """
+    freezer.move_to("2026-08-15")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    store_key = f"{PLANNING_STORE_KEY_PREFIX}_{entry.entry_id}"
+    hass_storage[store_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": store_key,
+        "data": {
+            "2026-07": [
+                {
+                    "id": "1001",
+                    "season": 3,
+                    "episode": 4,  # old field name, before the "number" rename
+                    "code": "S03E04",
+                    "title": "Old Cache Shape",
+                    "description": "",
+                    "air_date": "2026-07-15",
+                    "seen": False,
+                    "platforms": [],
+                    "resource_url": "https://www.betaseries.com/episode/1001",
+                    "show_id": "55",
+                    "show_title": "Example Show",
+                }
+            ]
+        },
+    }
+    mock_client = AsyncMock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is True
+    # The incompatible cache is discarded, so both the past and current month
+    # are freshly fetched instead of the past month being served (and crashing).
+    assert mock_client.fetch_planning.await_count == 2
+    assert tuple(coordinator.data) == (EPISODE, EPISODE)

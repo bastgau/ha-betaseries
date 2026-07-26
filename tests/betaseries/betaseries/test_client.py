@@ -7,9 +7,10 @@ using aioresponses.
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 from custom_components.betaseries.betaseries.client import Client
-from custom_components.betaseries.betaseries.exceptions import Error
+from custom_components.betaseries.betaseries.exceptions import AuthError, Error
 import pytest
 
 from .test_auth import FakeResponse, FakeSession
@@ -51,9 +52,9 @@ async def test_fetch_member_data_success() -> None:
 
     result = await client.fetch_member_data()
 
-    assert result.id == "42"
-    assert result.login == "test_user"
-    assert result.xp == 1337
+    assert result.identity.id == "42"
+    assert result.identity.login == "test_user"
+    assert result.stats.xp == 1337
     assert result.stats.episodes_to_watch == 12
     assert result.stats.time_to_spend == 540
     assert result.stats.progress == 77.4699
@@ -72,19 +73,80 @@ async def test_fetch_member_data_success() -> None:
     assert result.stats.favorite_genre == "Drama"
 
 
+async def test_fetch_member_data_sends_default_locale_param() -> None:
+    """Default to "locale": "fr" when no locale is given, matching BetaSeries' own default."""
+    session = FakeSession(get_responses=[FakeResponse(200, MEMBER_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_member_data()
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "fr"}
+
+
+async def test_fetch_member_data_sends_configured_locale_param() -> None:
+    """Send the "locale" query param the client was configured with."""
+    session = FakeSession(get_responses=[FakeResponse(200, MEMBER_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN, "en")  # type: ignore[arg-type]
+
+    await client.fetch_member_data()
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "en"}
+
+
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_member_data_failure(status: int) -> None:
-    """Raise Error when fetching member data fails.
+    """Raise Error, carrying the response's status/body, when fetching member data fails.
+
+    The client itself never logs this - it attaches the response to the
+    exception so the caller (e.g. Home Assistant's coordinator) can.
 
     Args:
         status (int): Non-200 HTTP status returned by the fake response.
 
     """
-    session = FakeSession(get_responses=[FakeResponse(status)])
+    session = FakeSession(get_responses=[FakeResponse(status, {"errors": [{"code": 9999, "text": "boom"}]})])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
-    with pytest.raises(Error):
+    with pytest.raises(Error) as exc_info:
         await client.fetch_member_data()
+
+    assert exc_info.value.status == status
+    assert exc_info.value.body is not None
+    assert "boom" in exc_info.value.body
+
+
+@pytest.mark.parametrize(
+    ("code", "text"),
+    [
+        (1001, "Mauvaise clé API."),
+        (2001, "Données d'identification incorrectes."),
+    ],
+)
+async def test_fetch_member_data_raises_auth_error_on_invalid_credentials(code: int, text: str) -> None:
+    """Raise AuthError on HTTP 400 with either of BetaSeries' "invalid credentials" error codes.
+
+    Both verified in production on this endpoint (HTTP 400, not 401):
+    1001 for a rejected api_key (X-BetaSeries-Key), 2001 for a rejected
+    access token - the latter is the same numeric code as the unrelated
+    device-flow "pending" state (see const.ERROR_CODE_PENDING).
+
+    Args:
+        code (int): The BetaSeries error code returned in the response body.
+        text (str): The corresponding localized error text (unused by the client).
+
+    """
+    payload = {"errors": [{"code": code, "text": text}]}
+    session = FakeSession(get_responses=[FakeResponse(400, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(AuthError) as exc_info:
+        await client.fetch_member_data()
+
+    assert exc_info.value.status == 400
+    assert exc_info.value.body is not None
+    assert str(code) in exc_info.value.body
 
 
 PLANNING_PAYLOAD = {
@@ -98,7 +160,7 @@ PLANNING_PAYLOAD = {
             "description": "A thrilling episode summary.",
             "date": "2026-08-01",
             "user": {"seen": False},
-            "show": {"id": 55, "title": "Example Show", "description": "A show about tests."},
+            "show": {"id": 55, "title": "Example Show", "description": "A show about tests.", "slug": "example-show"},
             "platform_links": [{"platform": "Netflix"}, {"platform": "Apple TV"}],
             "resource_url": "https://www.betaseries.com/episode/1001",
         }
@@ -107,19 +169,23 @@ PLANNING_PAYLOAD = {
 
 
 async def test_fetch_planning_success() -> None:
-    """Return a tuple of PlanningEpisode built from the JSON payload on HTTP 200."""
+    """Return a CollectionEpisode built from the JSON payload on HTTP 200."""
     session = FakeSession(get_responses=[FakeResponse(200, PLANNING_PAYLOAD)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
     result = await client.fetch_planning("2026-08")
 
     assert len(result) == 1
-    episode = result[0]
+    episode = next(iter(result))
+    show = episode.show
     assert episode.id == "1001"
-    assert episode.show_id == "55"
-    assert episode.show_title == "Example Show"
+    assert show.id == "55"
+    assert show.title == "Example Show"
+    assert show.description == "A show about tests."
+    assert show.slug == "example-show"
+    assert show.resource_url == "https://www.betaseries.com/serie/example-show"
     assert episode.season == 3
-    assert episode.episode == 4
+    assert episode.number == 4
     assert episode.code == "S03E04"
     assert episode.title == "The One With The Tests"
     assert episode.description == "A thrilling episode summary."
@@ -129,8 +195,13 @@ async def test_fetch_planning_success() -> None:
     assert episode.resource_url == "https://www.betaseries.com/episode/1001"
 
 
-async def test_fetch_planning_falls_back_to_show_description() -> None:
-    """Use the show's description when the episode's own description is empty."""
+async def test_fetch_planning_keeps_empty_description_as_is() -> None:
+    """Leave the episode's description empty as-is, with no fallback to the show's.
+
+    Not every source of Episode has a show with a description (e.g. GET
+    /shows/episodes' show sub-object doesn't) - so this is left to consumers
+    to handle, not assumed by the client.
+    """
     payload = {
         "episodes": [
             {
@@ -144,7 +215,7 @@ async def test_fetch_planning_falls_back_to_show_description() -> None:
 
     result = await client.fetch_planning("2026-08")
 
-    assert result[0].description == "A show about tests."
+    assert next(iter(result)).description == ""
 
 
 async def test_fetch_planning_sends_month_param() -> None:
@@ -162,7 +233,7 @@ async def test_fetch_planning_sends_month_param() -> None:
     await client.fetch_planning("2026-08")
 
     _args, kwargs = session.get_calls[0]
-    assert kwargs["params"] == {"month": "2026-08"}
+    assert kwargs["params"] == {"locale": "fr", "month": "2026-08"}
 
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
@@ -178,3 +249,398 @@ async def test_fetch_planning_failure(status: int) -> None:
 
     with pytest.raises(Error):
         await client.fetch_planning("2026-08")
+
+
+async def test_fetch_planning_raises_auth_error_on_invalid_credentials() -> None:
+    """Raise AuthError on HTTP 400 with BetaSeries' "invalid credentials" error code."""
+    payload = {"errors": [{"code": 2001, "text": "Données d'identification incorrectes."}]}
+    session = FakeSession(get_responses=[FakeResponse(400, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(AuthError):
+        await client.fetch_planning("2026-08")
+
+
+SHOW_EPISODES_PAYLOAD: dict[str, Any] = {
+    "episodes": [
+        {
+            "id": 303877,
+            "title": "Cool Your Jets",
+            "season": 1,
+            "episode": 1,
+            "code": "S01E01",
+            "description": "The Honor crew welcomes their first group of charter guests.",
+            "date": "2013-07-02",
+            "user": {"seen": False},
+            "show": {"id": 6947, "thetvdb_id": 270205, "title": "Below Deck", "in_account": True},
+            "platform_links": [{"platform": "M6+"}],
+            "resource_url": "https://www.betaseries.com/episode/below-deck/s01e01",
+        },
+        {
+            "id": 303878,
+            "title": "Anchors Aweigh",
+            "season": 1,
+            "episode": 2,
+            "code": "S01E02",
+            "description": "",
+            "date": "2013-07-09",
+            "user": {"seen": True},
+            "show": {"id": 6947, "thetvdb_id": 270205, "title": "Below Deck", "in_account": True},
+            "platform_links": [],
+            "resource_url": "https://www.betaseries.com/episode/below-deck/s01e02",
+        },
+    ],
+    "errors": [],
+}
+
+
+async def test_fetch_show_episodes_success() -> None:
+    """Return a CollectionEpisode built from the JSON payload on HTTP 200.
+
+    Uses a /shows/episodes-shaped show sub-object (id, thetvdb_id, title,
+    in_account - no description, unlike /planning/member's), verified via
+    Bruno (bruno/Shows/show-episodes.bru) to confirm _parse_episode handles it.
+    """
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_EPISODES_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_show_episodes("6947")
+
+    assert len(result) == 2
+    first, second = tuple(result)
+    assert first.id == "303877"
+    assert first.title == "Cool Your Jets"
+    assert first.season == 1
+    assert first.number == 1
+    assert first.code == "S01E01"
+    assert first.seen is False
+    assert first.show.id == "6947"
+    assert first.show.title == "Below Deck"
+    assert first.show.description is None
+    assert first.show.slug is None
+    assert first.show.resource_url is None
+    assert second.id == "303878"
+    assert second.description == ""
+    assert second.seen is True
+
+
+async def test_fetch_show_episodes_sends_id_param() -> None:
+    """Send the requested show id as a query param."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_EPISODES_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_show_episodes("6947")
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "fr", "id": "6947"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_fetch_show_episodes_failure(status: int) -> None:
+    """Raise Error when fetching show episodes fails.
+
+    Args:
+        status (int): Non-200 HTTP status returned by the fake response.
+
+    """
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.fetch_show_episodes("6947")
+
+
+EPISODES_TO_WATCH_PAYLOAD: dict[str, Any] = {
+    "shows": [
+        {
+            "id": 38605,
+            "title": "Achtsam Morden",
+            "remaining": 8,
+            "unseen": [
+                {
+                    "id": 3905073,
+                    "title": "Urlaub",
+                    "season": 2,
+                    "episode": 1,
+                    "show": {"id": 38605, "title": "Achtsam Morden", "poster": "https://pictures.betaseries.com/p.jpg"},
+                    "code": "S02E01",
+                    "description": "Nicole s'embrouille les pinceaux avec ses preuves.",
+                    "date": "2026-05-29",
+                    "user": {"seen": False},
+                    "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e01",
+                    "platform_links": [{"platform": "Netflix"}],
+                }
+            ],
+        },
+        {
+            "id": 6947,
+            "title": "Below Deck",
+            "remaining": 1,
+            "unseen": [
+                {
+                    "id": 303878,
+                    "title": "Anchors Aweigh",
+                    "season": 1,
+                    "episode": 2,
+                    "show": {"id": 6947, "title": "Below Deck", "in_account": True},
+                    "code": "S01E02",
+                    "description": "",
+                    "date": "2013-07-09",
+                    "user": {"seen": False},
+                    "resource_url": "https://www.betaseries.com/episode/below-deck/s01e02",
+                    "platform_links": [],
+                }
+            ],
+        },
+    ],
+    "total": 2,
+    "totalEpisodes": 2,
+    "errors": [],
+}
+
+
+async def test_fetch_episodes_to_watch_success() -> None:
+    """Flatten "shows[].unseen[]" into a single CollectionEpisode, across all shows.
+
+    Verified via Bruno (bruno/Episodes/list.bru) that the payload nests
+    episodes under each show, unlike /planning/member or /shows/episodes.
+    """
+    session = FakeSession(get_responses=[FakeResponse(200, EPISODES_TO_WATCH_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_episodes_to_watch()
+
+    assert len(result) == 2
+    first, second = tuple(result)
+    assert first.id == "3905073"
+    assert first.show.id == "38605"
+    assert first.show.title == "Achtsam Morden"
+    assert second.id == "303878"
+    assert second.show.id == "6947"
+    assert second.show.title == "Below Deck"
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_fetch_episodes_to_watch_failure(status: int) -> None:
+    """Raise Error when fetching episodes to watch fails.
+
+    Args:
+        status (int): Non-200 HTTP status returned by the fake response.
+
+    """
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.fetch_episodes_to_watch()
+
+
+async def test_fetch_episodes_to_watch_by_show_success() -> None:
+    """Keep "shows[].unseen[]" grouped by show, instead of flattening it.
+
+    Same payload as fetch_episodes_to_watch(), but each Show comes back
+    with its own `episodes` already populated.
+    """
+    session = FakeSession(get_responses=[FakeResponse(200, EPISODES_TO_WATCH_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_episodes_to_watch_by_show()
+
+    achtsam_morden = result.for_show("38605")
+    assert achtsam_morden is not None
+    assert achtsam_morden.title == "Achtsam Morden"
+    assert achtsam_morden.episodes is not None
+    assert len(achtsam_morden.episodes) == 1
+    assert next(iter(achtsam_morden.episodes)).id == "3905073"
+
+    below_deck = result.for_show("6947")
+    assert below_deck is not None
+    assert below_deck.episodes is not None
+    assert next(iter(below_deck.episodes)).id == "303878"
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_fetch_episodes_to_watch_by_show_failure(status: int) -> None:
+    """Raise Error when fetching episodes to watch fails.
+
+    Args:
+        status (int): Non-200 HTTP status returned by the fake response.
+
+    """
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.fetch_episodes_to_watch_by_show()
+
+
+SHOW_SINGLE_PAYLOAD: dict[str, Any] = {
+    "show": {
+        "id": 38605,
+        "title": "Achtsam Morden",
+        "description": "Un avocat véreux devient tueur à gages malgré lui.",
+        "slug": "achtsam-morden",
+        "original_title": "Achtsam Morden",
+        "imdb_id": "tt30217222",
+        "themoviedb_id": 252372,
+        "genres": {"Comedy": "Comédie", "Crime": "Crime", "Drama": "Drame", "Thriller": "Thriller"},
+        "showrunners": [{"id": "900934", "name": "Karsten Dusse", "slug": "karsten-dusse", "picture": None}],
+        "aliases": {"114873": "Achtsam Morden", "126382": "Assassino Zen"},
+        "seasons": "2",
+        "followers": "5974",
+        "network": "Netflix",
+        "country": "Allemagne",
+        "originalLanguage": "allemand",
+        "length": "30",
+        "rating": "",
+        "notes": {"total": 164, "mean": 3.89024, "user": 0},
+        "next_trailer": "ZDdijwdg7s8",
+        "resource_url": "https://www.betaseries.com/serie/achtsam-morden",
+        "images": {
+            "show": "https://pictures.betaseries.com/fonds/show/38605_a.jpg",
+            "banner": None,
+            "box": None,
+            "poster": "https://pictures.betaseries.com/fonds/poster/a.jpg",
+        },
+    },
+    "errors": [],
+}
+
+SHOW_MULTIPLE_PAYLOAD: dict[str, Any] = {
+    "shows": [
+        SHOW_SINGLE_PAYLOAD["show"],
+        {
+            "id": 38606,
+            "title": "Das Streben nach Glück",
+            "original_title": "Das Streben nach Glück",
+            "imdb_id": "",
+            "themoviedb_id": 0,
+            "genres": {"Drama": "Drame"},
+            "showrunners": [],
+            "aliases": {"114876": "Das Streben nach Glück"},
+            "seasons": "0",
+            "followers": "0",
+            "network": "",
+            "country": None,
+            "originalLanguage": None,
+            "length": "0",
+            "rating": "",
+            "notes": {"total": 0, "mean": 0, "user": 0},
+            "next_trailer": None,
+            "resource_url": "https://www.betaseries.com/serie/das-streben-nach-gluck",
+            "images": {"show": None, "banner": None, "box": None, "poster": None},
+        },
+    ],
+    "errors": [],
+}
+
+
+async def test_fetch_shows_single_id_success() -> None:
+    """Return a CollectionShow built from the singular "show" key (one id requested).
+
+    Verifies every field of Show and its nested additional_information, including images.
+    """
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_SINGLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605"])
+
+    show = result.for_show("38605")
+    assert show is not None
+    assert show.id == "38605"
+    assert show.title == "Achtsam Morden"
+    assert show.description == "Un avocat véreux devient tueur à gages malgré lui."
+    assert show.slug == "achtsam-morden"
+    assert show.resource_url == "https://www.betaseries.com/serie/achtsam-morden"
+
+    info = show.additional_information
+    assert info is not None
+    assert info.original_title == "Achtsam Morden"
+    assert info.imdb_id == "tt30217222"
+    assert info.themoviedb_id == "252372"
+    assert info.genres == ("Comédie", "Crime", "Drame", "Thriller")
+    assert info.showrunners == ("Karsten Dusse",)
+    assert info.aliases == ("Achtsam Morden", "Assassino Zen")
+    assert info.seasons == 2
+    assert info.followers == 5974
+    assert info.network == "Netflix"
+    assert info.country == "Allemagne"
+    assert info.original_language == "allemand"
+    assert info.length == 30
+    assert info.rating == ""
+    assert info.notes_mean == 3.89024
+    assert info.notes_total == 164
+    assert info.next_trailer == "ZDdijwdg7s8"
+    assert info.resource_url == "https://www.betaseries.com/serie/achtsam-morden"
+    assert info.images.poster == "https://pictures.betaseries.com/fonds/poster/a.jpg"
+
+
+async def test_fetch_shows_multiple_ids_success() -> None:
+    """Return a CollectionShow built from the plural "shows" key (several ids requested)."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_MULTIPLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605", "38606"])
+
+    assert result.for_show("38605") is not None
+    second = result.for_show("38606")
+    assert second is not None
+    assert second.title == "Das Streben nach Glück"
+
+
+async def test_fetch_shows_normalizes_empty_and_zero_ids() -> None:
+    """Normalize an empty imdb_id and a zero themoviedb_id to None, and empty showrunners/genres."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_MULTIPLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605", "38606"])
+
+    info = result.for_show("38606")
+    assert info is not None
+    assert info.description is None
+    assert info.slug is None
+    assert info.additional_information is not None
+    assert info.additional_information.imdb_id is None
+    assert info.additional_information.themoviedb_id is None
+    assert info.additional_information.showrunners == ()
+    assert info.additional_information.country is None
+    assert info.additional_information.original_language is None
+    assert info.additional_information.next_trailer is None
+    assert info.additional_information.seasons == 0
+    assert info.additional_information.followers == 0
+
+
+async def test_fetch_shows_unknown_show_returns_none() -> None:
+    """Return None from for_show() for a show id absent from the response."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_SINGLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605"])
+
+    assert result.for_show("unknown") is None
+
+
+async def test_fetch_shows_sends_comma_joined_ids() -> None:
+    """Join multiple show ids with a comma in the "id" query param."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_MULTIPLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_shows(["38605", "38606"])
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "fr", "id": "38605,38606"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_fetch_shows_failure(status: int) -> None:
+    """Raise Error when fetching shows fails.
+
+    Args:
+        status (int): Non-200 HTTP status returned by the fake response.
+
+    """
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.fetch_shows(["38605"])

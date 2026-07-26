@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .betaseries import PlanningEpisode
+    from .betaseries import Episode
     from .coordinator import BetaSeriesConfigEntry, PlanningCoordinator
 
 CALENDAR_DESCRIPTION = CalendarEntityDescription(key="planning", translation_key="planning")
@@ -41,11 +41,11 @@ async def async_setup_entry(  # pylint: disable=unused-argument
     async_add_entities([BetaSeriesCalendar(entry.runtime_data.planning, CALENDAR_DESCRIPTION)])
 
 
-def _to_calendar_event(episode: PlanningEpisode) -> CalendarEvent:
-    """Build an all-day CalendarEvent from a single PlanningEpisode.
+def _to_calendar_event(episode: Episode) -> CalendarEvent:
+    """Build an all-day CalendarEvent from a single Episode.
 
     Args:
-        episode (PlanningEpisode): The episode to represent as a calendar event.
+        episode (Episode): The episode to represent as a calendar event.
 
     Returns:
         CalendarEvent: The all-day event for this episode.
@@ -53,17 +53,20 @@ def _to_calendar_event(episode: PlanningEpisode) -> CalendarEvent:
     """
     platforms = ", ".join(episode.platforms)
     description_lines = [episode.title]
-    if episode.description:
-        description_lines.append(episode.description)
+    # Fall back to the show's synopsis when the episode has none of its own
+    # (common for not-yet-aired episodes - see bruno/Planning/member.bru).
+    description = episode.description or episode.show.description
+    if description:
+        description_lines.append(description)
     if platforms:
         description_lines.append(platforms)
-    description_lines.append(episode.resource_url)
 
     return CalendarEvent(
         start=episode.air_date,
         end=episode.air_date + timedelta(days=1),
-        summary=f"{episode.show_title} - {episode.code}",
+        summary=f"{episode.show.title} - {episode.code}",
         description="\n\n".join(description_lines),
+        location=episode.resource_url,
         uid=episode.id,
     )
 

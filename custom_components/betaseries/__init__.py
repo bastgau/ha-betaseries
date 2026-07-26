@@ -8,6 +8,7 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .betaseries import Client
+from .const import CONF_LOCALE, DEFAULT_LOCALE
 from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator
 
 if TYPE_CHECKING:
@@ -29,7 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -
         bool: True if setup succeeded.
 
     """
-    client = Client(async_get_clientsession(hass), entry.data[CONF_API_KEY], entry.data["access_token"])
+    client = Client(
+        async_get_clientsession(hass),
+        entry.data[CONF_API_KEY],
+        entry.data["access_token"],
+        entry.options.get(CONF_LOCALE, DEFAULT_LOCALE),
+    )
 
     member_coordinator = MemberCoordinator(hass, entry, client)
     planning_coordinator = PlanningCoordinator(hass, entry, client)

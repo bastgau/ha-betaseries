@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 from custom_components.betaseries.betaseries.member_data import MemberData
+from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import CONF_MEMBER_SCAN_INTERVAL, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator
@@ -20,10 +21,9 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 MEMBER_DATA = MemberData(
-    id="42",
-    login="test_user",
-    xp=1337,
+    identity=MemberIdentity(id="42", login="test_user"),
     stats=MemberStats(
+        xp=1337,
         episodes_to_watch=12,
         time_to_spend=540,
         progress=77.4699,
