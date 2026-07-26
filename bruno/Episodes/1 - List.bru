@@ -1,0 +1,645 @@
+meta {
+  name: 1 - List
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/episodes/list?showsLimit=3&limit=2
+  body: none
+  auth: none
+}
+
+params:query {
+  showsLimit: 3
+  limit: 2
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Fetch the list of episodes to watch, with various filters and pagination options.
+}
+
+example {
+  name: example
+  
+  request: {
+    url: {{baseUrl}}/episodes/list?showsLimit=3&limit=2
+    method: GET
+    mode: none
+    params:query: {
+      showsLimit: 3
+      limit: 2
+    }
+  
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "shows": [
+            {
+              "id": 38605,
+              "thetvdb_id": 417272,
+              "imdb_id": "tt30217222",
+              "title": "Achtsam Morden",
+              "remaining": 8,
+              "unseen": [
+                {
+                  "id": 3905073,
+                  "thetvdb_id": 11603666,
+                  "youtube_id": null,
+                  "title": "Urlaub",
+                  "season": 2,
+                  "episode": 1,
+                  "show": {
+                    "id": 38605,
+                    "thetvdb_id": 417272,
+                    "title": "Achtsam Morden",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/95dec54939de769f220aa9686fc03887.jpg",
+                    "in_account": true,
+                    "remaining": 8,
+                    "minutes_remaining": 272,
+                    "progress": 50,
+                    "status": "Continuing"
+                  },
+                  "code": "S02E01",
+                  "global": 9,
+                  "special": 0,
+                  "description": "Nicole s'embrouille les pinceaux avec ses preuves. Lors de vacances en famille en Autriche, Björn essaie de se détendre, mais un sérieux faux pas révèle qu'il y a encore du boulot.",
+                  "date": "2026-05-29",
+                  "note": {
+                    "total": 43,
+                    "mean": 3.767399999999999860023081055260263383388519287109375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "2",
+                  "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 1862,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2026-05-28",
+                      "date": "1779919200",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/62762471"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 3990372,
+                  "thetvdb_id": 11806146,
+                  "youtube_id": null,
+                  "title": "Realität",
+                  "season": 2,
+                  "episode": 2,
+                  "show": {
+                    "id": 38605,
+                    "thetvdb_id": 417272,
+                    "title": "Achtsam Morden",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/95dec54939de769f220aa9686fc03887.jpg",
+                    "in_account": true,
+                    "remaining": 8,
+                    "minutes_remaining": 272,
+                    "progress": 50,
+                    "status": "Continuing"
+                  },
+                  "code": "S02E02",
+                  "global": 10,
+                  "special": 0,
+                  "description": "Björn orchestre un faux cambriolage à la garderie pour régler un énième problème, mais un message glaçant et la visite surprise d'un groupe de parents compliquent les choses.",
+                  "date": "2026-05-29",
+                  "note": {
+                    "total": 36,
+                    "mean": 3.861099999999999976552089719916693866252899169921875,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 1786,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2026-05-28",
+                      "date": "1779926400",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/62773822"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 26491,
+              "thetvdb_id": 376472,
+              "imdb_id": "tt10795658",
+              "title": "Alice in Borderland (2020)",
+              "remaining": 6,
+              "unseen": [
+                {
+                  "id": 3685365,
+                  "thetvdb_id": 11156503,
+                  "youtube_id": null,
+                  "title": "Episode 1",
+                  "season": 3,
+                  "episode": 1,
+                  "show": {
+                    "id": 26491,
+                    "thetvdb_id": 376472,
+                    "title": "Alice in Borderland (2020)",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/f78eb78b64924c45426d78f4e96ccf90.jpg",
+                    "in_account": true,
+                    "remaining": 6,
+                    "minutes_remaining": 294,
+                    "progress": 72,
+                    "status": "Ended"
+                  },
+                  "code": "S03E01",
+                  "global": 17,
+                  "special": 0,
+                  "description": "De retour dans le monde réel sans aucun souvenir de Borderland, Arisu et Usagi rencontrent Ryuji, un professeur obsédé par les expériences de mort imminente.",
+                  "date": "2025-09-25",
+                  "note": {
+                    "total": 334,
+                    "mean": 3.652699999999999835864628039416857063770294189453125,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "18",
+                  "resource_url": "https://www.betaseries.com/episode/alice-in-borderland-2020/s03e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 15708,
+                  "platform_links": [],
+                  "characters": [
+                    {
+                      "actor": "Kento Yamazaki",
+                      "personId": "82066",
+                      "picture": "https://pictures.betaseries.com/persons/k3o9F4J4rfPXA7YEcpIJkZqREpb.jpg",
+                      "name": "Ryohei Arisu",
+                      "guest": false,
+                      "slug": "kento-yamazaki"
+                    },
+                    {
+                      "actor": "Tao Tsuchiya",
+                      "personId": "1764",
+                      "picture": "https://pictures.betaseries.com/persons/n2665l3bguzDTm5CnyP99ipU9Z0.jpg",
+                      "name": "Yuzuha Usagi",
+                      "guest": false,
+                      "slug": "tao-tsuchiya"
+                    },
+                    {
+                      "actor": "Nijirō Murakami",
+                      "personId": "93442",
+                      "picture": "https://pictures.betaseries.com/persons/ixKuljx33a5JqY28CsdEavflS1b.jpg",
+                      "name": "Chishiya",
+                      "guest": false,
+                      "slug": "nijir-murakami"
+                    },
+                    {
+                      "actor": "Aya Asahina",
+                      "personId": "128616",
+                      "picture": "https://pictures.betaseries.com/persons/zF3la0KvayUV3uACYPiBgCRIQcI.jpg",
+                      "name": "Kuina",
+                      "guest": false,
+                      "slug": "aya-asahina"
+                    }
+                  ]
+                },
+                {
+                  "id": 3689035,
+                  "thetvdb_id": 11167777,
+                  "youtube_id": null,
+                  "title": "Episode 2",
+                  "season": 3,
+                  "episode": 2,
+                  "show": {
+                    "id": 26491,
+                    "thetvdb_id": 376472,
+                    "title": "Alice in Borderland (2020)",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/f78eb78b64924c45426d78f4e96ccf90.jpg",
+                    "in_account": true,
+                    "remaining": 6,
+                    "minutes_remaining": 294,
+                    "progress": 72,
+                    "status": "Ended"
+                  },
+                  "code": "S03E02",
+                  "global": 18,
+                  "special": 0,
+                  "description": "Le premier jeu se déroule dans un sanctuaire. Arisu et les autres joueurs doivent résoudre des problèmes mathématiques de tête avant que tout s'embrase.",
+                  "date": "2025-09-25",
+                  "note": {
+                    "total": 327,
+                    "mean": 3.7644999999999999573674358543939888477325439453125,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "8",
+                  "resource_url": "https://www.betaseries.com/episode/alice-in-borderland-2020/s03e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 15333,
+                  "platform_links": [],
+                  "characters": [
+                    {
+                      "actor": "Kento Yamazaki",
+                      "personId": "82066",
+                      "picture": "https://pictures.betaseries.com/persons/k3o9F4J4rfPXA7YEcpIJkZqREpb.jpg",
+                      "name": "Ryohei Arisu",
+                      "guest": false,
+                      "slug": "kento-yamazaki"
+                    },
+                    {
+                      "actor": "Tao Tsuchiya",
+                      "personId": "1764",
+                      "picture": "https://pictures.betaseries.com/persons/n2665l3bguzDTm5CnyP99ipU9Z0.jpg",
+                      "name": "Yuzuha Usagi",
+                      "guest": false,
+                      "slug": "tao-tsuchiya"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 6947,
+              "thetvdb_id": 270205,
+              "imdb_id": "tt2342499",
+              "title": "Below Deck",
+              "remaining": 188,
+              "unseen": [
+                {
+                  "id": 303877,
+                  "thetvdb_id": 4605188,
+                  "youtube_id": null,
+                  "title": "Cool Your Jets",
+                  "season": 1,
+                  "episode": 1,
+                  "show": {
+                    "id": 6947,
+                    "thetvdb_id": 270205,
+                    "title": "Below Deck",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/74a07c532a8ec34d1939aae829aad0f8.jpg",
+                    "in_account": true,
+                    "remaining": 188,
+                    "minutes_remaining": 8460,
+                    "progress": 0,
+                    "status": "Continuing"
+                  },
+                  "code": "S01E01",
+                  "global": 1,
+                  "special": 0,
+                  "description": "The Honor crew welcomes their first group of charter guests: a gaggle of flamboyant fashion photographers who prove to be a boatload of trouble. Kat makes a shocking discovery that forces her into an agonizing decision; should she rat out the guests and ruin the charter, or risk serious consequences by turning a blind-eye? Adrienne chews out Sam for failing to respect her authority, but Sam refuses to back down and the two stews butt heads.",
+                  "date": "2013-07-02",
+                  "note": {
+                    "total": 5,
+                    "mean": 3.600000000000000088817841970012523233890533447265625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck/s01e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2024-06-04",
+                      "date": "1717459200",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/61014563"
+                    },
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/60235099"
+                    }
+                  ],
+                  "characters": [
+                    {
+                      "actor": "Lee Rosbach",
+                      "personId": "177289",
+                      "picture": "https://pictures.betaseries.com/persons/r5IM6gTba2n2WdxRFCxaZb0FdzJ.jpg",
+                      "name": "Self - Captain",
+                      "guest": false,
+                      "slug": "lee-rosbach"
+                    },
+                    {
+                      "actor": "Aleks Taldykin",
+                      "personId": "133132",
+                      "picture": null,
+                      "name": "Self - First Officer",
+                      "guest": false,
+                      "slug": "aleks-taldykin"
+                    },
+                    {
+                      "actor": "Ben Robinson",
+                      "personId": "131416",
+                      "picture": "https://pictures.betaseries.com/persons/7Rd9GMHauQbMOWI5k2KcB0Ru3hI.jpg",
+                      "name": "Self - Chef",
+                      "guest": false,
+                      "slug": "ben-robinson"
+                    },
+                    {
+                      "actor": "Adrienne Gang",
+                      "personId": "133133",
+                      "picture": null,
+                      "name": "Self - Chief Stewardess",
+                      "guest": false,
+                      "slug": "adrienne-gang"
+                    },
+                    {
+                      "actor": "Kat Held",
+                      "personId": "133134",
+                      "picture": "https://pictures.betaseries.com/persons/qPnyASPMcWxZFbA1StLHsRbCmgu.jpg",
+                      "name": "Self - 2nd Stewardess",
+                      "guest": false,
+                      "slug": "kat-held"
+                    },
+                    {
+                      "actor": "Samantha Orme",
+                      "personId": "133135",
+                      "picture": null,
+                      "name": "Self - 3rd Stewardess",
+                      "guest": false,
+                      "slug": "samantha-orme"
+                    },
+                    {
+                      "actor": "C.J. LeBeau",
+                      "personId": "133136",
+                      "picture": null,
+                      "name": "Self - 2nd Engineer",
+                      "guest": false,
+                      "slug": "cj-lebeau"
+                    },
+                    {
+                      "actor": "Eddie Lucas",
+                      "personId": "175025",
+                      "picture": "https://pictures.betaseries.com/persons/bqPfzhVpNY4y9ViMMogYmnNiPcV.jpg",
+                      "name": "Self - Deckhand",
+                      "guest": false,
+                      "slug": "eddie-lucas"
+                    },
+                    {
+                      "actor": "David Alanson Bradberry",
+                      "personId": "53644",
+                      "picture": "https://pictures.betaseries.com/persons/uWpeqDKXZF4K9bU3Ud1AIAINAyc.jpg",
+                      "name": "Self - Deckhand",
+                      "guest": false,
+                      "slug": "david-alanson-bradberry"
+                    }
+                  ]
+                },
+                {
+                  "id": 303878,
+                  "thetvdb_id": 4605189,
+                  "youtube_id": null,
+                  "title": "It's Not Easy Being Green",
+                  "season": 1,
+                  "episode": 2,
+                  "show": {
+                    "id": 6947,
+                    "thetvdb_id": 270205,
+                    "title": "Below Deck",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/74a07c532a8ec34d1939aae829aad0f8.jpg",
+                    "in_account": true,
+                    "remaining": 188,
+                    "minutes_remaining": 8460,
+                    "progress": 0,
+                    "status": "Continuing"
+                  },
+                  "code": "S01E02",
+                  "global": 2,
+                  "special": 0,
+                  "description": "The crew enjoys a night out, but Kat enjoys a few too many cocktails. Meanwhile, the new charter guests, a wealthy hypnotist and his friends, come aboard and their special dietary demands tax the crew to the breaking point. After driving Kat and Sam especially hard, the uptight Adrienne agrees to a hypnotherapy session that will hopefully chill her out.",
+                  "date": "2013-07-09",
+                  "note": {
+                    "total": 6,
+                    "mean": 3.166700000000000070343730840249918401241302490234375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck/s01e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2024-06-04",
+                      "date": "1717459200",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/61014564"
+                    },
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/60249539"
+                    }
+                  ],
+                  "characters": [
+                    {
+                      "actor": "Lee Rosbach",
+                      "personId": "177289",
+                      "picture": "https://pictures.betaseries.com/persons/r5IM6gTba2n2WdxRFCxaZb0FdzJ.jpg",
+                      "name": "Self - Captain",
+                      "guest": false,
+                      "slug": "lee-rosbach"
+                    },
+                    {
+                      "actor": "Aleks Taldykin",
+                      "personId": "133132",
+                      "picture": null,
+                      "name": "Self - First Officer",
+                      "guest": false,
+                      "slug": "aleks-taldykin"
+                    },
+                    {
+                      "actor": "Ben Robinson",
+                      "personId": "131416",
+                      "picture": "https://pictures.betaseries.com/persons/7Rd9GMHauQbMOWI5k2KcB0Ru3hI.jpg",
+                      "name": "Self - Chef",
+                      "guest": false,
+                      "slug": "ben-robinson"
+                    },
+                    {
+                      "actor": "Adrienne Gang",
+                      "personId": "133133",
+                      "picture": null,
+                      "name": "Self - Chief Stewardess",
+                      "guest": false,
+                      "slug": "adrienne-gang"
+                    },
+                    {
+                      "actor": "Kat Held",
+                      "personId": "133134",
+                      "picture": "https://pictures.betaseries.com/persons/qPnyASPMcWxZFbA1StLHsRbCmgu.jpg",
+                      "name": "Self - 2nd Stewardess",
+                      "guest": false,
+                      "slug": "kat-held"
+                    },
+                    {
+                      "actor": "Samantha Orme",
+                      "personId": "133135",
+                      "picture": null,
+                      "name": "Self - 3rd Stewardess",
+                      "guest": false,
+                      "slug": "samantha-orme"
+                    },
+                    {
+                      "actor": "C.J. LeBeau",
+                      "personId": "133136",
+                      "picture": null,
+                      "name": "Self - 2nd Engineer",
+                      "guest": false,
+                      "slug": "cj-lebeau"
+                    },
+                    {
+                      "actor": "Eddie Lucas",
+                      "personId": "175025",
+                      "picture": "https://pictures.betaseries.com/persons/bqPfzhVpNY4y9ViMMogYmnNiPcV.jpg",
+                      "name": "Self - Deckhand",
+                      "guest": false,
+                      "slug": "eddie-lucas"
+                    },
+                    {
+                      "actor": "David Alanson Bradberry",
+                      "personId": "53644",
+                      "picture": "https://pictures.betaseries.com/persons/uWpeqDKXZF4K9bU3Ud1AIAINAyc.jpg",
+                      "name": "Self - Deckhand",
+                      "guest": false,
+                      "slug": "david-alanson-bradberry"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "total": 37,
+          "totalEpisodes": 852,
+          "totalMissingShows": 0,
+          "totalMissingEpisodes": 0,
+          "errors": []
+        }
+      '''
+    }
+  }
+}

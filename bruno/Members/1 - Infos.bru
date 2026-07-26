@@ -1,0 +1,134 @@
+meta {
+  name: 1 - Infos
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/members/infos
+  body: none
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Returns information of a member, defaulting to the identified member. Use movies/member to retrieve movies and shows/member for series.
+}
+
+example {
+  name: example
+  
+  request: {
+    url: {{baseUrl}}/members/infos
+    method: GET
+    mode: none
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: private, must-revalidate
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "member": {
+            "id": 278876,
+            "fb_id": 0,
+            "login": "bastgau",
+            "xp": 5960,
+            "locale": "fr",
+            "cached": 1784849688,
+            "avatar": "https://img.betaseries.com/mHwGeX9K-jSnKgMeo1Fcn_wcUVc=/250x250/smart/https%3A%2F%2Fpictures.betaseries.com%2Favatars%2Ff1%2Ff10e38dd681a316c6b891f4cdf77ad30.jpg",
+            "profile_banner": "https://pictures.betaseries.com/fonds/members/ed9b64ebb941011c30157c071d2588a9.jpg?v=4a553e4dd3c6f0b2aba54b5f67b7d9ca",
+            "in_account": true,
+            "is_private": false,
+            "is_blocked": false,
+            "is_admin": false,
+            "premium": false,
+            "subscription": 2013,
+            "valid_email": true,
+            "screeners": [],
+            "twitterLogin": null,
+            "stats": {
+              "friends": 0,
+              "shows": 143,
+              "seasons": 260,
+              "episodes": 2927,
+              "comments": 0,
+              "progress": 77.4500000000000028421709430404007434844970703125,
+              "episodes_to_watch": 852,
+              "time_on_tv": 132595,
+              "time_to_spend": 38337,
+              "movies": 24,
+              "badges": 40,
+              "member_since_days": 4710,
+              "friends_of_friends": 0,
+              "episodes_per_month": 19,
+              "favorite_day": "dimanche",
+              "five_stars_percent": 58.61999999999999744204615126363933086395263671875,
+              "four-five_stars_total": 53,
+              "streak_days": 4,
+              "favorite_genre": "Drame",
+              "written_words": 0,
+              "without_days": 373,
+              "shows_finished": 66,
+              "shows_current": 31,
+              "shows_to_watch": 15,
+              "shows_abandoned": 31,
+              "movies_to_watch": 0,
+              "time_on_movies": 2489,
+              "time_to_spend_movies": 0,
+              "episodes_rewatch": 0,
+              "seasons_rewatch": 0,
+              "time_rewatch": 0,
+              "movies_rewatch": 0,
+              "movie_time_rewatch": 0
+            },
+            "options": {
+              "downloaded": true,
+              "notation": false,
+              "timelag": true,
+              "global": false,
+              "specials": false,
+              "profil": false,
+              "episodes_tri": "nom",
+              "friendship": "open",
+              "country": "fr",
+              "language": "original",
+              "mail_mois": false,
+              "mail_hebdo": false,
+              "notification_news": false,
+              "twitter_auto": false,
+              "comment_language": "site_locale",
+              "display_shows": "grid",
+              "display_movies": "grid",
+              "only_svod": true
+            }
+          },
+          "errors": []
+        }
+      '''
+    }
+  }
+}

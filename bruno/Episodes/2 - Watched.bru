@@ -1,7 +1,7 @@
 meta {
-  name: episodes-watched POST (mark seen)
+  name: 2 - Watched
   type: http
-  seq: 4
+  seq: 2
 }
 
 post {
@@ -20,11 +20,6 @@ body:form-urlencoded {
   id: {{episodeId}}
 }
 
-vars:pre-request {
-  baseUrl: https://api.betaseries.com
-}
-
 docs {
-  VERIFY #1: confirm POST exists + exact param(s) (id? bulk? note?).
-  Use a throwaway episode; DELETE /episodes/watched (verified) can revert.
+  Mark one or more episodes as watched, with options to specify multiple episodes, bulk marking, and deletion of future episode marks.
 }

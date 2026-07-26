@@ -1,7 +1,7 @@
 meta {
-  name: episodes-note POST (rate episode)
+  name: 3 - Note
   type: http
-  seq: 7
+  seq: 3
 }
 
 post {
@@ -21,10 +21,6 @@ body:form-urlencoded {
   note: 4
 }
 
-vars:pre-request {
-  baseUrl: https://api.betaseries.com
-}
-
 docs {
-  Verified endpoint. Included to confirm the note param name/range in practice.
+  Rate an episode with a score from 1 to 5.
 }

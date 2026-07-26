@@ -1,7 +1,7 @@
 meta {
-  name: seasons-watched POST (mark season)
+  name: 1 - Watched
   type: http
-  seq: 5
+  seq: 1
 }
 
 post {
@@ -21,10 +21,6 @@ body:form-urlencoded {
   season: {{seasonNumber}}
 }
 
-vars:pre-request {
-  baseUrl: https://api.betaseries.com
-}
-
 docs {
-  VERIFY #2: exact params (id = show id? + season number?).
+  Mark all episodes of a season as watched. Skips already watched episodes.
 }

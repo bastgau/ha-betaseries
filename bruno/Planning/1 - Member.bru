@@ -1,0 +1,1990 @@
+meta {
+  name: 1 - Member
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/planning/member?unseen=true&month=2026-08
+  body: none
+  auth: none
+}
+
+params:query {
+  unseen: true
+  month: 2026-08
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+vars:pre-request {
+  month: 2026-08
+}
+
+docs {
+  Display the schedule of the identified member or another member.
+}
+
+example {
+  name: example
+  
+  request: {
+    url: {{baseUrl}}/planning/member?unseen=true&month=2026-08
+    method: GET
+    mode: none
+    params:query: {
+      unseen: true
+      month: 2026-08
+    }
+  
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+  
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+  
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: json
+      content: '''
+        {
+          "episodes": [
+            {
+              "id": 3965198,
+              "thetvdb_id": 11751884,
+              "youtube_id": null,
+              "title": "The Drive",
+              "season": 3,
+              "episode": 6,
+              "show": {
+                "id": 29029,
+                "thetvdb_id": 403245,
+                "title": "Silo",
+                "in_account": true,
+                "slug": "wool",
+                "creation": "2023",
+                "status": "Continuing",
+                "description": "Dans un monde futur dévasté et toxique, des milliers de survivants habitent un gigantesque silo souterrain. Après la transgression d'une règle d'or par leur shérif et la mort mystérieuse de plusieurs résidents, Juliette, une mécanicienne, perce peu à peu les terribles secrets du Silo."
+              },
+              "code": "S03E06",
+              "global": 26,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-07",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784997653",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/wool/s03e06",
+              "subtitles": [],
+              "seen_total": 22,
+              "platform_links": [
+                {
+                  "platform_id": "255",
+                  "platform": "Apple TV",
+                  "color": "#2F2F2F",
+                  "type": "svod",
+                  "day": "2026-08-07",
+                  "date": "1786060800",
+                  "logo": "https://pictures.betaseries.com/platforms/255.jpg",
+                  "link": "https://www.betaseries.com/link/62768945"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-07",
+                    "platform_id": "255",
+                    "date": "1786060800",
+                    "name": "Apple TV",
+                    "logo": "https://pictures.betaseries.com/platforms/255.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Rebecca Ferguson",
+                  "personId": "61183",
+                  "picture": "https://pictures.betaseries.com/persons/ty8ZPzaCBBlqIr5qzpOXI24iC8j.jpg",
+                  "name": "Juliette Nichols",
+                  "guest": false,
+                  "slug": "rebecca-ferguson"
+                },
+                {
+                  "actor": "Common",
+                  "personId": "25891",
+                  "picture": "https://pictures.betaseries.com/persons/eggJAnJxpn8wYraX7ea5svETB54.jpg",
+                  "name": "Robert Sims",
+                  "guest": false,
+                  "slug": "common"
+                },
+                {
+                  "actor": "Harriet Walter",
+                  "personId": "6345",
+                  "picture": "https://pictures.betaseries.com/persons/vH8JrqdHaoFeGos44XeKTNuQMKE.jpg",
+                  "name": "Martha Walker",
+                  "guest": false,
+                  "slug": "harriet-walter"
+                },
+                {
+                  "actor": "Chinaza Uche",
+                  "personId": "86651",
+                  "picture": "https://pictures.betaseries.com/persons/5fbbLI9BPiByyIIRYu9pbRQwyUN.jpg",
+                  "name": "Paul Billings",
+                  "guest": false,
+                  "slug": "chinaza-uche"
+                },
+                {
+                  "actor": "Avi Nash",
+                  "personId": "25446",
+                  "picture": "https://pictures.betaseries.com/persons/xmdcJQVhrnFdTv9KkrU3EnBWFfV.jpg",
+                  "name": "Lukas Kyle",
+                  "guest": false,
+                  "slug": "avi-nash"
+                },
+                {
+                  "actor": "Rick Gomez",
+                  "personId": "45765",
+                  "picture": "https://pictures.betaseries.com/persons/gmVYPHJgmRVIzhaVYMns4kgBVqm.jpg",
+                  "name": "Patrick Kennedy",
+                  "guest": false,
+                  "slug": "rick-gomez"
+                },
+                {
+                  "actor": "Tim Robbins",
+                  "personId": "25475",
+                  "picture": "https://pictures.betaseries.com/persons/3FfJMIVwXgsIXbAT8ECBSZJAncR.jpg",
+                  "name": "Bernard Holland",
+                  "guest": false,
+                  "slug": "tim-robbins"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 3965199,
+              "thetvdb_id": 11751885,
+              "youtube_id": null,
+              "title": "Radio",
+              "season": 3,
+              "episode": 7,
+              "show": {
+                "id": 29029,
+                "thetvdb_id": 403245,
+                "title": "Silo",
+                "in_account": true,
+                "slug": "wool",
+                "creation": "2023",
+                "status": "Continuing",
+                "description": "Dans un monde futur dévasté et toxique, des milliers de survivants habitent un gigantesque silo souterrain. Après la transgression d'une règle d'or par leur shérif et la mort mystérieuse de plusieurs résidents, Juliette, une mécanicienne, perce peu à peu les terribles secrets du Silo."
+              },
+              "code": "S03E07",
+              "global": 27,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-14",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784923796",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/wool/s03e07",
+              "subtitles": [],
+              "seen_total": 20,
+              "platform_links": [
+                {
+                  "platform_id": "255",
+                  "platform": "Apple TV",
+                  "color": "#2F2F2F",
+                  "type": "svod",
+                  "day": "2026-08-14",
+                  "date": "1786665600",
+                  "logo": "https://pictures.betaseries.com/platforms/255.jpg",
+                  "link": "https://www.betaseries.com/link/62768946"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-14",
+                    "platform_id": "255",
+                    "date": "1786665600",
+                    "name": "Apple TV",
+                    "logo": "https://pictures.betaseries.com/platforms/255.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Rebecca Ferguson",
+                  "personId": "61183",
+                  "picture": "https://pictures.betaseries.com/persons/ty8ZPzaCBBlqIr5qzpOXI24iC8j.jpg",
+                  "name": "Juliette Nichols",
+                  "guest": false,
+                  "slug": "rebecca-ferguson"
+                },
+                {
+                  "actor": "Common",
+                  "personId": "25891",
+                  "picture": "https://pictures.betaseries.com/persons/eggJAnJxpn8wYraX7ea5svETB54.jpg",
+                  "name": "Robert Sims",
+                  "guest": false,
+                  "slug": "common"
+                },
+                {
+                  "actor": "Harriet Walter",
+                  "personId": "6345",
+                  "picture": "https://pictures.betaseries.com/persons/vH8JrqdHaoFeGos44XeKTNuQMKE.jpg",
+                  "name": "Martha Walker",
+                  "guest": false,
+                  "slug": "harriet-walter"
+                },
+                {
+                  "actor": "Chinaza Uche",
+                  "personId": "86651",
+                  "picture": "https://pictures.betaseries.com/persons/5fbbLI9BPiByyIIRYu9pbRQwyUN.jpg",
+                  "name": "Paul Billings",
+                  "guest": false,
+                  "slug": "chinaza-uche"
+                },
+                {
+                  "actor": "Avi Nash",
+                  "personId": "25446",
+                  "picture": "https://pictures.betaseries.com/persons/xmdcJQVhrnFdTv9KkrU3EnBWFfV.jpg",
+                  "name": "Lukas Kyle",
+                  "guest": false,
+                  "slug": "avi-nash"
+                },
+                {
+                  "actor": "Rick Gomez",
+                  "personId": "45765",
+                  "picture": "https://pictures.betaseries.com/persons/gmVYPHJgmRVIzhaVYMns4kgBVqm.jpg",
+                  "name": "Patrick Kennedy",
+                  "guest": false,
+                  "slug": "rick-gomez"
+                },
+                {
+                  "actor": "Tim Robbins",
+                  "personId": "25475",
+                  "picture": "https://pictures.betaseries.com/persons/3FfJMIVwXgsIXbAT8ECBSZJAncR.jpg",
+                  "name": "Bernard Holland",
+                  "guest": false,
+                  "slug": "tim-robbins"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4003709,
+              "thetvdb_id": 10875288,
+              "youtube_id": null,
+              "title": "TBD",
+              "season": 5,
+              "episode": 1,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E01",
+              "global": 41,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784909033",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e01",
+              "subtitles": [],
+              "seen_total": 817,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838032"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006357,
+              "thetvdb_id": 11859876,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 2,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E02",
+              "global": 42,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784934676",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e02",
+              "subtitles": [],
+              "seen_total": 706,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838033"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006358,
+              "thetvdb_id": 11859877,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 3,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E03",
+              "global": 43,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784959062",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e03",
+              "subtitles": [],
+              "seen_total": 624,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838034"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006359,
+              "thetvdb_id": 11859878,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 4,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E04",
+              "global": 44,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784952561",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e04",
+              "subtitles": [],
+              "seen_total": 528,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838035"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006360,
+              "thetvdb_id": 11859879,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 5,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E05",
+              "global": 45,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784934676",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e05",
+              "subtitles": [],
+              "seen_total": 462,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838036"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006361,
+              "thetvdb_id": 11859880,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 6,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E06",
+              "global": 46,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784930336",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e06",
+              "subtitles": [],
+              "seen_total": 395,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838037"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006362,
+              "thetvdb_id": 11859881,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 7,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E07",
+              "global": 47,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784930336",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e07",
+              "subtitles": [],
+              "seen_total": 313,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838038"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006363,
+              "thetvdb_id": 11859882,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 8,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E08",
+              "global": 48,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784918866",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e08",
+              "subtitles": [],
+              "seen_total": 274,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838039"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006364,
+              "thetvdb_id": 11859883,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 9,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E09",
+              "global": 49,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784952561",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e09",
+              "subtitles": [],
+              "seen_total": 230,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838040"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 4006365,
+              "thetvdb_id": 11859884,
+              "youtube_id": null,
+              "title": "TBA",
+              "season": 5,
+              "episode": 10,
+              "show": {
+                "id": 24039,
+                "thetvdb_id": 379169,
+                "title": "Outer Banks",
+                "in_account": true,
+                "slug": "outer-banks",
+                "creation": "2020",
+                "status": "Continuing",
+                "description": "Sur une île où les inégalités sont accentuées, John B recrute ses trois meilleurs amis pour partir à la recherche d'un trésor légendaire lié à la disparition de son père."
+              },
+              "code": "S05E10",
+              "global": 50,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-20",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784952561",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/outer-banks/s05e10",
+              "subtitles": [],
+              "seen_total": 197,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-08-20",
+                  "date": "1787184000",
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62838041"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-20",
+                    "platform_id": "1",
+                    "date": "1787184000",
+                    "name": "Netflix",
+                    "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Chase Stokes",
+                  "personId": "65269",
+                  "picture": "https://pictures.betaseries.com/persons/a9w81CDv6PQfeUdLFDgeOFpoU5T.jpg",
+                  "name": "John B. Routledge",
+                  "guest": false,
+                  "slug": "chase-stokes"
+                },
+                {
+                  "actor": "Madelyn Cline",
+                  "personId": "17308",
+                  "picture": "https://pictures.betaseries.com/persons/6bFItWARGJFRrkhBaZtvLJf6VRQ.jpg",
+                  "name": "Sarah Cameron",
+                  "guest": false,
+                  "slug": "madelyn-cline"
+                },
+                {
+                  "actor": "Madison Bailey",
+                  "personId": "1808",
+                  "picture": "https://pictures.betaseries.com/persons/a2NvQxbnwePDG8TtnK88u4wXVyh.jpg",
+                  "name": "Kiara Carrera",
+                  "guest": false,
+                  "slug": "madison-bailey"
+                },
+                {
+                  "actor": "Jonathan Daviss",
+                  "personId": "65271",
+                  "picture": "https://pictures.betaseries.com/persons/3Km5u8dh7BwkdhNd9E3zlpJhEps.jpg",
+                  "name": "Pope Heyward",
+                  "guest": false,
+                  "slug": "jonathan-daviss"
+                },
+                {
+                  "actor": "Carlacia Grant",
+                  "personId": "101319",
+                  "picture": "https://pictures.betaseries.com/persons/mNxKOXg9MIoZwsQRjxMzXqBHGxY.jpg",
+                  "name": "Cleo",
+                  "guest": false,
+                  "slug": "carlacia-grant"
+                },
+                {
+                  "actor": "Drew Starkey",
+                  "personId": "10746",
+                  "picture": "https://pictures.betaseries.com/persons/gD3YIM3Yinc3v6Qg7dvRRKXzAyw.jpg",
+                  "name": "Rafe Cameron",
+                  "guest": false,
+                  "slug": "drew-starkey"
+                },
+                {
+                  "actor": "J Anthony Crane",
+                  "personId": "112581",
+                  "picture": null,
+                  "name": "Jonathan Groff",
+                  "guest": false,
+                  "slug": "j-anthony-crane"
+                },
+                {
+                  "actor": "Cullen Moss",
+                  "personId": "25221",
+                  "picture": "https://pictures.betaseries.com/persons/zjVvER4Bg4mz38u2JQfLgypYrSP.jpg",
+                  "name": "Sheriff Shoupe",
+                  "guest": false,
+                  "slug": "cullen-moss"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 3965200,
+              "thetvdb_id": 11751886,
+              "youtube_id": null,
+              "title": "Gray Goo",
+              "season": 3,
+              "episode": 8,
+              "show": {
+                "id": 29029,
+                "thetvdb_id": 403245,
+                "title": "Silo",
+                "in_account": true,
+                "slug": "wool",
+                "creation": "2023",
+                "status": "Continuing",
+                "description": "Dans un monde futur dévasté et toxique, des milliers de survivants habitent un gigantesque silo souterrain. Après la transgression d'une règle d'or par leur shérif et la mort mystérieuse de plusieurs résidents, Juliette, une mécanicienne, perce peu à peu les terribles secrets du Silo."
+              },
+              "code": "S03E08",
+              "global": 28,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-21",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784995193",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/wool/s03e08",
+              "subtitles": [],
+              "seen_total": 19,
+              "platform_links": [
+                {
+                  "platform_id": "255",
+                  "platform": "Apple TV",
+                  "color": "#2F2F2F",
+                  "type": "svod",
+                  "day": "2026-08-21",
+                  "date": "1787270400",
+                  "logo": "https://pictures.betaseries.com/platforms/255.jpg",
+                  "link": "https://www.betaseries.com/link/62768947"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-21",
+                    "platform_id": "255",
+                    "date": "1787270400",
+                    "name": "Apple TV",
+                    "logo": "https://pictures.betaseries.com/platforms/255.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Rebecca Ferguson",
+                  "personId": "61183",
+                  "picture": "https://pictures.betaseries.com/persons/ty8ZPzaCBBlqIr5qzpOXI24iC8j.jpg",
+                  "name": "Juliette Nichols",
+                  "guest": false,
+                  "slug": "rebecca-ferguson"
+                },
+                {
+                  "actor": "Common",
+                  "personId": "25891",
+                  "picture": "https://pictures.betaseries.com/persons/eggJAnJxpn8wYraX7ea5svETB54.jpg",
+                  "name": "Robert Sims",
+                  "guest": false,
+                  "slug": "common"
+                },
+                {
+                  "actor": "Harriet Walter",
+                  "personId": "6345",
+                  "picture": "https://pictures.betaseries.com/persons/vH8JrqdHaoFeGos44XeKTNuQMKE.jpg",
+                  "name": "Martha Walker",
+                  "guest": false,
+                  "slug": "harriet-walter"
+                },
+                {
+                  "actor": "Chinaza Uche",
+                  "personId": "86651",
+                  "picture": "https://pictures.betaseries.com/persons/5fbbLI9BPiByyIIRYu9pbRQwyUN.jpg",
+                  "name": "Paul Billings",
+                  "guest": false,
+                  "slug": "chinaza-uche"
+                },
+                {
+                  "actor": "Avi Nash",
+                  "personId": "25446",
+                  "picture": "https://pictures.betaseries.com/persons/xmdcJQVhrnFdTv9KkrU3EnBWFfV.jpg",
+                  "name": "Lukas Kyle",
+                  "guest": false,
+                  "slug": "avi-nash"
+                },
+                {
+                  "actor": "Rick Gomez",
+                  "personId": "45765",
+                  "picture": "https://pictures.betaseries.com/persons/gmVYPHJgmRVIzhaVYMns4kgBVqm.jpg",
+                  "name": "Patrick Kennedy",
+                  "guest": false,
+                  "slug": "rick-gomez"
+                },
+                {
+                  "actor": "Tim Robbins",
+                  "personId": "25475",
+                  "picture": "https://pictures.betaseries.com/persons/3FfJMIVwXgsIXbAT8ECBSZJAncR.jpg",
+                  "name": "Bernard Holland",
+                  "guest": false,
+                  "slug": "tim-robbins"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 3965206,
+              "thetvdb_id": 11751887,
+              "youtube_id": null,
+              "title": "Farewell",
+              "season": 3,
+              "episode": 9,
+              "show": {
+                "id": 29029,
+                "thetvdb_id": 403245,
+                "title": "Silo",
+                "in_account": true,
+                "slug": "wool",
+                "creation": "2023",
+                "status": "Continuing",
+                "description": "Dans un monde futur dévasté et toxique, des milliers de survivants habitent un gigantesque silo souterrain. Après la transgression d'une règle d'or par leur shérif et la mort mystérieuse de plusieurs résidents, Juliette, une mécanicienne, perce peu à peu les terribles secrets du Silo."
+              },
+              "code": "S03E09",
+              "global": 29,
+              "special": 0,
+              "description": "",
+              "date": "2026-08-28",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784923796",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/wool/s03e09",
+              "subtitles": [],
+              "seen_total": 17,
+              "platform_links": [
+                {
+                  "platform_id": "255",
+                  "platform": "Apple TV",
+                  "color": "#2F2F2F",
+                  "type": "svod",
+                  "day": "2026-08-28",
+                  "date": "1787875200",
+                  "logo": "https://pictures.betaseries.com/platforms/255.jpg",
+                  "link": "https://www.betaseries.com/link/62768948"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": false,
+                "releases": [
+                  {
+                    "day": "2026-08-28",
+                    "platform_id": "255",
+                    "date": "1787875200",
+                    "name": "Apple TV",
+                    "logo": "https://pictures.betaseries.com/platforms/255.jpg"
+                  }
+                ]
+              },
+              "characters": [
+                {
+                  "actor": "Rebecca Ferguson",
+                  "personId": "61183",
+                  "picture": "https://pictures.betaseries.com/persons/ty8ZPzaCBBlqIr5qzpOXI24iC8j.jpg",
+                  "name": "Juliette Nichols",
+                  "guest": false,
+                  "slug": "rebecca-ferguson"
+                },
+                {
+                  "actor": "Common",
+                  "personId": "25891",
+                  "picture": "https://pictures.betaseries.com/persons/eggJAnJxpn8wYraX7ea5svETB54.jpg",
+                  "name": "Robert Sims",
+                  "guest": false,
+                  "slug": "common"
+                },
+                {
+                  "actor": "Harriet Walter",
+                  "personId": "6345",
+                  "picture": "https://pictures.betaseries.com/persons/vH8JrqdHaoFeGos44XeKTNuQMKE.jpg",
+                  "name": "Martha Walker",
+                  "guest": false,
+                  "slug": "harriet-walter"
+                },
+                {
+                  "actor": "Chinaza Uche",
+                  "personId": "86651",
+                  "picture": "https://pictures.betaseries.com/persons/5fbbLI9BPiByyIIRYu9pbRQwyUN.jpg",
+                  "name": "Paul Billings",
+                  "guest": false,
+                  "slug": "chinaza-uche"
+                },
+                {
+                  "actor": "Avi Nash",
+                  "personId": "25446",
+                  "picture": "https://pictures.betaseries.com/persons/xmdcJQVhrnFdTv9KkrU3EnBWFfV.jpg",
+                  "name": "Lukas Kyle",
+                  "guest": false,
+                  "slug": "avi-nash"
+                },
+                {
+                  "actor": "Rick Gomez",
+                  "personId": "45765",
+                  "picture": "https://pictures.betaseries.com/persons/gmVYPHJgmRVIzhaVYMns4kgBVqm.jpg",
+                  "name": "Patrick Kennedy",
+                  "guest": false,
+                  "slug": "rick-gomez"
+                },
+                {
+                  "actor": "Tim Robbins",
+                  "personId": "25475",
+                  "picture": "https://pictures.betaseries.com/persons/3FfJMIVwXgsIXbAT8ECBSZJAncR.jpg",
+                  "name": "Bernard Holland",
+                  "guest": false,
+                  "slug": "tim-robbins"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}
