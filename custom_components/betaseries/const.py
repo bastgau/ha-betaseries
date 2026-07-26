@@ -22,7 +22,22 @@ MAX_MEMBER_SCAN_INTERVAL_MINUTES = 120
 MIN_PLANNING_SCAN_INTERVAL_MINUTES = 15
 MAX_PLANNING_SCAN_INTERVAL_MINUTES = 360
 
-# Number of months fetched per planning refresh (current + this many ahead),
-# giving calendar.py enough lookahead to answer async_get_events() requests
-# that span slightly beyond the current month without an extra API round trip.
-PLANNING_MONTHS_AHEAD = 2
+# Number of months fetched per planning refresh, both directions around the
+# current month (see CLAUDE.md §4/§6). Configurable via OptionsFlow like the
+# scan intervals above. Past months are fetched once and cached (see
+# coordinator.py) since they never change once the month is over.
+CONF_PLANNING_MONTHS_AHEAD = "planning_months_ahead"
+CONF_PLANNING_MONTHS_BEHIND = "planning_months_behind"
+
+DEFAULT_PLANNING_MONTHS_AHEAD = 2
+DEFAULT_PLANNING_MONTHS_BEHIND = 2
+
+MIN_PLANNING_MONTHS_AHEAD = 0
+MAX_PLANNING_MONTHS_AHEAD = 12
+
+MIN_PLANNING_MONTHS_BEHIND = 0
+MAX_PLANNING_MONTHS_BEHIND = 12
+
+# Storage key for the cached past-months planning (see PlanningCoordinator).
+PLANNING_STORE_VERSION = 1
+PLANNING_STORE_KEY_PREFIX = "betaseries_planning_past"

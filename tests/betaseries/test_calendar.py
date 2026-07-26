@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.planning_episode import PlanningEpisode
-from custom_components.betaseries.const import DOMAIN
+from custom_components.betaseries.const import CONF_PLANNING_MONTHS_BEHIND, DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
@@ -86,7 +86,13 @@ async def _setup_entry_with_planning(hass: HomeAssistant, episodes: tuple[Planni
         MockConfigEntry: The set up config entry.
 
     """
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="test_user",
+        data=USER_INPUT,
+        options={CONF_PLANNING_MONTHS_BEHIND: 0},
+    )
     entry.add_to_hass(hass)
 
     mock_client = AsyncMock()

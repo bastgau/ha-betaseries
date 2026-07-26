@@ -39,13 +39,21 @@ from .betaseries import (
 )
 from .const import (
     CONF_MEMBER_SCAN_INTERVAL,
+    CONF_PLANNING_MONTHS_AHEAD,
+    CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
     DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES,
+    DEFAULT_PLANNING_MONTHS_AHEAD,
+    DEFAULT_PLANNING_MONTHS_BEHIND,
     DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES,
     DOMAIN,
     MAX_MEMBER_SCAN_INTERVAL_MINUTES,
+    MAX_PLANNING_MONTHS_AHEAD,
+    MAX_PLANNING_MONTHS_BEHIND,
     MAX_PLANNING_SCAN_INTERVAL_MINUTES,
     MIN_MEMBER_SCAN_INTERVAL_MINUTES,
+    MIN_PLANNING_MONTHS_AHEAD,
+    MIN_PLANNING_MONTHS_BEHIND,
     MIN_PLANNING_SCAN_INTERVAL_MINUTES,
 )
 
@@ -310,6 +318,30 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                     NumberSelectorConfig(
                         min=MIN_PLANNING_SCAN_INTERVAL_MINUTES,
                         max=MAX_PLANNING_SCAN_INTERVAL_MINUTES,
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Required(
+                    CONF_PLANNING_MONTHS_BEHIND,
+                    default=self.config_entry.options.get(
+                        CONF_PLANNING_MONTHS_BEHIND, DEFAULT_PLANNING_MONTHS_BEHIND
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_PLANNING_MONTHS_BEHIND,
+                        max=MAX_PLANNING_MONTHS_BEHIND,
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Required(
+                    CONF_PLANNING_MONTHS_AHEAD,
+                    default=self.config_entry.options.get(
+                        CONF_PLANNING_MONTHS_AHEAD, DEFAULT_PLANNING_MONTHS_AHEAD
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_PLANNING_MONTHS_AHEAD,
+                        max=MAX_PLANNING_MONTHS_AHEAD,
                         mode=NumberSelectorMode.BOX,
                     )
                 ),

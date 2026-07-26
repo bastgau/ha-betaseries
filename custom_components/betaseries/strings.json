@@ -34,7 +34,9 @@
         "description": "Configure how often BetaSeries data is refreshed.",
         "data": {
           "member_scan_interval": "Member data refresh interval (minutes)",
-          "planning_scan_interval": "Planning refresh interval (minutes)"
+          "planning_scan_interval": "Planning refresh interval (minutes)",
+          "planning_months_behind": "Past months to show in the calendar",
+          "planning_months_ahead": "Future months to show in the calendar"
         }
       }
     }
@@ -58,7 +60,8 @@
       "member_since_days": { "name": "Member since" },
       "episodes_per_month": { "name": "Episodes per month" },
       "favorite_genre": { "name": "Favorite genre" },
-      "next_episode": { "name": "Next episode" }
+      "next_episode": { "name": "Next episode" },
+      "calendar_event_count": { "name": "Calendar event count" }
     },
     "binary_sensor": {
       "new_episode_available": { "name": "New episode available" },

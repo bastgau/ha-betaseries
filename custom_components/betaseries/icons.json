@@ -17,7 +17,9 @@
       "streak_days": { "default": "mdi:fire" },
       "member_since_days": { "default": "mdi:calendar-account-outline" },
       "episodes_per_month": { "default": "mdi:calendar-month-outline" },
-      "favorite_genre": { "default": "mdi:tag-heart-outline" }
+      "favorite_genre": { "default": "mdi:tag-heart-outline" },
+      "next_episode": { "default": "mdi:television-clock" },
+      "calendar_event_count": { "default": "mdi:calendar-search" }
     },
     "binary_sensor": {
       "new_episode_available": {

@@ -58,7 +58,10 @@ The integration is translated into:
 
 ## Configuration
 
-During setup you will be asked for your BetaSeries `client_id` and `client_secret`, then shown a device code to validate on the BetaSeries website. Polling intervals (member stats / planning) can be adjusted afterwards from the integration options.
+During setup you will be asked for your BetaSeries `client_id` and `client_secret`, then shown a device code to validate on the BetaSeries website. From the integration options, you can adjust afterwards:
+
+- The member stats / planning polling intervals.
+- How many past and future months of episodes the calendar and sensors load (2 months each way by default).
 
 ## Entities
 
@@ -85,7 +88,8 @@ All entities below are enabled by default and grouped under a single device per 
 | Member since | d | Number of days since account creation |
 | Episodes per month | - | Average number of episodes watched per month |
 | Favorite genre | - | Most watched genre |
-| Next episode | - | Air date of the earliest unseen upcoming episode |
+| Next episode | - | Air date of the earliest episode not yet marked as watched |
+| Calendar event count | - | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes |
 
 ### Binary sensor
 
@@ -96,7 +100,7 @@ All entities below are enabled by default and grouped under a single device per 
 
 ### Calendar
 
-One calendar entity ("Planning") lists your upcoming unseen episodes as all-day events, titled `<show> - <SxxEyy>`, for the current month and the two following months.
+One calendar entity ("Planning") lists episodes of the shows you follow as all-day events, titled `<show> - <SxxEyy>`, including both watched and unwatched episodes. The window of months shown (past and future) is configurable from the integration options (2 months each way by default). The calendar's own "next event" and the `Next episode` sensor only ever point to the earliest episode not yet marked as watched.
 
 ## Troubleshooting
 

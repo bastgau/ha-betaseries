@@ -34,7 +34,9 @@
         "description": "Configurez la fréquence de rafraîchissement des données BetaSeries.",
         "data": {
           "member_scan_interval": "Intervalle de rafraîchissement des données membre (minutes)",
-          "planning_scan_interval": "Intervalle de rafraîchissement du planning (minutes)"
+          "planning_scan_interval": "Intervalle de rafraîchissement du planning (minutes)",
+          "planning_months_behind": "Mois passés à afficher dans le calendrier",
+          "planning_months_ahead": "Mois futurs à afficher dans le calendrier"
         }
       }
     }
@@ -58,7 +60,8 @@
       "member_since_days": { "name": "Membre depuis" },
       "episodes_per_month": { "name": "Épisodes par mois" },
       "favorite_genre": { "name": "Genre préféré" },
-      "next_episode": { "name": "Prochain épisode" }
+      "next_episode": { "name": "Prochain épisode" },
+      "calendar_event_count": { "name": "Nombre d'évènements du calendrier" }
     },
     "binary_sensor": {
       "new_episode_available": { "name": "Nouvel épisode disponible" },

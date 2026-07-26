@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.util import dt as dt_util
 
 from .entity import BetaSeriesEntity
@@ -193,6 +194,28 @@ NEXT_EPISODE_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
     value_fn=_next_episode_air_datetime,
 )
 
+CALENDAR_EVENT_COUNT_DESCRIPTION = SensorEntityDescription(
+    key="calendar_event_count",
+    translation_key="calendar_event_count",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
+    entity_registry_enabled_default=False,
+)
+
+
+def _episode_counts_by_month(episodes: tuple[PlanningEpisode, ...]) -> dict[str, int]:
+    """Count episodes per "YYYY-MM" month.
+
+    Args:
+        episodes (tuple[PlanningEpisode, ...]): The planning currently loaded by the coordinator.
+
+    Returns:
+        dict[str, int]: Number of episodes for each month present in the planning, sorted by month.
+
+    """
+    counts = Counter(episode.air_date.strftime("%Y-%m") for episode in episodes)
+    return dict(sorted(counts.items()))
+
 
 async def async_setup_entry(  # pylint: disable=unused-argument
     hass: HomeAssistant,  # noqa: ARG001
@@ -216,6 +239,7 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         [
             *(BetaSeriesSensor(member_coordinator, description) for description in SENSOR_DESCRIPTIONS),
             BetaSeriesPlanningSensor(planning_coordinator, NEXT_EPISODE_DESCRIPTION),
+            BetaSeriesCalendarEventCountSensor(planning_coordinator, CALENDAR_EVENT_COUNT_DESCRIPTION),
         ]
     )
 
@@ -264,3 +288,34 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
 
         """
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+    """Diagnostic sensor exposing how many calendar events are currently loaded.
+
+    Attributes:
+        coordinator (PlanningCoordinator): The coordinator providing the planning data.
+
+    """
+
+    coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    @property
+    def native_value(self) -> int:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the total number of episodes currently loaded in the planning.
+
+        Returns:
+            int: The number of events the calendar currently exposes.
+
+        """
+        return len(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, int]:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the event count broken down by month.
+
+        Returns:
+            dict[str, int]: Number of episodes per "YYYY-MM" month currently loaded.
+
+        """
+        return _episode_counts_by_month(self.coordinator.data)
