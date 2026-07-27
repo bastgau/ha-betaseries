@@ -1,0 +1,89 @@
+meta {
+  name: event
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/timeline/event?id=2220482558
+  body: none
+  auth: none
+}
+
+params:query {
+  id: 2220482558
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Displays a particular event.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/timeline/event?id=2220482558
+    method: GET
+    mode: none
+    params:query: {
+      id: 2220482558
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "event": {
+            "id": 2220482558,
+            "type": "season_watched",
+            "ref": "29029.2",
+            "ref_id": 0,
+            "user": "example_user",
+            "user_id": 42,
+            "html": "vient de regarder la saison 2 de la série <a href=\"/serie/wool\">Silo</a>.",
+            "picture_url": "",
+            "date": "2026-07-27 23:16:41",
+            "comments": 0,
+            "data": [],
+            "first_comments": [],
+            "comments_by_user": 0,
+            "is_club_member": false
+          },
+          "errors": []
+        }
+      '''
+    }
+  }
+}
