@@ -3,36 +3,44 @@
 from __future__ import annotations
 
 import contextlib
-from datetime import date
+from datetime import date, datetime
 import json
 from typing import TYPE_CHECKING
 
 from .collection_episode import CollectionEpisode
 from .collection_show import CollectionShow
+from .collection_timeline_event import CollectionTimelineEvent
 from .const import (
     API_VERSION,
     BASE_URL,
+    EPISODES_DISPLAY_ENDPOINT,
     EPISODES_LIST_ENDPOINT,
     INVALID_CREDENTIALS_ERROR_CODES,
     MEMBERS_INFOS_ENDPOINT,
     PLANNING_MEMBER_ENDPOINT,
     SHOWS_DISPLAY_ENDPOINT,
     SHOWS_EPISODES_ENDPOINT,
+    TIMELINE_MEMBER_ENDPOINT,
 )
 from .episode import Episode
+from .episode_watched_event import EpisodeWatchedEvent
 from .exceptions import AuthError, Error
 from .member_data import MemberData
 from .member_identity import MemberIdentity
 from .member_stats import MemberStats
+from .season_watched_event import SeasonWatchedEvent
 from .show import Show
 from .show_additional_information import ShowAdditionalInformation
 from .show_images import ShowImages
+from .timeline_event_type import TimelineEventType
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any
 
     import aiohttp
+
+    from .timeline_event import TimelineEvent
 
 
 class Client:
@@ -193,8 +201,7 @@ class Client:
             await self._raise_for_error(response, "fetch planning")
             payload = await response.json()
 
-        episodes = tuple(self._parse_episode(episode) for episode in payload["episodes"])
-        return CollectionEpisode(episodes)
+        return CollectionEpisode(self._parse_episodes(payload["episodes"]))
 
     async def fetch_show_episodes(self, show_id: str) -> CollectionEpisode:
         """Fetch every episode of a single show (GET /shows/episodes).
@@ -217,8 +224,82 @@ class Client:
             await self._raise_for_error(response, "fetch show episodes")
             payload = await response.json()
 
-        episodes = tuple(self._parse_episode(episode) for episode in payload["episodes"])
-        return CollectionEpisode(episodes)
+        return CollectionEpisode(self._parse_episodes(payload["episodes"]))
+
+    async def fetch_episodes_by_id(self, episode_ids: Iterable[str]) -> CollectionEpisode:
+        """Fetch one or more episodes by id (GET /episodes/display).
+
+        Accepts any number of ids in a single request (bulk, like
+        fetch_shows) - unlike fetch_show_episodes, which only accepts a
+        single show id.
+
+        Args:
+            episode_ids (Iterable[str]): BetaSeries episode ids to fetch.
+
+        Returns:
+            CollectionEpisode: The requested episodes, each with its show.
+
+        """
+        async with self._session.get(
+            f"{BASE_URL}{EPISODES_DISPLAY_ENDPOINT}",
+            headers=self._headers,
+            params={**self._params, "id": ",".join(episode_ids)},
+        ) as response:
+            await self._raise_for_error(response, "fetch episodes by id")
+            payload = await response.json()
+
+        return CollectionEpisode(self._parse_episodes(payload["episodes"]))
+
+    async def fetch_timeline(
+        self,
+        member_id: str,
+        *,
+        nbpp: int | None = None,
+        since_id: str | None = None,
+        last_id: str | None = None,
+        types: Iterable[TimelineEventType] | None = None,
+    ) -> CollectionTimelineEvent:
+        """Fetch a member's timeline events (GET /timeline/member).
+
+        Only EpisodeWatchedEvent/SeasonWatchedEvent are currently modeled
+        (see timeline_event.py); events of any other type - whether a known
+        TimelineEventType without a dedicated subclass yet, or a value this
+        client doesn't recognize at all (the API doesn't document an
+        exhaustive enum for this field, see
+        docs/watch-history-calendar-exploration.md) - are silently dropped
+        rather than failing the whole fetch.
+
+        Args:
+            member_id (str): BetaSeries member id to fetch the timeline for.
+            nbpp (int | None): Number of events per page, maximum 100 (Optional).
+            since_id (str | None): Return events older than this event id (Optional).
+            last_id (str | None): Return events newer than this event id (Optional).
+            types (Iterable[TimelineEventType] | None): Only return events of these types (Optional).
+
+        Returns:
+            CollectionTimelineEvent: The member's modeled timeline events, in API order (newest first).
+
+        """
+        params: dict[str, str] = {**self._params, "id": member_id}
+        if nbpp is not None:
+            params["nbpp"] = str(nbpp)
+        if since_id is not None:
+            params["since_id"] = since_id
+        if last_id is not None:
+            params["last_id"] = last_id
+        if types is not None:
+            params["types"] = ",".join(types)
+
+        async with self._session.get(
+            f"{BASE_URL}{TIMELINE_MEMBER_ENDPOINT}",
+            headers=self._headers,
+            params=params,
+        ) as response:
+            await self._raise_for_error(response, "fetch timeline")
+            payload = await response.json()
+
+        events = (self._parse_timeline_event(event) for event in payload["events"])
+        return CollectionTimelineEvent(tuple(event for event in events if event is not None))
 
     async def fetch_episodes_to_watch(self) -> CollectionEpisode:
         """Fetch the member's episodes still to watch, flattened across shows (GET /episodes/list).
@@ -234,8 +315,7 @@ class Client:
 
         """
         shows = await self._fetch_episodes_to_watch()
-        episodes = tuple(self._parse_episode(episode) for show in shows for episode in show["unseen"])
-        return CollectionEpisode(episodes)
+        return CollectionEpisode(self._parse_episodes(episode for show in shows for episode in show["unseen"]))
 
     async def fetch_episodes_to_watch_by_show(self) -> CollectionShow:
         """Fetch the member's episodes still to watch, grouped by show (GET /episodes/list).
@@ -254,7 +334,7 @@ class Client:
                 str(show["id"]): Show(
                     id=str(show["id"]),
                     title=show["title"],
-                    episodes=CollectionEpisode(tuple(self._parse_episode(episode) for episode in show["unseen"])),
+                    episodes=CollectionEpisode(self._parse_episodes(show["unseen"])),
                 )
                 for show in shows
             }
@@ -395,17 +475,86 @@ class Client:
         )
 
     @staticmethod
-    def _parse_episode(episode: dict[str, Any]) -> Episode:
+    def _parse_timeline_event(event: dict[str, Any]) -> TimelineEvent | None:
+        """Build a TimelineEvent from a single /timeline/member payload entry.
+
+        Only EPISODE_WATCHED/SEASON_WATCHED get a subclass instance; any
+        other type - known but not yet modeled, or entirely unrecognized -
+        returns None (see fetch_timeline's docstring). A SEASON_WATCHED
+        event whose "ref" doesn't match the verified "{show_id}.{season}"
+        format also returns None, rather than raising and failing the
+        whole fetch over one malformed entry.
+
+        Args:
+            event (dict[str, Any]): One entry of the "events" payload list.
+
+        Returns:
+            TimelineEvent | None: The parsed event, or None if this event type isn't modeled.
+
+        """
+        try:
+            event_type = TimelineEventType(event["type"])
+        except ValueError:
+            return None
+
+        event_id = str(event["id"])
+        event_date = datetime.strptime(event["date"], "%Y-%m-%d %H:%M:%S")  # noqa: DTZ007 (API doesn't return a timezone)
+
+        if event_type is TimelineEventType.EPISODE_WATCHED:
+            return EpisodeWatchedEvent(id=event_id, date=event_date, episode_id=str(event["ref_id"]))
+        if event_type is TimelineEventType.SEASON_WATCHED:
+            try:
+                show_id, season = event["ref"].split(".")
+                return SeasonWatchedEvent(id=event_id, date=event_date, show_id=show_id, season=int(season))
+            except ValueError:
+                return None
+        return None
+
+    @staticmethod
+    def _parse_episodes(episodes: Iterable[dict[str, Any]]) -> tuple[Episode, ...]:
+        """Build Episodes from a list of /planning/member-shaped payload entries.
+
+        Episodes referencing the same show (by id) share a single Show
+        instance instead of each rebuilding their own equal-but-distinct
+        copy - relevant when many episodes of the same show appear in one
+        response (e.g. fetch_episodes_by_id with several episode ids from
+        the same show).
+
+        Args:
+            episodes (Iterable[dict[str, Any]]): Entries of an "episodes" payload list.
+
+        Returns:
+            tuple[Episode, ...]: The parsed episodes, in payload order.
+
+        """
+        shows_by_id: dict[str, Show] = {}
+        return tuple(Client._parse_episode(episode, shows_by_id) for episode in episodes)
+
+    @staticmethod
+    def _parse_episode(episode: dict[str, Any], shows_by_id: dict[str, Show]) -> Episode:
         """Build an Episode from a single /planning/member payload entry.
 
         Args:
             episode (dict[str, Any]): One entry of the "episodes" payload list.
+            shows_by_id (dict[str, Show]): Cache of Show instances shared across a batch (see _parse_episodes).
 
         Returns:
             Episode: The parsed episode, together with its show.
 
         """
-        show = episode["show"]
+        show_payload = episode["show"]
+        show_id = str(show_payload["id"])
+
+        show = shows_by_id.get(show_id)
+        if show is None:
+            show = Show(
+                id=show_id,
+                title=show_payload["title"],
+                description=show_payload.get("description"),
+                slug=show_payload.get("slug"),
+            )
+            shows_by_id[show_id] = show
+
         return Episode(
             id=str(episode["id"]),
             season=episode["season"],
@@ -417,10 +566,5 @@ class Client:
             seen=episode["user"]["seen"],
             platforms=tuple(link["platform"] for link in episode["platform_links"]),
             resource_url=episode["resource_url"],
-            show=Show(
-                id=str(show["id"]),
-                title=show["title"],
-                description=show.get("description"),
-                slug=show.get("slug"),
-            ),
+            show=show,
         )

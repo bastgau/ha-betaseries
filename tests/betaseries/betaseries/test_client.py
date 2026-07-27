@@ -6,11 +6,14 @@ using aioresponses.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 from custom_components.betaseries.betaseries.client import Client
+from custom_components.betaseries.betaseries.episode_watched_event import EpisodeWatchedEvent
 from custom_components.betaseries.betaseries.exceptions import AuthError, Error
+from custom_components.betaseries.betaseries.season_watched_event import SeasonWatchedEvent
+from custom_components.betaseries.betaseries.timeline_event_type import TimelineEventType
 import pytest
 
 from .test_auth import FakeResponse, FakeSession
@@ -644,3 +647,248 @@ async def test_fetch_shows_failure(status: int) -> None:
 
     with pytest.raises(Error):
         await client.fetch_shows(["38605"])
+
+
+EPISODES_DISPLAY_PAYLOAD: dict[str, Any] = {
+    "episodes": [
+        {
+            "id": 38605,
+            "title": "Cat's Bell",
+            "season": 1,
+            "episode": 13,
+            "code": "S01E13",
+            "description": "",
+            "date": "1997-07-04",
+            "user": {"seen": False},
+            "show": {"id": 1485, "title": "Hyper Police", "slug": "hyperpolice"},
+            "platform_links": [],
+            "resource_url": "https://www.betaseries.com/episode/hyperpolice/s01e13",
+        },
+        {
+            "id": 38606,
+            "title": "Another One",
+            "season": 1,
+            "episode": 14,
+            "code": "S01E14",
+            "description": "",
+            "date": "1997-07-11",
+            "user": {"seen": True},
+            "show": {"id": 1485, "title": "Hyper Police", "slug": "hyperpolice"},
+            "platform_links": [],
+            "resource_url": "https://www.betaseries.com/episode/hyperpolice/s01e14",
+        },
+    ],
+    "errors": [],
+}
+
+
+async def test_fetch_episodes_by_id_success() -> None:
+    """Return a CollectionEpisode built from the JSON payload on HTTP 200."""
+    session = FakeSession(get_responses=[FakeResponse(200, EPISODES_DISPLAY_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_episodes_by_id(["38605", "38606"])
+
+    assert len(result) == 2
+    first, second = tuple(result)
+    assert first.id == "38605"
+    assert first.show.id == "1485"
+    assert first.show.title == "Hyper Police"
+    assert second.id == "38606"
+    assert second.seen is True
+
+
+async def test_fetch_episodes_by_id_deduplicates_shared_show() -> None:
+    """Reuse a single Show instance across episodes referencing the same show id."""
+    session = FakeSession(get_responses=[FakeResponse(200, EPISODES_DISPLAY_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_episodes_by_id(["38605", "38606"])
+
+    first, second = tuple(result)
+    assert first.show is second.show
+
+
+async def test_fetch_episodes_by_id_sends_comma_joined_ids() -> None:
+    """Join multiple episode ids with a comma in the "id" query param."""
+    session = FakeSession(get_responses=[FakeResponse(200, EPISODES_DISPLAY_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_episodes_by_id(["38605", "38606"])
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "fr", "id": "38605,38606"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_fetch_episodes_by_id_failure(status: int) -> None:
+    """Raise Error when fetching episodes by id fails.
+
+    Args:
+        status (int): Non-200 HTTP status returned by the fake response.
+
+    """
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.fetch_episodes_by_id(["38605"])
+
+
+TIMELINE_PAYLOAD: dict[str, Any] = {
+    "events": [
+        {
+            "id": 2220001980,
+            "type": "badge",
+            "ref": None,
+            "ref_id": 285,
+            "date": "2026-07-26 12:18:50",
+        },
+        {
+            "id": 2219944567,
+            "type": "markas",
+            "ref": "3965195",
+            "ref_id": 3965195,
+            "date": "2026-07-26 05:20:30",
+        },
+        {
+            "id": 2219941369,
+            "type": "season_watched",
+            "ref": "13381.1",
+            "ref_id": 0,
+            "date": "2026-07-26 03:49:26",
+        },
+        {
+            "id": 2216743213,
+            "type": "add_serie",
+            "ref": None,
+            "ref_id": 31940,
+            "date": "2026-07-16 23:09:04",
+        },
+    ],
+    "errors": [],
+}
+
+
+async def test_fetch_timeline_success() -> None:
+    """Return a CollectionTimelineEvent with only the modeled event types kept.
+
+    "badge" and "add_serie" aren't modeled yet (see timeline_event_type.py) -
+    they're silently dropped rather than failing the whole fetch.
+    """
+    session = FakeSession(get_responses=[FakeResponse(200, TIMELINE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_timeline("42")
+
+    assert len(result) == 2
+    episode_event, season_event = tuple(result)
+    assert isinstance(episode_event, EpisodeWatchedEvent)
+    assert episode_event.id == "2219944567"
+    assert episode_event.episode_id == "3965195"
+    assert episode_event.date == datetime(2026, 7, 26, 5, 20, 30)  # noqa: DTZ001 (API doesn't return a timezone)
+    assert isinstance(season_event, SeasonWatchedEvent)
+    assert season_event.id == "2219941369"
+    assert season_event.show_id == "13381"
+    assert season_event.season == 1
+    assert season_event.date == datetime(2026, 7, 26, 3, 49, 26)  # noqa: DTZ001 (API doesn't return a timezone)
+
+
+async def test_fetch_timeline_drops_unrecognized_type() -> None:
+    """Drop an event whose "type" doesn't match any known TimelineEventType value."""
+    payload = {
+        "events": [{"id": 1, "type": "some_future_event_type", "ref": None, "ref_id": 0, "date": "2026-01-01 00:00:00"}]
+    }
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_timeline("42")
+
+    assert len(result) == 0
+
+
+@pytest.mark.parametrize(
+    "ref",
+    [
+        "not-a-valid-ref",  # no dot: "ref".split(".") unpacking fails
+        "123.abc",  # season isn't numeric: int(season) fails
+    ],
+)
+async def test_fetch_timeline_drops_season_watched_with_malformed_ref(ref: str) -> None:
+    """Drop a SEASON_WATCHED event whose "ref" doesn't match "{show_id}.{season}".
+
+    Regression test: a malformed ref used to raise an uncaught ValueError
+    (from "ref".split(".") unpacking or int(season)), failing the whole
+    fetch over a single bad entry instead of just dropping it.
+
+    Args:
+        ref (str): The malformed "ref" value to test.
+
+    """
+    payload = {"events": [{"id": 1, "type": "season_watched", "ref": ref, "ref_id": 0, "date": "2026-01-01 00:00:00"}]}
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_timeline("42")
+
+    assert len(result) == 0
+
+
+async def test_fetch_timeline_sends_member_id_param_and_omits_optional_ones_by_default() -> None:
+    """Send the member id as the "id" query param, omitting nbpp/since_id/last_id/types when not passed."""
+    session = FakeSession(get_responses=[FakeResponse(200, TIMELINE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_timeline("42")
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "fr", "id": "42"}
+
+
+async def test_fetch_timeline_sends_optional_params_when_given() -> None:
+    """Send nbpp/since_id/last_id/types only when explicitly passed."""
+    session = FakeSession(get_responses=[FakeResponse(200, TIMELINE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_timeline(
+        "42",
+        nbpp=50,
+        since_id="100",
+        last_id="200",
+        types=[TimelineEventType.EPISODE_WATCHED, TimelineEventType.SEASON_WATCHED],
+    )
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {
+        "locale": "fr",
+        "id": "42",
+        "nbpp": "50",
+        "since_id": "100",
+        "last_id": "200",
+        "types": "markas,season_watched",
+    }
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_fetch_timeline_failure(status: int) -> None:
+    """Raise Error when fetching the timeline fails.
+
+    Args:
+        status (int): Non-200 HTTP status returned by the fake response.
+
+    """
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.fetch_timeline("42")
+
+
+async def test_fetch_timeline_raises_auth_error_on_invalid_credentials() -> None:
+    """Raise AuthError on HTTP 400 with BetaSeries' "invalid credentials" error code."""
+    payload = {"errors": [{"code": 2001, "text": "Données d'identification incorrectes."}]}
+    session = FakeSession(get_responses=[FakeResponse(400, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(AuthError):
+        await client.fetch_timeline("42")

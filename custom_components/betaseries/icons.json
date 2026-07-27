@@ -34,6 +34,9 @@
           "off": "mdi:movie-off-outline"
         }
       }
+    },
+    "calendar": {
+      "release_calendar": { "default": "mdi:calendar-month" }
     }
   }
 }

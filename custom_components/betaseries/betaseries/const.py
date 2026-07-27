@@ -8,8 +8,10 @@ OAUTH_TOKEN_ENDPOINT = "/oauth/access_token"  # noqa: S105 (endpoint path, not a
 MEMBERS_INFOS_ENDPOINT = "/members/infos"
 PLANNING_MEMBER_ENDPOINT = "/planning/member"
 EPISODES_LIST_ENDPOINT = "/episodes/list"
+EPISODES_DISPLAY_ENDPOINT = "/episodes/display"
 SHOWS_DISPLAY_ENDPOINT = "/shows/display"
 SHOWS_EPISODES_ENDPOINT = "/shows/episodes"
+TIMELINE_MEMBER_ENDPOINT = "/timeline/member"
 
 # Required on every request (see api.betaseries.com docs).
 API_VERSION = "3.0"

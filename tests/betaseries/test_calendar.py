@@ -114,7 +114,7 @@ async def test_calendar_lists_events_sorted_by_air_date(hass: HomeAssistant) -> 
     """Expose one all-day event per unseen episode, sorted by air_date."""
     await _setup_entry_with_planning(hass, (LATER_EPISODE, EARLIER_EPISODE))
 
-    state = hass.states.get("calendar.betaseries_test_user_planning")
+    state = hass.states.get("calendar.betaseries_test_user_release_calendar")
     assert state is not None
     assert state.attributes["message"] == "Example Show - S03E03"
 
@@ -123,7 +123,7 @@ async def test_calendar_event_is_none_when_no_episodes(hass: HomeAssistant) -> N
     """Report no event when the planning is empty."""
     await _setup_entry_with_planning(hass, ())
 
-    state = hass.states.get("calendar.betaseries_test_user_planning")
+    state = hass.states.get("calendar.betaseries_test_user_release_calendar")
     assert state is not None
     assert state.state == "off"
 
@@ -145,7 +145,7 @@ async def test_calendar_event_skips_seen_episodes(hass: HomeAssistant) -> None:
     )
     await _setup_entry_with_planning(hass, (seen_episode, EARLIER_EPISODE, LATER_EPISODE))
 
-    state = hass.states.get("calendar.betaseries_test_user_planning")
+    state = hass.states.get("calendar.betaseries_test_user_release_calendar")
     assert state is not None
     assert state.attributes["message"] == "Example Show - S03E03"
 
@@ -167,7 +167,7 @@ async def test_async_get_events_includes_seen_episodes(hass: HomeAssistant) -> N
     )
     entry = await _setup_entry_with_planning(hass, (seen_episode, EARLIER_EPISODE, LATER_EPISODE))
 
-    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_planning")
+    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_release_calendar")
     assert entity is not None
 
     tz = dt_util.get_default_time_zone()
@@ -184,7 +184,7 @@ async def test_async_get_events_filters_by_range(hass: HomeAssistant) -> None:
     """Return only events overlapping the requested range."""
     entry = await _setup_entry_with_planning(hass, (EARLIER_EPISODE, LATER_EPISODE))
 
-    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_planning")
+    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_release_calendar")
     assert entity is not None
 
     tz = dt_util.get_default_time_zone()
@@ -218,7 +218,7 @@ async def test_calendar_event_description_without_platforms_or_description(hass:
     )
     entry = await _setup_entry_with_planning(hass, (episode,))
 
-    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_planning")
+    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_release_calendar")
     assert entity is not None
     assert entity.event is not None
     assert entity.event.description == "No Platforms"
@@ -248,7 +248,7 @@ async def test_calendar_event_description_falls_back_to_show_description(hass: H
     )
     entry = await _setup_entry_with_planning(hass, (episode,))
 
-    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_planning")
+    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_release_calendar")
     assert entity is not None
     assert entity.event is not None
     assert entity.event.description == "Not Aired Yet\n\nA show about a silo."
