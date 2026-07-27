@@ -116,8 +116,8 @@
       }
     },
     "calendar": {
-      "planning": {
-        "name": "Planning"
+      "release_calendar": {
+        "name": "Release calendar"
       }
     }
   },

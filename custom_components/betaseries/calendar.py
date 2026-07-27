@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from .betaseries import Episode
     from .coordinator import BetaSeriesConfigEntry, PlanningCoordinator
 
-CALENDAR_DESCRIPTION = CalendarEntityDescription(key="planning", translation_key="planning")
+CALENDAR_DESCRIPTION = CalendarEntityDescription(key="release_calendar", translation_key="release_calendar")
 
 
 async def async_setup_entry(  # pylint: disable=unused-argument
