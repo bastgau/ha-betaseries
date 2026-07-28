@@ -12,6 +12,7 @@ from .collection_show import CollectionShow
 from .collection_timeline_event import CollectionTimelineEvent
 from .device_code import DeviceCodeData
 from .episode import Episode
+from .episode_images import EpisodeImages
 from .episode_watched_event import EpisodeWatchedEvent
 from .exceptions import AuthError, AuthTimeoutError, Error
 from .member_data import MemberData
@@ -34,6 +35,7 @@ __all__ = [
     "CollectionTimelineEvent",
     "DeviceCodeData",
     "Episode",
+    "EpisodeImages",
     "EpisodeWatchedEvent",
     "Error",
     "MemberData",
