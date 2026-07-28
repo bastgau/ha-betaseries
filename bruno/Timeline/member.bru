@@ -13,9 +13,9 @@ get {
 params:query {
   id: {{userId}}
   nbpp: 100
-  ~since_id:
-  ~last_id:
-  ~types:
+  ~since_id: 
+  ~last_id: 
+  ~types: 
 }
 
 headers {
@@ -30,29 +30,12 @@ settings {
 }
 
 docs {
-  Displays the latest events of the specified member. Candidate source for a
-  watch-history calendar: paginated via since_id/last_id (event ID cursor, not
-  date-bounded like /planning/member), potentially covering episodes watched
-  regardless of how old their air date is. Not yet confirmed - save this
-  example once run to check the actual event payload shape and whether a
-  "watched episode" event type exists with a usable date field.
-
-  Available filters (per openapi.json, disabled by default - uncomment in
-  params:query to use):
-  - nbpp: number of events per page, maximum 100 (enabled here, set to the max
-    to see a wide variety of event types in one call)
-  - since_id: ID of the last event received, to get older ones (Optional)
-  - last_id: ID of the last event received, to get newer ones (Optional)
-  - types: comma-separated event types to filter on (Optional) - possible
-    values are NOT documented in the OpenAPI spec; run this request without
-    the filter first, inspect the "type" field on returned events, then set
-    this param once real values are known (e.g. to isolate watched-episode
-    events for a future watch-history calendar).
+  Displays the latest events of the specified member.
 }
 
 example {
   name: example
-
+  
   request: {
     url: {{baseUrl}}/timeline/member?id={{userId}}&nbpp=100
     method: GET
@@ -60,18 +43,18 @@ example {
     params:query: {
       id: {{userId}}
       nbpp: 100
-      ~since_id:
-      ~last_id:
-      ~types:
+      ~since_id: 
+      ~last_id: 
+      ~types: 
     }
-
+  
     headers: {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
       Authorization: Bearer {{token}}
     }
   }
-
+  
   response: {
     headers: {
       content-type: application/json
@@ -80,12 +63,12 @@ example {
       access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
       access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
     }
-
+  
     status: {
       code: 200
       text: OK
     }
-
+  
     body: {
       type: json
       content: '''

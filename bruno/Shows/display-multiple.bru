@@ -5,19 +5,20 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/shows/display
-  body: formUrlEncoded
+  url: {{baseUrl}}/shows/display?id=38605,38606&locale=en
+  body: none
   auth: none
+}
+
+params:query {
+  id: 38605,38606
+  locale: en
 }
 
 headers {
   X-BetaSeries-Key: {{apiKey}}
   X-BetaSeries-Version: 3.0
   Authorization: Bearer {{token}}
-}
-
-body:form-urlencoded {
-  id: 38605,38606
 }
 
 docs {
@@ -28,17 +29,18 @@ example {
   name: example
   
   request: {
-    url: {{baseUrl}}/shows/display
+    url: {{baseUrl}}/shows/display?id=38605,38606&locale=en
     method: GET
-    mode: formUrlEncoded
+    mode: none
+    params:query: {
+      id: 38605,38606
+      locale: en
+    }
+  
     headers: {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
       Authorization: Bearer {{token}}
-    }
-  
-    body:form-urlencoded: {
-      id: 38605,38606
     }
   }
   
@@ -82,7 +84,7 @@ example {
                 }
               ],
               "episodes": "16",
-              "followers": "5974",
+              "followers": "5998",
               "comments": 11,
               "similars": "0",
               "characters": "0",
@@ -114,8 +116,8 @@ example {
               "language": "de",
               "originalLanguage": "allemand",
               "notes": {
-                "total": 164,
-                "mean": 3.890239999999999920277105047716759145259857177734375,
+                "total": 166,
+                "mean": 3.891570000000000195683469428331591188907623291015625,
                 "user": 0
               },
               "in_account": true,

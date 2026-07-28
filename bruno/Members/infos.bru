@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/members/infos
+  url: {{baseUrl}}/members/infos?locale=fr
   body: none
   auth: none
+}
+
+params:query {
+  locale: fr
 }
 
 headers {
@@ -24,9 +28,13 @@ example {
   name: example
   
   request: {
-    url: {{baseUrl}}/members/infos
+    url: {{baseUrl}}/members/infos?locale=en
     method: GET
     mode: none
+    params:query: {
+      locale: en
+    }
+  
     headers: {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
@@ -38,6 +46,7 @@ example {
     headers: {
       content-type: application/json
       cache-control: private, must-revalidate
+      last-modified: Tue, 28 Jul 2026 06:39:57 GMT
       access-control-allow-origin: *
       access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
       access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
@@ -56,9 +65,9 @@ example {
             "id": 42,
             "fb_id": 0,
             "login": "example_user",
-            "xp": 5960,
+            "xp": 5980,
             "locale": "fr",
-            "cached": 1784849688,
+            "cached": 1785220797,
             "avatar": "https://img.betaseries.com/00000000000000000000000=/250x250/smart/https%3A%2F%2Fpictures.betaseries.com%2Favatars%2F00%2F00000000000000000000000000000000.jpg",
             "profile_banner": "https://pictures.betaseries.com/fonds/members/00000000000000000000000000000000.jpg?v=0000000000000000000000000000000",
             "in_account": true,
@@ -73,16 +82,16 @@ example {
             "stats": {
               "friends": 0,
               "shows": 143,
-              "seasons": 260,
-              "episodes": 2927,
+              "seasons": 268,
+              "episodes": 3060,
               "comments": 0,
-              "progress": 77.4500000000000028421709430404007434844970703125,
-              "episodes_to_watch": 852,
-              "time_on_tv": 132595,
-              "time_to_spend": 38337,
+              "progress": 80.7000000000000028421709430404007434844970703125,
+              "episodes_to_watch": 732,
+              "time_on_tv": 138632,
+              "time_to_spend": 32940,
               "movies": 24,
               "badges": 40,
-              "member_since_days": 4710,
+              "member_since_days": 4713,
               "friends_of_friends": 0,
               "episodes_per_month": 19,
               "favorite_day": "dimanche",
@@ -93,9 +102,9 @@ example {
               "written_words": 0,
               "without_days": 373,
               "shows_finished": 66,
-              "shows_current": 31,
+              "shows_current": 32,
               "shows_to_watch": 15,
-              "shows_abandoned": 31,
+              "shows_abandoned": 30,
               "movies_to_watch": 0,
               "time_on_movies": 2489,
               "time_to_spend_movies": 0,

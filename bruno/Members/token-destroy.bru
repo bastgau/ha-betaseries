@@ -1,25 +1,19 @@
 meta {
-  name: year
+  name: token-destroy
   type: http
-  seq: 4
+  seq: 6
 }
 
-get {
-  url: {{baseUrl}}/members/year?year=2026&locale=fr
+post {
+  url: {{baseUrl}}/members/destroy
   body: none
-  auth: none
-}
-
-params:query {
-  year: 2026
-  locale: fr
+  auth: inherit
 }
 
 headers {
   X-BetaSeries-Key: {{apiKey}}
   X-BetaSeries-Version: 3.0
-  Authorization: Basic    {{base64_credential}}
-  ~Authorization: Bearer {{token}}
+  Authorization: Bearer {{token}}
 }
 
 settings {
@@ -28,20 +22,16 @@ settings {
 }
 
 docs {
-  Returns the year's statistics of a member, defaulting to the identified member.
+  Destroys the active token.
 }
 
 example {
   name: example
   
   request: {
-    url: {{baseUrl}}/members/year?year=2026
-    method: GET
+    url: {{baseUrl}}/members/destroy
+    method: POST
     mode: none
-    params:query: {
-      year: 2026
-    }
-  
     headers: {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
@@ -67,21 +57,6 @@ example {
       type: json
       content: '''
         {
-          "stats": {
-            "watchedEps": 369,
-            "rewatchedEps": 0,
-            "addedShows": 13,
-            "archivedShows": 6,
-            "fiveStars": 23,
-            "xp": 480,
-            "badges": 3,
-            "comments": 0,
-            "watchedMovies": 0,
-            "rewatchedMovies": 0,
-            "favoriteShowsGenre": "Drame",
-            "favoriteMoviesGenre": null
-          },
-          "locale": "fr",
           "errors": []
         }
       '''

@@ -17,12 +17,16 @@ params:query {
 headers {
   X-BetaSeries-Key: {{apiKey}}
   X-BetaSeries-Version: 3.0
-  Authorization: Bearer {{token}}
+  ~Authorization: Bearer {{token}}
 }
 
 settings {
   encodeUrl: true
   timeout: 0
+}
+
+docs {
+  Displays member badges.
 }
 
 example {
