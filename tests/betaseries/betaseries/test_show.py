@@ -56,7 +56,7 @@ async def test_fetch_additional_information_returns_the_freshly_fetched_show() -
         title="Achtsam Morden",
         description="Fresh description",
         slug="achtsam-morden",
-        additional_information="sentinel-info",
+        additional_information="sentinel-info",  # type: ignore[arg-type]
     )
     client = AsyncMock()
     client.fetch_shows.return_value = CollectionShow({"38605": fetched})

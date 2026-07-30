@@ -371,5 +371,6 @@ async def test_reauth_flow_defaults_locale_to_entrys_current_option(hass: HomeAs
     assert result["step_id"] == "user"
     # Not a dict comprehension over every key: api_key/client_secret have no
     # default (vol.UNDEFINED, not callable), unlike the options-flow schema.
+    assert result["data_schema"] is not None
     locale_key = next(key for key in result["data_schema"].schema if key.schema == CONF_LOCALE)
     assert locale_key.default() == "en"

@@ -119,6 +119,14 @@
       "release_calendar": {
         "name": "Calendrier des sorties"
       }
+    },
+    "button": {
+      "refresh_badges": {
+        "name": "Rafraîchir les badges"
+      },
+      "refresh_planning": {
+        "name": "Rafraîchir le planning"
+      }
     }
   },
   "selector": {

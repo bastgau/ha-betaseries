@@ -50,7 +50,7 @@ SUPPORTED_LOCALES = ["fr", "en"]
 
 # Storage key for the cached past-months planning (see PlanningCoordinator).
 # Bump this whenever the cached Episode dict shape changes (see
-# coordinator._episode_to_dict/_episode_from_dict) - _PastMonthsStore discards
+# coordinator._episode_to_dict/_episode_from_dict) - _PastPlanningStore discards
 # any data from an older version instead of trying to migrate it, since this
 # cache is just a performance optimization that's always safe/cheap to refill
 # from the API. Bumped 1 -> 2: Episode's "number" field used to be persisted
@@ -61,3 +61,10 @@ SUPPORTED_LOCALES = ["fr", "en"]
 # would silently keep missing these fields forever instead of just once.
 PLANNING_STORE_VERSION = 3
 PLANNING_STORE_KEY_PREFIX = "betaseries_planning_past"
+
+# Storage key for the cached badge details (see MemberCoordinator). Badges are
+# only refetched when stats.badges (the count from GET /members/infos) changes
+# from the last known value - this persists both the count and the matching
+# badge list so a HA restart doesn't force a refetch even when nothing changed.
+BADGES_STORE_VERSION = 1
+BADGES_STORE_KEY_PREFIX = "betaseries_badges"

@@ -7,6 +7,7 @@ shared, parametrized tests in test_coordinator_errors.py instead of here.
 from __future__ import annotations
 
 from datetime import date, timedelta
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
@@ -238,6 +239,36 @@ async def test_past_months_persist_across_coordinator_instances(
     assert tuple(second_coordinator.data) == (EPISODE, EPISODE)
 
 
+async def test_force_refresh_planning_refetches_cached_past_months(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Force a refetch of every month, including cached past ones, via the "Refresh planning" button."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="Test Account",
+        options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    mock_client = AsyncMock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+    assert mock_client.fetch_planning.await_count == 2  # 1 past month + current month
+
+    mock_client.fetch_planning.reset_mock()
+    with caplog.at_level(logging.DEBUG):
+        await coordinator.async_force_refresh_planning()
+
+    # Both the past month and the current month are re-fetched, bypassing the cache.
+    assert mock_client.fetch_planning.await_count == 2
+    assert tuple(coordinator.data) == (EPISODE, EPISODE)
+    assert "Clearing cached past months for Test Account" in caplog.text
+
+
 async def test_cache_prunes_months_that_slid_out_of_window(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -287,7 +318,7 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
 
     Regression test: PLANNING_STORE_VERSION was bumped after Episode's cached
     dict shape changed ("episode" -> "number" - see coordinator._episode_to_dict).
-    Without _PastMonthsStore's discard-on-migrate, an existing cache from
+    Without _PastPlanningStore's discard-on-migrate, an existing cache from
     before that rename made _episode_from_dict raise KeyError: 'number',
     permanently failing PlanningCoordinator's setup for any pre-existing user.
 

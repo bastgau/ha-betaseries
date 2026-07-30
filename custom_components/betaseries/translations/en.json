@@ -119,6 +119,14 @@
       "release_calendar": {
         "name": "Release calendar"
       }
+    },
+    "button": {
+      "refresh_badges": {
+        "name": "Refresh badges"
+      },
+      "refresh_planning": {
+        "name": "Refresh planning"
+      }
     }
   },
   "selector": {

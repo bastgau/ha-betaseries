@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -13,8 +14,10 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .betaseries import AuthError, CollectionEpisode, Episode, Error, Show
+from .betaseries import AuthError, Badge, CollectionBadge, CollectionEpisode, Episode, Error, Show
 from .const import (
+    BADGES_STORE_KEY_PREFIX,
+    BADGES_STORE_VERSION,
     CONF_MEMBER_SCAN_INTERVAL,
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
@@ -83,12 +86,96 @@ def _log_auth_failure(title: str, err: AuthError) -> None:
     )
 
 
+class _BadgesStore(Store[dict[str, Any]]):
+    """Store for the cached badge details, discarding old data on a version bump.
+
+    This cache only ever holds a performance optimization (avoid re-fetching
+    the full badge list when the count hasn't changed, see MemberCoordinator) -
+    it's always safe/cheap to start empty and let the coordinator refetch as
+    if the count changed, instead of writing a real migration for each past
+    schema change.
+
+    """
+
+    async def _async_migrate_func(  # pylint: disable=unused-argument
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Discard any data from a previous store version.
+
+        Args:
+            old_major_version (int): Unused; any past version is discarded the same way.
+            old_minor_version (int): Unused; any past version is discarded the same way.
+            old_data (dict[str, Any]): Unused; the previous shape of the cached data.
+
+        Returns:
+            dict[str, Any]: An empty cache, forcing a full refetch.
+
+        """
+        return {}
+
+
+def _badge_to_dict(badge: Badge) -> dict[str, Any]:
+    """Serialize a Badge for storage (date -> ISO string).
+
+    Args:
+        badge (Badge): The badge to serialize.
+
+    Returns:
+        dict[str, Any]: A JSON-serializable representation of the badge.
+
+    """
+    return {
+        "id": badge.id,
+        "code": badge.code,
+        "name": badge.name,
+        "description": badge.description,
+        "date": badge.date.isoformat(),
+        "height": badge.height,
+        "width": badge.width,
+        "level": badge.level,
+    }
+
+
+def _badge_from_dict(data: dict[str, Any]) -> Badge:
+    """Deserialize a Badge from storage (ISO string -> datetime).
+
+    Args:
+        data (dict[str, Any]): The stored representation of the badge.
+
+    Returns:
+        Badge: The deserialized badge.
+
+    """
+    return Badge(
+        id=data["id"],
+        code=data["code"],
+        name=data["name"],
+        description=data["description"],
+        date=datetime.fromisoformat(data["date"]),
+        height=data["height"],
+        width=data["width"],
+        level=data["level"],
+    )
+
+
 class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
     """Fetch member data and statistics via Client.fetch_member_data() (see CLAUDE.md §5).
+
+    Badge details (MemberData.badges) are only refetched (GET /members/badges)
+    when stats.badges - the count already included in fetch_member_data() -
+    differs from the last known count, persisted in a Store alongside the
+    badge list itself so a HA restart doesn't force a refetch when nothing
+    changed. The client has no state of its own to make that call, so this
+    coordinator orchestrates it, the same way PlanningCoordinator decides
+    which planning months need fetching.
 
     Attributes:
         config_entry (BetaSeriesConfigEntry): The config entry this coordinator serves.
         client (Client): The BetaSeries API client used to fetch member data.
+        badges_store (Store[dict[str, Any]]): Persisted cache of the last known badge count/details.
 
     """
 
@@ -114,12 +201,15 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
             update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self.client = client
+        self.badges_store: Store[dict[str, Any]] = _BadgesStore(
+            hass, BADGES_STORE_VERSION, f"{BADGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
+        )
 
     async def _async_update_data(self) -> MemberData:
-        """Fetch the latest member data.
+        """Fetch the latest member data, refetching badge details only if their count changed.
 
         Returns:
-            MemberData: The member's id, login, xp and viewing statistics.
+            MemberData: The member's id, login, xp, viewing statistics and badges.
 
         Raises:
             ConfigEntryAuthFailed: If the stored access token was rejected.
@@ -128,7 +218,8 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
         """
         try:
             _LOGGER.debug("Fetching member data for %s from BetaSeries", self.config_entry.title)
-            return await self.client.fetch_member_data()
+            member_data = await self.client.fetch_member_data()
+            badges = await self._async_get_badges(member_data.identity.id, member_data.stats.badges)
         except AuthError as err:
             _log_auth_failure(self.config_entry.title, err)
             raise ConfigEntryAuthFailed from err
@@ -141,8 +232,52 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
             )
             raise UpdateFailed(str(err)) from err
 
+        return dataclasses.replace(member_data, badges=badges)
 
-class _PastMonthsStore(Store[dict[str, list[dict[str, Any]]]]):
+    async def _async_get_badges(self, member_id: str, badge_count: int) -> CollectionBadge:
+        """Return the member's badges, refetching them only if their count changed.
+
+        Errors from fetching the badges propagate to the caller unchanged.
+
+        Args:
+            member_id (str): BetaSeries member id to fetch badges for.
+            badge_count (int): The current badge count, from stats.badges.
+
+        Returns:
+            CollectionBadge: The member's badges, freshly fetched or from cache.
+
+        """
+        stored = await self.badges_store.async_load()
+
+        if stored is not None and stored.get("count") == badge_count:
+            return CollectionBadge(tuple(_badge_from_dict(data) for data in stored["badges"]))
+
+        _LOGGER.debug("Badge count changed for %s, fetching badge details from BetaSeries", self.config_entry.title)
+        badges = await self.client.fetch_badges(member_id)
+        await self.badges_store.async_save(
+            {"count": badge_count, "badges": [_badge_to_dict(badge) for badge in badges]}
+        )
+        return badges
+
+    async def async_force_refresh_badges(self) -> None:
+        """Force a full refetch of badge details on the next refresh, then refresh now.
+
+        Clears the badges_store cache first: _async_get_badges() only skips
+        re-fetching when the cached count matches stats.badges, so without
+        this, pressing the "Refresh badges" button would silently do nothing
+        if the count hadn't changed (e.g. a badge's description changed
+        without a new badge being earned).
+
+        Returns:
+            None: The coordinator's data is updated in place, like any refresh.
+
+        """
+        _LOGGER.debug("Clearing cached badges for %s, forcing a full refetch", self.config_entry.title)
+        await self.badges_store.async_remove()
+        await self.async_refresh()
+
+
+class _PastPlanningStore(Store[dict[str, list[dict[str, Any]]]]):
     """Store for the cached past months, discarding old data on a version bump.
 
     This cache only ever holds a performance optimization (avoid re-fetching
@@ -209,7 +344,7 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
             update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self.client = client
-        self.store: Store[dict[str, list[dict[str, Any]]]] = _PastMonthsStore(
+        self.store: Store[dict[str, list[dict[str, Any]]]] = _PastPlanningStore(
             hass, PLANNING_STORE_VERSION, f"{PLANNING_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
 
@@ -249,6 +384,22 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
 
         episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
         return CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
+
+    async def async_force_refresh_planning(self) -> None:
+        """Force a full refetch of every month, including cached past ones, then refresh now.
+
+        Clears the store first: _async_get_cached_past_months() only fetches
+        months missing from the cache, so without this, past months (which
+        never change once over) would keep being served from the store
+        untouched by the "Refresh planning" button.
+
+        Returns:
+            None: The coordinator's data is updated in place, like any refresh.
+
+        """
+        _LOGGER.debug("Clearing cached past months for %s, forcing a full refetch", self.config_entry.title)
+        await self.store.async_remove()
+        await self.async_refresh()
 
     async def _async_fetch_planning(self, month: str) -> CollectionEpisode:
         """Fetch a single month's planning, logging the account name beforehand.

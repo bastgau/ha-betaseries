@@ -7,6 +7,8 @@ from datetime import date, datetime
 import json
 from typing import TYPE_CHECKING
 
+from .badge import Badge
+from .collection_badge import CollectionBadge
 from .collection_episode import CollectionEpisode
 from .collection_show import CollectionShow
 from .collection_timeline_event import CollectionTimelineEvent
@@ -16,6 +18,7 @@ from .const import (
     EPISODES_DISPLAY_ENDPOINT,
     EPISODES_LIST_ENDPOINT,
     INVALID_CREDENTIALS_ERROR_CODES,
+    MEMBERS_BADGES_ENDPOINT,
     MEMBERS_INFOS_ENDPOINT,
     PLANNING_MEMBER_ENDPOINT,
     SHOWS_DISPLAY_ENDPOINT,
@@ -182,6 +185,31 @@ class Client:
                 favorite_genre=stats["favorite_genre"],
             ),
         )
+
+    async def fetch_badges(self, member_id: str) -> CollectionBadge:
+        """Fetch every badge earned by a member (GET /members/badges).
+
+        Called by MemberCoordinator only when stats.badges (the count from
+        fetch_member_data()) changes, rather than on every refresh - this
+        client has no state of its own to know when that's the case.
+
+        Args:
+            member_id (str): BetaSeries member id to fetch badges for.
+
+        Returns:
+            CollectionBadge: The member's earned badges, sorted by date earned (oldest first).
+
+        """
+        async with self._session.get(
+            f"{BASE_URL}{MEMBERS_BADGES_ENDPOINT}",
+            headers=self._headers,
+            params={**self._params, "id": member_id},
+        ) as response:
+            await self._raise_for_error(response, "fetch member badges")
+            payload = await response.json()
+
+        badges = (self._parse_badge(badge) for badge in payload["badges"])
+        return CollectionBadge(tuple(sorted(badges, key=lambda badge: badge.date)))
 
     async def fetch_planning(self, month: str) -> CollectionEpisode:
         """Fetch the member's episodes for a given month (GET /planning/member).
@@ -397,6 +425,28 @@ class Client:
             payload = await response.json()
 
         return payload["shows"] if "shows" in payload else [payload["show"]]
+
+    @staticmethod
+    def _parse_badge(badge: dict[str, Any]) -> Badge:
+        """Build a Badge from a single /members/badges payload entry.
+
+        Args:
+            badge (dict[str, Any]): One entry of the "badges" payload list.
+
+        Returns:
+            Badge: The parsed badge.
+
+        """
+        return Badge(
+            id=str(badge["id"]),
+            code=badge["code"],
+            name=badge["name"],
+            description=badge["description"],
+            date=datetime.strptime(badge["date"], "%Y-%m-%d %H:%M:%S"),  # noqa: DTZ007 (API doesn't return a timezone)
+            height=badge.get("height"),
+            width=badge.get("width"),
+            level=badge.get("level"),
+        )
 
     @staticmethod
     def _parse_show(show: dict[str, Any]) -> Show:

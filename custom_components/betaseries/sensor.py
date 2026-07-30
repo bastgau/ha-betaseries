@@ -20,6 +20,7 @@ from .entity import BetaSeriesEntity
 if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import datetime
+    from typing import Any
 
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,16 +31,46 @@ if TYPE_CHECKING:
 type StateType = int | float | str | None
 
 
+def _badges_attributes(data: MemberData) -> dict[str, list[dict[str, str | int | None]]]:
+    """Return every earned badge's raw fields, for the "badges" sensor's attributes.
+
+    Args:
+        data (MemberData): The coordinator's current member data.
+
+    Returns:
+        dict[str, list[dict[str, str | int | None]]]: All badge fields, keyed "badges" (empty list until fetched, see MemberCoordinator).
+
+    """
+    return {
+        "badges": [
+            {
+                "id": badge.id,
+                "code": badge.code,
+                "name": badge.name,
+                "description": badge.description,
+                "date": badge.date.isoformat(),
+                "height": badge.height,
+                "width": badge.width,
+                "level": badge.level,
+            }
+            for badge in data.badges
+        ]
+    }
+
+
 @dataclass(kw_only=True, frozen=True)
 class BetaSeriesSensorEntityDescription(SensorEntityDescription):
     """Describe a BetaSeries sensor backed by MemberCoordinator data.
 
     Attributes:
         value_fn (Callable[[MemberData], StateType]): Extracts this sensor's value.
+        attrs_fn (Callable[[MemberData], dict[str, Any]] | None): Extracts this sensor's
+            extra_state_attributes, if any (None for sensors with no attributes).
 
     """
 
     value_fn: Callable[[MemberData], StateType]
+    attrs_fn: Callable[[MemberData], dict[str, Any]] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
@@ -89,6 +120,7 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
         translation_key="badges",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.badges,
+        attrs_fn=_badges_attributes,
     ),
     BetaSeriesSensorEntityDescription(
         key="shows",
@@ -265,6 +297,18 @@ class BetaSeriesSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[repor
 
         """
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return this sensor's extra attributes, if its description defines any.
+
+        Returns:
+            dict[str, Any] | None: The attributes extracted from the coordinator's member data, or None.
+
+        """
+        if self.entity_description.attrs_fn is None:
+            return None
+        return self.entity_description.attrs_fn(self.coordinator.data)
 
 
 class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]

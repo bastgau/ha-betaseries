@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+
+from .collection_badge import CollectionBadge
 
 if TYPE_CHECKING:
     from .member_identity import MemberIdentity
@@ -19,8 +21,12 @@ class MemberData:
     Attributes:
         identity (MemberIdentity): The member's id and login.
         stats (MemberStats): The member's viewing statistics, including xp.
+        badges (CollectionBadge): The member's earned badges, empty until fetched
+            via Client.fetch_badges() (GET /members/infos doesn't return them,
+            only their count in stats.badges - see MemberCoordinator).
 
     """
 
     identity: MemberIdentity
     stats: MemberStats
+    badges: CollectionBadge = field(default_factory=lambda: CollectionBadge(()))

@@ -6,7 +6,9 @@ Self-contained: it can be extracted as its own PyPI package as-is if it's ever n
 from __future__ import annotations
 
 from .auth import Auth
+from .badge import Badge
 from .client import Client
+from .collection_badge import CollectionBadge
 from .collection_episode import CollectionEpisode
 from .collection_show import CollectionShow
 from .collection_timeline_event import CollectionTimelineEvent
@@ -29,7 +31,9 @@ __all__ = [
     "Auth",
     "AuthError",
     "AuthTimeoutError",
+    "Badge",
     "Client",
+    "CollectionBadge",
     "CollectionEpisode",
     "CollectionShow",
     "CollectionTimelineEvent",

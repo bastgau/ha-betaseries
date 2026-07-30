@@ -892,3 +892,103 @@ async def test_fetch_timeline_raises_auth_error_on_invalid_credentials() -> None
 
     with pytest.raises(AuthError):
         await client.fetch_timeline("42")
+
+
+BADGES_PAYLOAD: dict[str, Any] = {
+    "badges": [
+        {
+            "id": 64,
+            "code": "regarde_moi",
+            "name": "Regarde-moi",
+            "description": "Un mois s'est écoulé et 30 épisodes ont été regardés.",
+            "date": "2013-09-01 22:45:26",
+            "height": 256,
+            "width": 256,
+            "level": None,
+        },
+        {
+            "id": 1,
+            "code": "debutant",
+            "name": "Débutant",
+            "description": "Vous avez regardé votre premier épisode.",
+            "date": "2013-08-15 10:00:00",
+            "height": 256,
+            "width": 256,
+            "level": None,
+        },
+        {
+            "id": 282,
+            "code": "gi_joe",
+            "name": "G.I. Joe",
+            "description": "Vous avez regardé 50 séries américaines.",
+            "date": "2020-11-13 04:14:58",
+            "height": None,
+            "width": None,
+            "level": 10,
+        },
+    ],
+    "total": 3,
+    "errors": [],
+}
+
+
+async def test_fetch_badges_success() -> None:
+    """Return a CollectionBadge built from the JSON payload, sorted by date earned."""
+    session = FakeSession(get_responses=[FakeResponse(200, BADGES_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_badges("42")
+
+    badges = list(result)
+    # Sorted oldest-first by date, regardless of payload order (see BADGES_PAYLOAD above).
+    assert [badge.code for badge in badges] == ["debutant", "regarde_moi", "gi_joe"]
+
+    debutant = badges[0]
+    assert debutant.id == "1"
+    assert debutant.name == "Débutant"
+    assert debutant.description == "Vous avez regardé votre premier épisode."
+    assert debutant.date == datetime(2013, 8, 15, 10, 0, 0)  # noqa: DTZ001 (API doesn't return a timezone)
+    assert debutant.height == 256
+    assert debutant.width == 256
+    assert debutant.level is None
+
+    gi_joe = badges[2]
+    assert gi_joe.height is None
+    assert gi_joe.width is None
+    assert gi_joe.level == 10
+
+
+async def test_fetch_badges_sends_member_id() -> None:
+    """Send the member id in the "id" query param."""
+    session = FakeSession(get_responses=[FakeResponse(200, BADGES_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_badges("42")
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "fr", "id": "42"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_fetch_badges_failure(status: int) -> None:
+    """Raise Error when fetching badges fails.
+
+    Args:
+        status (int): Non-200 HTTP status returned by the fake response.
+
+    """
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.fetch_badges("42")
+
+
+async def test_fetch_badges_raises_auth_error_on_invalid_credentials() -> None:
+    """Raise AuthError on HTTP 400 with BetaSeries' "invalid credentials" error code."""
+    payload = {"errors": [{"code": 2001, "text": "Données d'identification incorrectes."}]}
+    session = FakeSession(get_responses=[FakeResponse(400, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(AuthError):
+        await client.fetch_badges("42")

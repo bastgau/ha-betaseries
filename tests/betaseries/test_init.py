@@ -54,6 +54,7 @@ async def test_setup_entry_creates_coordinator(hass: HomeAssistant) -> None:
 
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):

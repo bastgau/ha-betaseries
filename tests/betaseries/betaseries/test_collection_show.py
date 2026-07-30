@@ -100,7 +100,9 @@ async def test_fetch_additional_information_replaces_each_show_with_the_fetched_
             "20": Show(id="20", title="Show B"),
         }
     )
-    fetched_a = Show(id="10", title="Show A", description="Fresh description A", additional_information="info-10")
+    fetched_a = Show(
+        id="10", title="Show A", description="Fresh description A", additional_information="info-10"  # type: ignore[arg-type]
+    )
     client = AsyncMock()
     client.fetch_shows.return_value = CollectionShow({"10": fetched_a})
 
@@ -109,6 +111,7 @@ async def test_fetch_additional_information_replaces_each_show_with_the_fetched_
     show_a = result.for_show("10")
     show_b = result.for_show("20")
     assert show_a is fetched_a
+    assert show_a is not None
     assert show_a.description == "Fresh description A"
     assert show_a.additional_information == "info-10"
     # Show 20 wasn't in the client's response: it's kept as-is.

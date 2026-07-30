@@ -12,6 +12,7 @@ EPISODES_DISPLAY_ENDPOINT = "/episodes/display"
 SHOWS_DISPLAY_ENDPOINT = "/shows/display"
 SHOWS_EPISODES_ENDPOINT = "/shows/episodes"
 TIMELINE_MEMBER_ENDPOINT = "/timeline/member"
+MEMBERS_BADGES_ENDPOINT = "/members/badges"
 
 # Required on every request (see api.betaseries.com docs).
 API_VERSION = "3.0"

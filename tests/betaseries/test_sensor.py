@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
+from custom_components.betaseries.betaseries.badge import Badge
+from custom_components.betaseries.betaseries.collection_badge import CollectionBadge
 from custom_components.betaseries.betaseries.collection_episode import CollectionEpisode
 from custom_components.betaseries.betaseries.episode import Episode
 from custom_components.betaseries.betaseries.member_data import MemberData
@@ -335,3 +337,64 @@ async def test_calendar_event_count_is_zero_when_planning_is_empty(hass: HomeAss
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "0"
+
+
+async def test_badges_sensor_exposes_all_raw_fields_as_attributes(hass: HomeAssistant) -> None:
+    """Expose every fetched badge's raw fields under the "badges" attribute."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
+    entry.add_to_hass(hass)
+
+    badge = Badge(
+        id="1",
+        code="debutant",
+        name="Débutant",
+        description="Vous avez regardé votre premier épisode.",
+        date=datetime(2013, 8, 15, 10, 0, 0),  # noqa: DTZ001 (API doesn't return a timezone)
+        height=256,
+        width=256,
+        level=None,
+    )
+
+    mock_client = AsyncMock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_badges.return_value = CollectionBadge((badge,))
+    mock_client.fetch_planning.return_value = CollectionEpisode(())
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.betaseries_test_user_badges")
+    assert state is not None
+    assert state.state == "8"
+    assert state.attributes["badges"] == [
+        {
+            "id": "1",
+            "code": "debutant",
+            "name": "Débutant",
+            "description": "Vous avez regardé votre premier épisode.",
+            "date": "2013-08-15T10:00:00",
+            "height": 256,
+            "width": 256,
+            "level": None,
+        }
+    ]
+
+
+async def test_other_sensors_have_no_extra_attributes(hass: HomeAssistant) -> None:
+    """Report no extra_state_attributes for sensors with no attrs_fn (e.g. xp)."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
+    entry.add_to_hass(hass)
+
+    mock_client = AsyncMock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_badges.return_value = CollectionBadge(())
+    mock_client.fetch_planning.return_value = CollectionEpisode(())
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.betaseries_test_user_xp")
+    assert state is not None
+    assert "badges" not in state.attributes
