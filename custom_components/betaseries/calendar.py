@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEntityDescription, CalendarEvent
+from homeassistant.util import dt as dt_util
 
 from .entity import BetaSeriesEntity
 
@@ -104,6 +105,13 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
         Includes both seen and unseen episodes, unlike the `event` property
         (which only surfaces the next unseen one).
 
+        Both bounds are converted to local time before being reduced to a
+        date: HA passes tz-aware datetimes, usually in UTC, so calling
+        .date() on them directly would shift the window by a day for any
+        user east of UTC (e.g. local midnight in Paris is 22:00 UTC the
+        previous day). Episodes are all-day events dated in the show's
+        local calendar, so the comparison must be done in local time too.
+
         Args:
             hass (HomeAssistant): The Home Assistant instance.
             start_date (datetime): Start of the requested range.
@@ -113,8 +121,6 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
             list[CalendarEvent]: Events for episodes airing within the range.
 
         """
-        return [
-            _to_calendar_event(episode)
-            for episode in self.coordinator.data
-            if start_date.date() <= episode.air_date <= end_date.date()
-        ]
+        start = dt_util.as_local(start_date).date()
+        end = dt_util.as_local(end_date).date()
+        return [_to_calendar_event(episode) for episode in self.coordinator.data if start <= episode.air_date <= end]

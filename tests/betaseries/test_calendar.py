@@ -201,6 +201,35 @@ async def test_async_get_events_filters_by_range(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+async def test_async_get_events_converts_utc_bounds_to_local(hass: HomeAssistant) -> None:
+    """Compare the requested range in local time, not UTC.
+
+    HA passes tz-aware bounds, usually in UTC: local midnight in a positive
+    offset zone is the previous day in UTC. Reducing the end bound to a date
+    without converting it back to local time first pulls it a day earlier,
+    dropping any episode airing on the last day of the requested range.
+    """
+    await hass.config.async_set_time_zone("Europe/Paris")
+    entry = await _setup_entry_with_planning(hass, (EARLIER_EPISODE, LATER_EPISODE))
+
+    entity = hass.data["entity_components"]["calendar"].get_entity("calendar.betaseries_test_user_release_calendar")
+    assert entity is not None
+
+    # Local midnight on both ends, as HA sends them: expressed in UTC.
+    # LATER_EPISODE airs on 2026-08-10, the exact last day of the range.
+    tz = dt_util.get_default_time_zone()
+    start = dt_util.as_utc(datetime(2026, 8, 1, tzinfo=tz))
+    end = dt_util.as_utc(datetime(2026, 8, 10, tzinfo=tz))
+    assert end.date() == date(2026, 8, 9)  # guard: the bound really is shifted in UTC
+
+    events = await entity.async_get_events(hass, start, end)
+
+    # Without the conversion, the end bound would be 2026-08-09 and drop "1001".
+    assert {event.uid for event in events} == {"999", "1001"}
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
 async def test_calendar_event_description_without_platforms_or_description(hass: HomeAssistant) -> None:
     """Omit the summary/platforms lines when neither is known."""
     episode = Episode(
