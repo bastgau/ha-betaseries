@@ -10,7 +10,7 @@
           "locale": "Preferred language"
         },
         "data_description": {
-          "locale": "Language BetaSeries responses (genres, descriptions, error messages) are returned in. Changeable later in the integration's options."
+          "locale": "Language BetaSeries responses (genres, descriptions, error messages) are returned in. Changeable later in the integration's options. Note: BetaSeries currently ignores this setting and replies in your BetaSeries account's own language, so changing it may have no visible effect."
         }
       },
       "timeout": {
@@ -43,6 +43,9 @@
           "planning_months_behind": "Past months to show in the calendar",
           "planning_months_ahead": "Future months to show in the calendar",
           "locale": "Preferred language"
+        },
+        "data_description": {
+          "locale": "BetaSeries currently ignores this setting and replies in your BetaSeries account's own language, so changing it may have no visible effect."
         }
       }
     }

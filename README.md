@@ -62,6 +62,15 @@ During setup you will be asked for your BetaSeries `client_id` and `client_secre
 
 - The member stats / planning polling intervals.
 - How many past and future months of episodes the calendar and sensors load (2 months each way by default).
+- The preferred language for BetaSeries responses (French or English).
+
+> [!NOTE]
+> **Known limitation - the preferred language setting currently has no effect.** The integration sends
+> your choice to the BetaSeries API on every request, but the API ignores it and returns content
+> (genres, descriptions, error messages) in the language configured on your BetaSeries account
+> instead. This was verified against several endpoints. Change the language on
+> [betaseries.com](https://www.betaseries.com/) itself if you need different content. The setting is
+> kept so it starts working automatically if BetaSeries fixes the behaviour on their side.
 
 ## Entities
 
