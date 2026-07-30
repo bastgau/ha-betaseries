@@ -383,6 +383,25 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         return dt_util.start_of_local_day(episode.air_date) if episode is not None else None
 
     @property
+    def entity_picture(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the poster of the show the selected episode belongs to.
+
+        Posters come from the coordinator's bulk /shows/display cache and are
+        public URLs on pictures.betaseries.com, loadable by the frontend with
+        no authentication. Shows without a poster simply have no entry there,
+        so this returns None rather than a broken image - BetaSeries' episode
+        thumbnail endpoint is not a usable fallback (see CLAUDE.md §4).
+
+        Returns:
+            str | None: The show's poster URL, or None if there is no episode or no poster.
+
+        """
+        episode = self._episode
+        if episode is None:
+            return None
+        return self.coordinator.show_images.get(episode.show.id, {}).get("poster")
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the selected episode's identifiers and details.
 
@@ -399,6 +418,11 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         if episode is None:
             return None
         return {
+            # Every artwork the show has (poster/banner/box/show/clearlogo),
+            # so a card can pick a different one than entity_picture's poster -
+            # a banner for a wide card, a clearlogo to overlay, ... Kinds the
+            # show has no image for are absent rather than null.
+            "show_images": self.coordinator.show_images.get(episode.show.id, {}),
             "episode_id": episode.id,
             "show_id": episode.show.id,
             "code": episode.code,

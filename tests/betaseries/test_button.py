@@ -11,6 +11,8 @@ from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from tests.conftest import client_mock
+
 from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.helpers import entity_registry as er
@@ -67,7 +69,7 @@ async def _async_setup(hass: HomeAssistant, mock_client: AsyncMock) -> MockConfi
 
 async def test_refresh_buttons_disabled_by_default(hass: HomeAssistant) -> None:
     """Disable both refresh buttons by default, as diagnostic entities."""
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()
@@ -87,7 +89,7 @@ async def test_refresh_buttons_disabled_by_default(hass: HomeAssistant) -> None:
 
 async def test_refresh_badges_button_presses_force_refresh(hass: HomeAssistant) -> None:
     """Call MemberCoordinator.async_force_refresh_badges() when the button is pressed."""
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()
@@ -114,7 +116,7 @@ async def test_refresh_badges_button_presses_force_refresh(hass: HomeAssistant) 
 
 async def test_refresh_planning_button_presses_force_refresh(hass: HomeAssistant) -> None:
     """Call PlanningCoordinator.async_force_refresh_planning() when the button is pressed."""
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()

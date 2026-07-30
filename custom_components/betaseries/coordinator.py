@@ -14,7 +14,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .betaseries import AuthError, Badge, CollectionBadge, CollectionEpisode, Episode, Error, Show
+from .betaseries import AuthError, Badge, CollectionBadge, CollectionEpisode, Episode, Error, Show, ShowImages
 from .const import (
     BADGES_STORE_KEY_PREFIX,
     BADGES_STORE_VERSION,
@@ -29,6 +29,8 @@ from .const import (
     DOMAIN,
     PLANNING_STORE_KEY_PREFIX,
     PLANNING_STORE_VERSION,
+    SHOW_IMAGES_STORE_KEY_PREFIX,
+    SHOW_IMAGES_STORE_VERSION,
 )
 
 if TYPE_CHECKING:
@@ -120,6 +122,33 @@ class _CacheStore[DataT: dict[str, Any]](Store[DataT]):
 
         """
         return cast("DataT", {})
+
+
+def _images_to_dict(images: ShowImages) -> dict[str, str]:
+    """Serialize a show's image URLs, dropping the ones it doesn't have.
+
+    Any field of ShowImages may be None (a show can have no artwork at all),
+    and those are left out entirely rather than stored/exposed as null: what
+    remains is exactly what a dashboard card can actually display.
+
+    Args:
+        images (ShowImages): The show's image URLs, as returned by GET /shows/display.
+
+    Returns:
+        dict[str, str]: The URLs the show actually has, keyed by image kind.
+
+    """
+    return {
+        kind: url
+        for kind, url in (
+            ("show", images.show),
+            ("banner", images.banner),
+            ("box", images.box),
+            ("poster", images.poster),
+            ("clearlogo", images.clearlogo),
+        )
+        if url
+    }
 
 
 def _badge_to_dict(badge: Badge) -> dict[str, Any]:
@@ -294,6 +323,8 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
         config_entry (BetaSeriesConfigEntry): The config entry this coordinator serves.
         client (Client): The BetaSeries API client used to fetch the planning.
         store (Store[dict[str, list[dict[str, Any]]]]): Persisted cache of past months' episodes.
+        show_images_store (Store[dict[str, Any]]): Persisted cache of each show's image URLs.
+        show_images (dict[str, dict[str, str]]): Image URLs per show id currently in the window, empty dicts included.
 
     """
 
@@ -322,6 +353,10 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
         self.store: Store[dict[str, list[dict[str, Any]]]] = _CacheStore[dict[str, list[dict[str, Any]]]](
             hass, PLANNING_STORE_VERSION, f"{PLANNING_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
+        self.show_images_store: Store[dict[str, Any]] = _CacheStore[dict[str, Any]](
+            hass, SHOW_IMAGES_STORE_VERSION, f"{SHOW_IMAGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
+        )
+        self.show_images: dict[str, dict[str, str]] = {}
 
     async def _async_update_data(self) -> CollectionEpisode:
         """Fetch the current/future planning and merge it with the cached past months.
@@ -358,15 +393,70 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
             raise UpdateFailed(str(err)) from err
 
         episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
-        return CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
+        planning = CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
+        self.show_images = await self._async_get_show_images(planning.show_ids)
+        return planning
+
+    async def _async_get_show_images(self, show_ids: frozenset[str]) -> dict[str, dict[str, str]]:
+        """Return the image URLs of each show in the window, fetching only the missing ones.
+
+        A show's images essentially never change, so shows already cached are
+        never refetched; shows that left the window are dropped so the cache
+        doesn't grow unbounded. Shows that have no image at all are cached as
+        an empty dict, which stops them being refetched on every refresh.
+
+        Failures are swallowed on purpose: these images are decoration, and
+        the planning itself refreshed fine by the time this runs - failing the
+        whole update over a missing image would take the calendar and both
+        episode sensors down with it.
+
+        Args:
+            show_ids (frozenset[str]): Show ids currently present in the planning window.
+
+        Returns:
+            dict[str, dict[str, str]]: Image URLs per show id, each without its unset entries.
+
+        """
+        stored: dict[str, Any] = await self.show_images_store.async_load() or {}
+        cached: dict[str, dict[str, str]] = {show_id: stored[show_id] for show_id in show_ids if show_id in stored}
+        missing = show_ids - cached.keys()
+
+        if missing:
+            try:
+                _LOGGER.debug(
+                    "Fetching images for %s new show(s) of %s from BetaSeries",
+                    len(missing),
+                    self.config_entry.title,
+                )
+                shows = await self.client.fetch_shows(sorted(missing))
+            except Error as err:
+                _LOGGER.debug(
+                    "Fetching show images for %s failed (HTTP %s): %s",
+                    self.config_entry.title,
+                    err.status,
+                    _compact(err.body),
+                )
+            else:
+                for show_id in missing:
+                    show = shows.for_show(show_id)
+                    information = show.additional_information if show is not None else None
+                    cached[show_id] = _images_to_dict(information.images) if information is not None else {}
+
+        if cached != stored:
+            # Either new images were fetched, or shows left the window and
+            # their entries were dropped by the comprehension above.
+            await self.show_images_store.async_save(cached)
+
+        return cached
 
     async def async_force_refresh_planning(self) -> None:
         """Force a full refetch of every month, including cached past ones, then refresh now.
 
-        Clears the store first: _async_get_cached_past_months() only fetches
-        months missing from the cache, so without this, past months (which
-        never change once over) would keep being served from the store
-        untouched by the "Refresh planning" button.
+        Clears both stores first: _async_get_cached_past_months() and
+        _async_get_show_images() only fetch what is missing from their cache, so
+        without this, past months (which never change once over) and already
+        known show images would keep being served from the store untouched by the
+        "Refresh planning" button.
 
         Returns:
             None: The coordinator's data is updated in place, like any refresh.
@@ -374,6 +464,7 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
         """
         _LOGGER.debug("Clearing cached past months for %s, forcing a full refetch", self.config_entry.title)
         await self.store.async_remove()
+        await self.show_images_store.async_remove()
         await self.async_refresh()
 
     async def _async_fetch_planning(self, month: str) -> CollectionEpisode:

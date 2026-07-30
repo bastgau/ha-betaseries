@@ -14,6 +14,8 @@ from custom_components.betaseries.const import CONF_LOCALE, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from tests.conftest import client_mock
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
@@ -57,7 +59,7 @@ async def test_setup_entry_creates_coordinator(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()
@@ -88,7 +90,7 @@ async def test_setup_entry_succeeds_when_only_the_planning_fails(hass: HomeAssis
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.side_effect = Error("planning is down")
@@ -161,7 +163,7 @@ async def test_setup_entry_retries_when_the_member_data_fails(hass: HomeAssistan
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.side_effect = Error("member endpoint is down")
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
@@ -180,7 +182,7 @@ async def test_setup_entry_passes_default_locale_to_client(hass: HomeAssistant) 
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.return_value = ()
 
@@ -201,7 +203,7 @@ async def test_setup_entry_passes_configured_locale_to_client(hass: HomeAssistan
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.return_value = ()
 
@@ -221,7 +223,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.return_value = ()
 

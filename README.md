@@ -103,6 +103,8 @@ All entities below are enabled by default and grouped under a single device per 
 
 Both episode sensors expose the same attributes, describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms` and `resource_url`. `episode_id` and `show_id` are the identifiers BetaSeries actions will target, so a dashboard card can act on the episode the sensor points at.
 
+They also carry the show's poster as their picture, so they render nicely in a `picture-entity` card. The `show_images` attribute holds every artwork the show has (`poster`, `banner`, `box`, `show`, `clearlogo`) so a card can use a different one - a banner for a wide layout, a clearlogo to overlay. Artwork the show doesn't have is left out of that attribute, and shows with no artwork at all simply get no picture.
+
 ### Binary sensor
 
 | Name | Meaning |

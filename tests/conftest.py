@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
+from custom_components.betaseries.betaseries.collection_show import CollectionShow
 import pytest
 
 if TYPE_CHECKING:
@@ -24,6 +25,30 @@ def auto_enable_custom_integrations(  # pylint: disable=unused-argument
         None: Nothing; the upstream fixture performs the setup.
 
     """
+
+
+def client_mock(**kwargs: object) -> AsyncMock:
+    """Build a Client mock with a usable default for fetch_shows().
+
+    PlanningCoordinator resolves show posters through
+    `(await client.fetch_shows(...)).for_show(...)`. A bare AsyncMock
+    propagates asynchronousness to its children, so for_show() - which is
+    synchronous - would hand back a coroutine. Returning a real, empty
+    CollectionShow keeps posters out of the way of tests that don't care
+    about them; poster tests override fetch_shows on the returned mock.
+
+    Args:
+        **kwargs (object): Attributes to set on the mock, e.g. fetch_planning=...
+
+    Returns:
+        AsyncMock: The configured client mock.
+
+    """
+    client = AsyncMock()
+    client.fetch_shows.return_value = CollectionShow({})
+    for name, value in kwargs.items():
+        setattr(client, name, value)
+    return client
 
 
 @pytest.fixture

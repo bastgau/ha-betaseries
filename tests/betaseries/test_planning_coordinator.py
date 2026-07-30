@@ -12,14 +12,20 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 from custom_components.betaseries.betaseries.collection_episode import CollectionEpisode
+from custom_components.betaseries.betaseries.collection_show import CollectionShow
 from custom_components.betaseries.betaseries.episode import Episode
+from custom_components.betaseries.betaseries.exceptions import Error
 from custom_components.betaseries.betaseries.show import Show
+from custom_components.betaseries.betaseries.show_additional_information import ShowAdditionalInformation
+from custom_components.betaseries.betaseries.show_images import ShowImages
 from custom_components.betaseries.const import (
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
     DOMAIN,
     PLANNING_STORE_KEY_PREFIX,
+    SHOW_IMAGES_STORE_KEY_PREFIX,
+    SHOW_IMAGES_STORE_VERSION,
 )
 from custom_components.betaseries.coordinator import (
     PlanningCoordinator,
@@ -28,6 +34,8 @@ from custom_components.betaseries.coordinator import (
 )
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from tests.conftest import client_mock
 
 if TYPE_CHECKING:
     from typing import Any
@@ -117,7 +125,7 @@ async def test_update_success_aggregates_all_months(hass: HomeAssistant) -> None
     """Aggregate episodes fetched across past, current and future months."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
@@ -144,7 +152,7 @@ async def test_update_success_with_float_months_options(hass: HomeAssistant) -> 
         options={CONF_PLANNING_MONTHS_BEHIND: 1.0, CONF_PLANNING_MONTHS_AHEAD: 1.0},
     )
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
@@ -176,7 +184,7 @@ async def test_update_success_sorts_by_air_date(hass: HomeAssistant) -> None:
         options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 1},
     )
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.side_effect = [
         CollectionEpisode((later_episode,)),
         CollectionEpisode((earlier_episode,)),
@@ -199,7 +207,7 @@ async def test_past_months_are_cached_and_not_refetched(
         options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
     )
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
@@ -225,7 +233,7 @@ async def test_past_months_persist_across_coordinator_instances(
         options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
     )
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     first_coordinator = PlanningCoordinator(hass, entry, mock_client)
@@ -252,7 +260,7 @@ async def test_force_refresh_planning_refetches_cached_past_months(
         options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
     )
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
@@ -287,7 +295,7 @@ async def test_cache_prunes_months_that_slid_out_of_window(
         options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
     )
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
@@ -359,7 +367,7 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
             ]
         },
     }
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
 
     coordinator = PlanningCoordinator(hass, entry, mock_client)
@@ -370,3 +378,173 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
     # are freshly fetched instead of the past month being served (and crashing).
     assert mock_client.fetch_planning.await_count == 2
     assert tuple(coordinator.data) == (EPISODE, EPISODE)
+
+
+def _show_with_poster(show_id: str, poster: str | None) -> Show:
+    """Build a Show carrying the additional information that holds its poster.
+
+    Args:
+        show_id (str): BetaSeries show id.
+        poster (str | None): Poster URL, or None for a show that has no poster.
+
+    Returns:
+        Show: The show, with additional_information populated.
+
+    """
+    return Show(
+        id=show_id,
+        title="Example Show",
+        additional_information=ShowAdditionalInformation(
+            original_title="Example Show",
+            imdb_id=None,
+            themoviedb_id=None,
+            genres=(),
+            showrunners=(),
+            aliases=(),
+            seasons=1,
+            followers=0,
+            network="Netflix",
+            country=None,
+            original_language=None,
+            length=30,
+            rating="",
+            notes_mean=0,
+            notes_total=0,
+            next_trailer=None,
+            resource_url="https://www.betaseries.com/serie/example-show",
+            images=ShowImages(show=None, banner=None, box=None, poster=poster, clearlogo=None),
+        ),
+    )
+
+
+async def test_show_images_are_fetched_in_a_single_bulk_call(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
+) -> None:
+    """Resolve every show of the window's poster with one /shows/display call."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+    mock_client.fetch_shows.return_value = CollectionShow(
+        {"55": _show_with_poster("55", "https://pictures.betaseries.com/poster.jpg")}
+    )
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert coordinator.show_images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
+    assert mock_client.fetch_shows.await_count == 1
+    assert mock_client.fetch_shows.await_args.args[0] == ["55"]
+
+
+async def test_show_images_are_cached_and_not_refetched(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
+) -> None:
+    """Fetch a show's poster once, then reuse the stored copy on later refreshes."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+    mock_client.fetch_shows.return_value = CollectionShow(
+        {"55": _show_with_poster("55", "https://pictures.betaseries.com/poster.jpg")}
+    )
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+    await coordinator.async_refresh()
+
+    assert mock_client.fetch_shows.await_count == 1
+    assert coordinator.show_images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
+
+
+async def test_shows_without_any_image_are_cached_too(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
+) -> None:
+    """Remember shows that have no poster, so they are not refetched every time.
+
+    They are kept out of `posters` (there is nothing to display) but stay in
+    the store, otherwise they would count as "missing" on every refresh.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+    mock_client.fetch_shows.return_value = CollectionShow({"55": _show_with_poster("55", None)})
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+    await coordinator.async_refresh()
+
+    assert coordinator.show_images == {"55": {}}
+    assert mock_client.fetch_shows.await_count == 1
+
+
+async def test_show_images_of_shows_leaving_the_window_are_purged(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Drop cached posters of shows that are no longer in the planning window."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    hass_storage[f"{SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"] = {
+        "version": SHOW_IMAGES_STORE_VERSION,
+        "data": {"999": "https://pictures.betaseries.com/gone.jpg"},
+    }
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+    mock_client.fetch_shows.return_value = CollectionShow(
+        {"55": _show_with_poster("55", "https://pictures.betaseries.com/poster.jpg")}
+    )
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert coordinator.show_images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
+    stored = hass_storage[f"{SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
+    assert "999" not in stored
+
+
+async def test_show_images_failure_does_not_fail_the_refresh(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
+) -> None:
+    """Keep the planning usable when only the poster call fails.
+
+    A poster is decoration: failing the whole update over it would take the
+    calendar and both episode sensors down with it.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+    mock_client.fetch_shows.side_effect = Error("shows endpoint is down")
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is True
+    assert tuple(coordinator.data) == (EPISODE,)
+    assert coordinator.show_images == {}

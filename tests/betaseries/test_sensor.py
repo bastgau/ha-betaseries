@@ -9,17 +9,21 @@ from unittest.mock import AsyncMock, patch
 from custom_components.betaseries.betaseries.badge import Badge
 from custom_components.betaseries.betaseries.collection_badge import CollectionBadge
 from custom_components.betaseries.betaseries.collection_episode import CollectionEpisode
+from custom_components.betaseries.betaseries.collection_show import CollectionShow
 from custom_components.betaseries.betaseries.episode import Episode
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.show import Show
+from custom_components.betaseries.betaseries.show_additional_information import ShowAdditionalInformation
+from custom_components.betaseries.betaseries.show_images import ShowImages
 from custom_components.betaseries.const import CONF_PLANNING_MONTHS_AHEAD, CONF_PLANNING_MONTHS_BEHIND, DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from tests.conftest import client_mock
 
 if TYPE_CHECKING:
     from freezegun.api import FrozenDateTimeFactory
@@ -57,7 +61,7 @@ async def test_sensors_reflect_member_data(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
@@ -146,7 +150,7 @@ async def _setup_with_planning(hass: HomeAssistant, episodes: tuple[Episode, ...
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.side_effect = [
         CollectionEpisode(episodes),
@@ -255,7 +259,7 @@ async def test_calendar_event_count_disabled_by_default(hass: HomeAssistant) -> 
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.return_value = CollectionEpisode(())
 
@@ -333,7 +337,7 @@ async def test_calendar_event_count_reports_total_and_breakdown_by_month(
     def _fetch_planning(month: str) -> CollectionEpisode:
         return CollectionEpisode(episodes_by_month.get(month, ()))
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.side_effect = _fetch_planning
 
@@ -365,7 +369,7 @@ async def test_calendar_event_count_is_zero_when_planning_is_empty(hass: HomeAss
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.return_value = CollectionEpisode(())
 
@@ -400,7 +404,7 @@ async def test_badges_sensor_exposes_all_raw_fields_as_attributes(hass: HomeAssi
         level=None,
     )
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = CollectionBadge((badge,))
     mock_client.fetch_planning.return_value = CollectionEpisode(())
@@ -431,7 +435,7 @@ async def test_other_sensors_have_no_extra_attributes(hass: HomeAssistant) -> No
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = CollectionBadge(())
     mock_client.fetch_planning.return_value = CollectionEpisode(())
@@ -443,3 +447,86 @@ async def test_other_sensors_have_no_extra_attributes(hass: HomeAssistant) -> No
     state = hass.states.get("sensor.betaseries_test_user_xp")
     assert state is not None
     assert "badges" not in state.attributes
+
+
+async def test_episode_sensors_expose_the_show_poster_as_entity_picture(hass: HomeAssistant) -> None:
+    """Use the show's poster, resolved by the coordinator, as the sensor's picture."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="test_user",
+        data=USER_INPUT,
+        options={CONF_PLANNING_MONTHS_BEHIND: 0},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.side_effect = [
+        CollectionEpisode((_episode("1001", date(2026, 8, 10), seen=False),)),
+        CollectionEpisode(()),
+        CollectionEpisode(()),
+    ]
+    mock_client.fetch_shows.return_value = CollectionShow(
+        {
+            "55": Show(
+                id="55",
+                title="Example Show",
+                additional_information=ShowAdditionalInformation(
+                    original_title="Example Show",
+                    imdb_id=None,
+                    themoviedb_id=None,
+                    genres=(),
+                    showrunners=(),
+                    aliases=(),
+                    seasons=1,
+                    followers=0,
+                    network="Netflix",
+                    country=None,
+                    original_language=None,
+                    length=30,
+                    rating="",
+                    notes_mean=0,
+                    notes_total=0,
+                    next_trailer=None,
+                    resource_url="https://www.betaseries.com/serie/example-show",
+                    images=ShowImages(
+                        show=None,
+                        banner="https://pictures.betaseries.com/banner.jpg",
+                        box=None,
+                        poster="https://pictures.betaseries.com/poster.jpg",
+                        clearlogo="https://pictures.betaseries.com/logo.png",
+                    ),
+                ),
+            )
+        }
+    )
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    assert state is not None
+    assert state.attributes["entity_picture"] == "https://pictures.betaseries.com/poster.jpg"
+    # The whole set is exposed too, so a card can pick another artwork than the
+    # poster; kinds the show has no image for are absent rather than null.
+    assert state.attributes["show_images"] == {
+        "banner": "https://pictures.betaseries.com/banner.jpg",
+        "poster": "https://pictures.betaseries.com/poster.jpg",
+        "clearlogo": "https://pictures.betaseries.com/logo.png",
+    }
+
+
+async def test_episode_sensors_have_no_picture_without_a_poster(hass: HomeAssistant) -> None:
+    """Expose no picture at all when the show has no poster.
+
+    BetaSeries' episode thumbnail endpoint requires an API key, so it is not
+    a usable fallback (see CLAUDE.md §4): no picture beats a broken image.
+    """
+    await _setup_with_planning(hass, (_episode("1001", date(2026, 8, 10), seen=False),))
+
+    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    assert state is not None
+    assert "entity_picture" not in state.attributes
+    assert state.attributes["show_images"] == {}

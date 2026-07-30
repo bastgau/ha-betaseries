@@ -17,6 +17,8 @@ from custom_components.betaseries.coordinator import MemberCoordinator, Planning
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from tests.conftest import client_mock
+
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -49,7 +51,7 @@ async def test_auth_error_marks_refresh_failed(
     """
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     getattr(mock_client, mocked_method).side_effect = AuthError("Access token was rejected")
 
     coordinator = coordinator_class(hass, entry, mock_client)
@@ -82,7 +84,7 @@ async def test_auth_error_logs_reauth_guidance(
     """
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="Test Account")
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     getattr(mock_client, mocked_method).side_effect = AuthError(
         "Access token was rejected",
         status=400,
@@ -114,7 +116,7 @@ async def test_error_marks_refresh_failed(
     """
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     getattr(mock_client, mocked_method).side_effect = Error("boom")
 
     coordinator = coordinator_class(hass, entry, mock_client)

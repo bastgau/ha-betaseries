@@ -53,14 +53,18 @@ SUPPORTED_LOCALES = ["fr", "en"]
 # coordinator._episode_to_dict/_episode_from_dict) - _CacheStore discards
 # any data from an older version instead of trying to migrate it, since this
 # cache is just a performance optimization that's always safe/cheap to refill
-# from the API. Bumped 1 -> 2: Episode's "number" field used to be persisted
-# as "episode", crashing _episode_from_dict (KeyError: 'number') on any cache
-# left over from before that rename. Bumped 2 -> 3: added "show_description"/
-# "show_slug" keys (Show.description/Show.slug) - additive, but past months
-# never get refetched once cached, so without this bump a pre-existing cache
-# would silently keep missing these fields forever instead of just once.
-PLANNING_STORE_VERSION = 3
+# from the API.
+PLANNING_STORE_VERSION = 1
 PLANNING_STORE_KEY_PREFIX = "betaseries_planning_past"
+
+# Storage key for the cached show images (see PlanningCoordinator). These are
+# public URLs on pictures.betaseries.com (verified loadable with no auth, unlike
+# the episode thumbnails - see CLAUDE.md §4), fetched in a single bulk
+# GET /shows/display call for every show currently in the planning window. A
+# show's images essentially never change, so only shows missing from this cache
+# are fetched on each refresh, and shows that left the window are purged.
+SHOW_IMAGES_STORE_VERSION = 1
+SHOW_IMAGES_STORE_KEY_PREFIX = "betaseries_show_images"
 
 # Storage key for the cached badge details (see MemberCoordinator). Badges are
 # only refetched when stats.badges (the count from GET /members/infos) changes

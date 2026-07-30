@@ -15,6 +15,8 @@ from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.const import CONF_PLANNING_MONTHS_BEHIND, DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from tests.conftest import client_mock
+
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.util import dt as dt_util
 
@@ -95,7 +97,7 @@ async def _setup_entry_with_planning(hass: HomeAssistant, episodes: tuple[Episod
     )
     entry.add_to_hass(hass)
 
-    mock_client = AsyncMock()
+    mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.side_effect = [
         CollectionEpisode(episodes),
