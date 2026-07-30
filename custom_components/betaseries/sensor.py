@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .betaseries import CollectionEpisode, MemberData
+    from .betaseries import CollectionEpisode, Episode, MemberData
     from .coordinator import BetaSeriesConfigEntry, MemberCoordinator, PlanningCoordinator
 
 type StateType = int | float | str | None
@@ -192,37 +192,68 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
 
 @dataclass(kw_only=True, frozen=True)
 class BetaSeriesPlanningSensorEntityDescription(SensorEntityDescription):
-    """Describe a BetaSeries sensor backed by PlanningCoordinator data.
+    """Describe a BetaSeries sensor backed by a single episode of the planning.
+
+    These sensors only differ by which episode they single out, so they share
+    one selection callback: the state (its air date) and the actionable
+    attributes are both derived from that same episode, picked once.
 
     Attributes:
-        value_fn (Callable[[CollectionEpisode], datetime | None]): Extracts this sensor's value.
+        episode_fn (Callable[[CollectionEpisode], Episode | None]): Picks the episode this sensor describes.
 
     """
 
-    value_fn: Callable[[CollectionEpisode], datetime | None]
+    episode_fn: Callable[[CollectionEpisode], Episode | None]
 
 
-def _next_episode_air_datetime(episodes: CollectionEpisode) -> datetime | None:
-    """Return the air date of the earliest unseen episode as a local midnight datetime.
+def _latest_unwatched_episode(episodes: CollectionEpisode) -> Episode | None:
+    """Return the most recently aired episode the member has not watched yet.
+
+    Walks the planning backwards (it is sorted by air_date): the newest unseen
+    episode is the one to act on - the one just aired or about to be watched.
+    Deliberately not the oldest unseen one, which on a large backlog would be
+    a months-old straggler that never changes.
 
     Args:
         episodes (CollectionEpisode): The planning, sorted by air_date.
 
     Returns:
-        datetime | None: The next unseen episode's air date at local midnight, or None if there is none.
+        Episode | None: The newest unseen episode, or None if every episode has been seen.
 
     """
-    for episode in episodes:
-        if not episode.seen:
-            return dt_util.start_of_local_day(episode.air_date)
-    return None
+    return next((episode for episode in reversed(tuple(episodes)) if not episode.seen), None)
 
 
-NEXT_EPISODE_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
-    key="next_episode",
-    translation_key="next_episode",
+def _next_episode_airing(episodes: CollectionEpisode) -> Episode | None:
+    """Return the next episode due to air, whether or not it has been seen.
+
+    Unlike _latest_unwatched_episode, this ignores `seen` entirely: it answers
+    "when does the next episode of my shows come out", not "what should I
+    watch next".
+
+    Args:
+        episodes (CollectionEpisode): The planning, sorted by air_date.
+
+    Returns:
+        Episode | None: The first episode airing today or later, or None if there is none.
+
+    """
+    today = dt_util.now().date()
+    return next((episode for episode in episodes if episode.air_date >= today), None)
+
+
+LATEST_UNWATCHED_EPISODE_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
+    key="latest_unwatched_episode",
+    translation_key="latest_unwatched_episode",
     device_class=SensorDeviceClass.TIMESTAMP,
-    value_fn=_next_episode_air_datetime,
+    episode_fn=_latest_unwatched_episode,
+)
+
+NEXT_EPISODE_AIRING_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
+    key="next_episode_airing",
+    translation_key="next_episode_airing",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    episode_fn=_next_episode_airing,
 )
 
 CALENDAR_EVENT_COUNT_DESCRIPTION = SensorEntityDescription(
@@ -269,7 +300,8 @@ async def async_setup_entry(  # pylint: disable=unused-argument
     async_add_entities(
         [
             *(BetaSeriesSensor(member_coordinator, description) for description in SENSOR_DESCRIPTIONS),
-            BetaSeriesPlanningSensor(planning_coordinator, NEXT_EPISODE_DESCRIPTION),
+            BetaSeriesPlanningSensor(planning_coordinator, LATEST_UNWATCHED_EPISODE_DESCRIPTION),
+            BetaSeriesPlanningSensor(planning_coordinator, NEXT_EPISODE_AIRING_DESCRIPTION),
             BetaSeriesCalendarEventCountSensor(planning_coordinator, CALENDAR_EVENT_COUNT_DESCRIPTION),
         ]
     )
@@ -323,8 +355,8 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @property
-    def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the current value of this sensor.
+    def _episode(self) -> Episode | None:
+        """Return the episode this sensor currently describes.
 
         The planning is fetched without blocking the entry's setup (see
         __init__.py), so this entity can be added before any planning data
@@ -332,12 +364,51 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         is still None at that point (see BetaSeriesCalendar.event).
 
         Returns:
-            datetime | None: The value extracted from the coordinator's planning data.
+            Episode | None: The selected episode, or None if there is none (or no data yet).
 
         """
         if not self.coordinator.last_update_success:
             return None
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.episode_fn(self.coordinator.data)
+
+    @property
+    def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the selected episode's air date, as a local midnight datetime.
+
+        Returns:
+            datetime | None: The episode's air date at local midnight, or None if there is no episode.
+
+        """
+        episode = self._episode
+        return dt_util.start_of_local_day(episode.air_date) if episode is not None else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the selected episode's identifiers and details.
+
+        These make the sensor actionable from a dashboard card: episode_id
+        and show_id are what the (v3) services target, and Home Assistant's
+        CalendarEvent has no field to carry them, so the calendar entity
+        cannot expose them (see CLAUDE.md §5).
+
+        Returns:
+            dict[str, Any] | None: The episode's attributes, or None if there is no episode.
+
+        """
+        episode = self._episode
+        if episode is None:
+            return None
+        return {
+            "episode_id": episode.id,
+            "show_id": episode.show.id,
+            "code": episode.code,
+            "season": episode.season,
+            "number": episode.number,
+            "title": episode.title,
+            "show_title": episode.show.title,
+            "platforms": list(episode.platforms),
+            "resource_url": episode.resource_url,
+        }
 
 
 class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]

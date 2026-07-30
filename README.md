@@ -18,7 +18,7 @@ This integration connects Home Assistant to your [BetaSeries](https://www.betase
 It is delivered in three stages:
 
 - **v1** - `sensor` (account stats: episodes to watch, time to spend, progress, badges, etc.) and `binary_sensor` (a new episode / a movie to watch is available). Includes authentication.
-- **v2** - `calendar` (upcoming episodes of the shows you follow) and a `Next episode` sensor.
+- **v2** - `calendar` (upcoming episodes of the shows you follow) and the episode sensors.
 - **v3** - `services` (mark an episode/season watched, rate an episode/show).
 
 ## Requirements
@@ -97,8 +97,11 @@ All entities below are enabled by default and grouped under a single device per 
 | Member since | d | Number of days since account creation |
 | Episodes per month | - | Average number of episodes watched per month |
 | Favorite genre | - | Most watched genre |
-| Next episode | - | Air date of the earliest episode not yet marked as watched |
+| Latest unwatched episode | - | Air date of the most recently aired episode not yet marked as watched |
+| Next episode airing | - | Air date of the next episode due to air, watched or not |
 | Calendar event count | - | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes |
+
+Both episode sensors expose the same attributes, describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms` and `resource_url`. `episode_id` and `show_id` are the identifiers BetaSeries actions will target, so a dashboard card can act on the episode the sensor points at.
 
 ### Binary sensor
 
@@ -109,7 +112,7 @@ All entities below are enabled by default and grouped under a single device per 
 
 ### Calendar
 
-One calendar entity ("Planning") lists episodes of the shows you follow as all-day events, titled `<show> - <SxxEyy>`, including both watched and unwatched episodes. The window of months shown (past and future) is configurable from the integration options (2 months each way by default). The calendar's own "next event" and the `Next episode` sensor only ever point to the earliest episode not yet marked as watched.
+One calendar entity ("Planning") lists episodes of the shows you follow as all-day events, titled `<show> - <SxxEyy>`, including both watched and unwatched episodes. The window of months shown (past and future) is configurable from the integration options (2 months each way by default). The calendar's own "next event" points to the earliest episode not yet marked as watched.
 
 ## Troubleshooting
 

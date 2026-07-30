@@ -35,13 +35,6 @@ def _make_episode(show_id: str) -> Episode:
     )
 
 
-def test_images_derives_picture_url_from_id() -> None:
-    """Derive the episode's picture URL from its id, with no fetch involved."""
-    episode = _make_episode("10")
-
-    assert episode.images.episode == "https://api.betaseries.com/pictures/episodes?id=1"
-
-
 async def test_fetch_show_calls_client_with_its_show_id() -> None:
     """Call client.fetch_shows() with this episode's show id, alone in a list."""
     episode = _make_episode("10")

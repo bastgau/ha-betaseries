@@ -113,7 +113,7 @@ async def test_setup_entry_succeeds_when_only_the_planning_fails(hass: HomeAssis
     # HA adds them, before any planning data exists).
     for entity_id in (
         "calendar.betaseries_test_user_release_calendar",
-        "sensor.betaseries_test_user_next_episode",
+        "sensor.betaseries_test_user_latest_unwatched_episode",
     ):
         planning_state = hass.states.get(entity_id)
         assert planning_state is not None, entity_id
@@ -139,11 +139,12 @@ async def test_setup_entry_succeeds_when_only_the_planning_fails(hass: HomeAssis
     assert count_entity.native_value is None
     assert count_entity.extra_state_attributes == {}
 
-    next_episode = hass.data["entity_components"]["sensor"].get_entity(
-        "sensor.betaseries_test_user_next_episode"
+    latest_unwatched = hass.data["entity_components"]["sensor"].get_entity(
+        "sensor.betaseries_test_user_latest_unwatched_episode"
     )
-    assert next_episode is not None
-    assert next_episode.native_value is None
+    assert latest_unwatched is not None
+    assert latest_unwatched.native_value is None
+    assert latest_unwatched.extra_state_attributes is None
 
 
 async def test_setup_entry_retries_when_the_member_data_fails(hass: HomeAssistant) -> None:

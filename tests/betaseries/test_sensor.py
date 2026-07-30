@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
@@ -90,8 +90,53 @@ async def test_sensors_reflect_member_data(hass: HomeAssistant) -> None:
         assert state.state == expected_state
 
 
-async def test_next_episode_reflects_earliest_unseen_episode(hass: HomeAssistant) -> None:
-    """Expose the earliest unseen episode's air date as a local-midnight timestamp."""
+def _episode(
+    episode_id: str,
+    air_date: date,
+    *,
+    seen: bool,
+    code: str = "S03E04",
+    number: int = 4,
+) -> Episode:
+    """Build an Episode for the planning sensor tests.
+
+    Args:
+        episode_id (str): BetaSeries episode id.
+        air_date (date): Date the episode airs.
+        seen (bool): Whether the member has already watched it.
+        code (str): Season/episode code.
+        number (int): Episode number within the season.
+
+    Returns:
+        Episode: The built episode.
+
+    """
+    return Episode(
+        id=episode_id,
+        season=3,
+        number=number,
+        code=code,
+        title="The One With The Tests",
+        description="A thrilling episode summary.",
+        air_date=air_date,
+        seen=seen,
+        platforms=("Netflix", "Apple TV"),
+        resource_url=f"https://www.betaseries.com/episode/{episode_id}",
+        show=Show(id="55", title="Example Show"),
+    )
+
+
+async def _setup_with_planning(hass: HomeAssistant, episodes: tuple[Episode, ...]) -> MockConfigEntry:
+    """Set up an entry whose first planning month returns the given episodes.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant test instance.
+        episodes (tuple[Episode, ...]): Episodes returned for the first fetch_planning() call.
+
+    Returns:
+        MockConfigEntry: The set up config entry.
+
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
@@ -101,24 +146,10 @@ async def test_next_episode_reflects_earliest_unseen_episode(hass: HomeAssistant
     )
     entry.add_to_hass(hass)
 
-    episode = Episode(
-        id="1001",
-        season=3,
-        number=4,
-        code="S03E04",
-        title="The One With The Tests",
-        description="A thrilling episode summary.",
-        air_date=date(2026, 8, 10),
-        seen=False,
-        platforms=("Netflix",),
-        resource_url="https://www.betaseries.com/episode/1001",
-        show=Show(id="55", title="Example Show"),
-    )
-
     mock_client = AsyncMock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_planning.side_effect = [
-        CollectionEpisode((episode,)),
+        CollectionEpisode(episodes),
         CollectionEpisode(()),
         CollectionEpisode(()),
     ]
@@ -127,82 +158,96 @@ async def test_next_episode_reflects_earliest_unseen_episode(hass: HomeAssistant
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.betaseries_test_user_next_episode")
+    return entry
+
+
+async def test_latest_unwatched_episode_picks_the_newest_unseen_one(hass: HomeAssistant) -> None:
+    """Pick the most recently aired unseen episode, not the oldest one.
+
+    On a backlog, the oldest unseen episode would be a months-old straggler
+    that never changes; the newest one is what the member is about to watch.
+    """
+    older = _episode("500", date(2026, 8, 1), seen=False, code="S03E02", number=2)
+    newer = _episode("1001", date(2026, 8, 10), seen=False)
+    await _setup_with_planning(hass, (older, newer))
+
+    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
     assert state is not None
     assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(date(2026, 8, 10))
+    assert state.attributes["episode_id"] == "1001"
 
 
-async def test_next_episode_is_unknown_when_planning_is_empty(hass: HomeAssistant) -> None:
-    """Report an unknown state when there is no unseen episode."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
-    entry.add_to_hass(hass)
+async def test_latest_unwatched_episode_skips_seen_episodes(hass: HomeAssistant) -> None:
+    """Ignore already-seen episodes, even when they aired more recently."""
+    unseen = _episode("1001", date(2026, 8, 1), seen=False, code="S03E02", number=2)
+    seen = _episode("500", date(2026, 8, 10), seen=True)
+    await _setup_with_planning(hass, (unseen, seen))
 
-    mock_client = AsyncMock()
-    mock_client.fetch_member_data.return_value = MEMBER_DATA
-    mock_client.fetch_planning.return_value = CollectionEpisode(())
+    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    assert state is not None
+    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(date(2026, 8, 1))
+    assert state.attributes["episode_id"] == "1001"
 
-    with patch("custom_components.betaseries.Client", return_value=mock_client):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.betaseries_test_user_next_episode")
+async def test_latest_unwatched_episode_exposes_actionable_attributes(hass: HomeAssistant) -> None:
+    """Expose the identifiers the (v3) services target, which CalendarEvent cannot carry."""
+    await _setup_with_planning(hass, (_episode("1001", date(2026, 8, 10), seen=False),))
+
+    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    assert state is not None
+    assert state.attributes["episode_id"] == "1001"
+    assert state.attributes["show_id"] == "55"
+    assert state.attributes["code"] == "S03E04"
+    assert state.attributes["season"] == 3
+    assert state.attributes["number"] == 4
+    assert state.attributes["title"] == "The One With The Tests"
+    assert state.attributes["show_title"] == "Example Show"
+    assert state.attributes["platforms"] == ["Netflix", "Apple TV"]
+    assert state.attributes["resource_url"] == "https://www.betaseries.com/episode/1001"
+
+
+async def test_latest_unwatched_episode_is_unknown_when_everything_is_seen(hass: HomeAssistant) -> None:
+    """Report an unknown state, with no attributes, when there is no unseen episode."""
+    await _setup_with_planning(hass, (_episode("500", date(2026, 8, 1), seen=True),))
+
+    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
     assert state is not None
     assert state.state == "unknown"
+    assert "episode_id" not in state.attributes
 
 
-async def test_next_episode_skips_seen_episodes(hass: HomeAssistant) -> None:
-    """Skip already-seen episodes when picking the next episode's air date."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="42",
-        title="test_user",
-        data=USER_INPUT,
-        options={CONF_PLANNING_MONTHS_BEHIND: 0},
-    )
-    entry.add_to_hass(hass)
+async def test_next_episode_airing_picks_the_first_future_episode(hass: HomeAssistant) -> None:
+    """Pick the next episode due to air, regardless of whether it has been seen."""
+    today = dt_util.now().date()
+    aired = _episode("500", today - timedelta(days=5), seen=False, code="S03E02", number=2)
+    upcoming = _episode("1001", today + timedelta(days=3), seen=True)
+    await _setup_with_planning(hass, (aired, upcoming))
 
-    seen_episode = Episode(
-        id="500",
-        season=3,
-        number=2,
-        code="S03E02",
-        title="Already Watched",
-        description="",
-        air_date=date(2026, 8, 1),
-        seen=True,
-        platforms=(),
-        resource_url="https://www.betaseries.com/episode/500",
-        show=Show(id="55", title="Example Show"),
-    )
-    unseen_episode = Episode(
-        id="1001",
-        season=3,
-        number=4,
-        code="S03E04",
-        title="The One With The Tests",
-        description="A thrilling episode summary.",
-        air_date=date(2026, 8, 10),
-        seen=False,
-        platforms=("Netflix",),
-        resource_url="https://www.betaseries.com/episode/1001",
-        show=Show(id="55", title="Example Show"),
-    )
-
-    mock_client = AsyncMock()
-    mock_client.fetch_member_data.return_value = MEMBER_DATA
-    mock_client.fetch_planning.side_effect = [
-        CollectionEpisode((seen_episode, unseen_episode)),
-        CollectionEpisode(()),
-        CollectionEpisode(()),
-    ]
-
-    with patch("custom_components.betaseries.Client", return_value=mock_client):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.betaseries_test_user_next_episode")
+    state = hass.states.get("sensor.betaseries_test_user_next_episode_airing")
     assert state is not None
-    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(date(2026, 8, 10))
+    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(today + timedelta(days=3))
+    # Seen, yet still selected: this sensor answers "when does it come out".
+    assert state.attributes["episode_id"] == "1001"
+
+
+async def test_next_episode_airing_includes_today(hass: HomeAssistant) -> None:
+    """Treat an episode airing today as upcoming, not as past."""
+    today = dt_util.now().date()
+    await _setup_with_planning(hass, (_episode("1001", today, seen=False),))
+
+    state = hass.states.get("sensor.betaseries_test_user_next_episode_airing")
+    assert state is not None
+    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(today)
+
+
+async def test_next_episode_airing_is_unknown_when_everything_has_aired(hass: HomeAssistant) -> None:
+    """Report an unknown state when no episode is due to air."""
+    today = dt_util.now().date()
+    await _setup_with_planning(hass, (_episode("500", today - timedelta(days=5), seen=False),))
+
+    state = hass.states.get("sensor.betaseries_test_user_next_episode_airing")
+    assert state is not None
+    assert state.state == "unknown"
 
 
 async def test_calendar_event_count_disabled_by_default(hass: HomeAssistant) -> None:
