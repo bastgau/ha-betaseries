@@ -97,11 +97,13 @@ All entities below are enabled by default and grouped under a single device per 
 | Member since | d | Number of days since account creation |
 | Episodes per month | - | Average number of episodes watched per month |
 | Favorite genre | - | Most watched genre |
-| Latest unwatched episode | - | Air date of the most recently aired episode not yet marked as watched |
-| Next episode airing | - | Air date of the next episode due to air, watched or not |
+| Latest unwatched episode | - | Air date of the most recently aired episode not yet marked as watched (excluding today, see below) |
+| Next episode airing | - | Air date of the next episode due to air, watched or not (including today) |
 | Calendar event count | - | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes |
 
-Both episode sensors expose the same attributes, describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms` and `resource_url`. `episode_id` and `show_id` are the identifiers BetaSeries actions will target, so a dashboard card can act on the episode the sensor points at.
+BetaSeries only ever tells which day an episode airs, never at what time, so each sensor pins its timestamp to the end of the day it cannot be wrong about: "next episode airing" uses 23:59:59 and "latest unwatched episode" uses midnight. Home Assistant's relative display ("in 3 days", "2 days ago") then always agrees with what the sensor announces. For the same reason an episode airing today belongs to "next episode airing" until the day is over - claiming it is already watchable would be a guess - so the two sensors never point at the same episode.
+
+Both expose the same attributes, describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms` and `resource_url`. `episode_id` and `show_id` are the identifiers BetaSeries actions will target, so a dashboard card can act on the episode the sensor points at.
 
 They also carry the show's poster as their picture, so they render nicely in a `picture-entity` card. The `show_images` attribute holds every artwork the show has (`poster`, `banner`, `box`, `show`, `clearlogo`) so a card can use a different one - a banner for a wide layout, a clearlogo to overlay. Artwork the show doesn't have is left out of that attribute, and shows with no artwork at all simply get no picture.
 
