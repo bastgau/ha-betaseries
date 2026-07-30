@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
@@ -200,10 +201,12 @@ class BetaSeriesPlanningSensorEntityDescription(SensorEntityDescription):
 
     Attributes:
         episode_fn (Callable[[CollectionEpisode], Episode | None]): Picks the episode this sensor describes.
+        at_end_of_day (bool): Whether to timestamp the air date at 23:59:59 rather than at midnight.
 
     """
 
     episode_fn: Callable[[CollectionEpisode], Episode | None]
+    at_end_of_day: bool = False
 
 
 def _latest_unwatched_episode(episodes: CollectionEpisode) -> Episode | None:
@@ -214,14 +217,26 @@ def _latest_unwatched_episode(episodes: CollectionEpisode) -> Episode | None:
     Deliberately not the oldest unseen one, which on a large backlog would be
     a months-old straggler that never changes.
 
+    Episodes airing today or later are skipped: the planning window extends
+    months into the future (see PlanningCoordinator), and those episodes are
+    unseen simply because they do not exist yet - they say nothing about what
+    the member has left to watch. Today is excluded too, since BetaSeries
+    gives no airing time: an episode dated today may well air tonight. It
+    belongs to the "next episode airing" sensor until the day is over, so
+    the two sensors never point at the same episode.
+
     Args:
         episodes (CollectionEpisode): The planning, sorted by air_date.
 
     Returns:
-        Episode | None: The newest unseen episode, or None if every episode has been seen.
+        Episode | None: The newest already-aired unseen episode, or None if there is none.
 
     """
-    return next((episode for episode in reversed(tuple(episodes)) if not episode.seen), None)
+    today = dt_util.now().date()
+    return next(
+        (episode for episode in reversed(tuple(episodes)) if not episode.seen and episode.air_date < today),
+        None,
+    )
 
 
 def _next_episode_airing(episodes: CollectionEpisode) -> Episode | None:
@@ -254,6 +269,7 @@ NEXT_EPISODE_AIRING_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
     translation_key="next_episode_airing",
     device_class=SensorDeviceClass.TIMESTAMP,
     episode_fn=_next_episode_airing,
+    at_end_of_day=True,
 )
 
 CALENDAR_EVENT_COUNT_DESCRIPTION = SensorEntityDescription(
@@ -373,14 +389,29 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
 
     @property
     def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the selected episode's air date, as a local midnight datetime.
+        """Return the selected episode's air date, as a local timestamp.
+
+        BetaSeries only ever gives the day an episode airs, never the time,
+        so the hour here is picked rather than known - each sensor pins it to
+        the end of the day it can never be wrong about, which keeps the
+        frontend's relative rendering ("in 3 days", "2 days ago") consistent
+        with what the sensor claims to be. "Next episode airing" uses
+        23:59:59, so an episode airing today stays in the future all day
+        instead of reading "6 hours ago" at 06:00 under a sensor announcing
+        an upcoming release; "latest unwatched episode" uses midnight, so an
+        already-aired episode always reads in the past.
 
         Returns:
-            datetime | None: The episode's air date at local midnight, or None if there is no episode.
+            datetime | None: The episode's air date as a timestamp, or None if there is no episode.
 
         """
         episode = self._episode
-        return dt_util.start_of_local_day(episode.air_date) if episode is not None else None
+        if episode is None:
+            return None
+        start_of_day = dt_util.start_of_local_day(episode.air_date)
+        if not self.entity_description.at_end_of_day:
+            return start_of_day
+        return start_of_day + timedelta(days=1) - timedelta(seconds=1)
 
     @property
     def entity_picture(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]

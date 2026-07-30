@@ -24,6 +24,7 @@ from custom_components.betaseries.const import (
     CONF_PLANNING_SCAN_INTERVAL,
     DOMAIN,
     PLANNING_STORE_KEY_PREFIX,
+    PLANNING_STORE_VERSION,
     SHOW_IMAGES_STORE_KEY_PREFIX,
     SHOW_IMAGES_STORE_VERSION,
 )
@@ -345,7 +346,8 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
     entry.add_to_hass(hass)
     store_key = f"{PLANNING_STORE_KEY_PREFIX}_{entry.entry_id}"
     hass_storage[store_key] = {
-        "version": 1,
+        # Any version older than the current one: _CacheStore discards it.
+        "version": PLANNING_STORE_VERSION - 1,
         "minor_version": 1,
         "key": store_key,
         "data": {
@@ -548,3 +550,42 @@ async def test_show_images_failure_does_not_fail_the_refresh(
     assert coordinator.last_update_success is True
     assert tuple(coordinator.data) == (EPISODE,)
     assert coordinator.show_images == {}
+
+
+async def test_cache_newer_than_supported_is_discarded_not_fatal(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Drop a cache written by a newer integration version instead of failing setup.
+
+    Store raises UnsupportedStorageVersionError - before _async_migrate_func
+    ever runs - when the file's major version is higher than this class
+    supports, which happens on a downgrade. These files only hold rebuildable
+    cache, so _CacheStore discards them and logs why.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    store_key = f"{PLANNING_STORE_KEY_PREFIX}_{entry.entry_id}"
+    hass_storage[store_key] = {
+        "version": PLANNING_STORE_VERSION + 2,
+        "minor_version": 1,
+        "key": store_key,
+        "data": {"2026-07": []},
+    }
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    with caplog.at_level(logging.WARNING):
+        await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is True
+    assert "Discarding the" in caplog.text
+    # Both months are refetched, as if nothing had ever been cached.
+    assert mock_client.fetch_planning.await_count == 2
+    assert tuple(coordinator.data) == (EPISODE, EPISODE)

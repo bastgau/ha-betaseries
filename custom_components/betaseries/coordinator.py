@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, UnsupportedStorageVersionError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -103,6 +103,34 @@ class _CacheStore[DataT: dict[str, Any]](Store[DataT]):
     changes, so stale entries are dropped rather than deserialized wrongly.
 
     """
+
+    async def async_load(self) -> DataT | None:
+        """Load the cache, discarding it outright if its version is unreadable.
+
+        Store raises UnsupportedStorageVersionError - before ever calling
+        _async_migrate_func - when the file on disk has a *newer* major
+        version than this class expects, which happens whenever the
+        integration is downgraded to a release that used an older cache
+        shape. Since these stores only hold a rebuildable cache, dropping
+        the file is always preferable to failing the whole setup.
+
+        Returns:
+            DataT | None: The cached data, or None when there is none (or it was discarded).
+
+        """
+        try:
+            return await super().async_load()
+        except UnsupportedStorageVersionError as err:
+            _LOGGER.warning(
+                "Discarding the %s cache: it was written by a newer version of the integration "
+                "(storage version %s, this version reads up to %s). It will be rebuilt on the "
+                "next refresh; nothing is lost, these files only ever hold cached API responses",
+                self.key,
+                err.found_version,
+                err.max_supported_version,
+            )
+            await self.async_remove()
+            return None
 
     async def _async_migrate_func(  # pylint: disable=unused-argument
         self,
