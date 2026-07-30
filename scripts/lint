@@ -82,7 +82,7 @@ else
   exit_code=1
 fi
 
-echo -e "\n${YELLOW}> Lint with docstring-linter :${NC}\n"
+echo -e "${YELLOW}> Lint with docstring-linter :${NC}\n"
 
 docstring-linter $files
 docstring_linter_exit=$?
