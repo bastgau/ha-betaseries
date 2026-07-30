@@ -6,7 +6,7 @@ import dataclasses
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -86,14 +86,19 @@ def _log_auth_failure(title: str, err: AuthError) -> None:
     )
 
 
-class _BadgesStore(Store[dict[str, Any]]):
-    """Store for the cached badge details, discarding old data on a version bump.
+class _CacheStore[DataT: dict[str, Any]](Store[DataT]):
+    """Store for a pure cache, discarding old data on a version bump.
 
-    This cache only ever holds a performance optimization (avoid re-fetching
-    the full badge list when the count hasn't changed, see MemberCoordinator) -
-    it's always safe/cheap to start empty and let the coordinator refetch as
-    if the count changed, instead of writing a real migration for each past
+    Every Store in this integration only ever holds a performance
+    optimization (avoid re-fetching badge details whose count hasn't changed,
+    or past planning months that can no longer change - see MemberCoordinator
+    and PlanningCoordinator). Starting empty is therefore always safe and
+    cheap: the owning coordinator just refetches as if nothing had been
+    cached, instead of this class carrying a real migration for each past
     schema change.
+
+    Bump the matching *_STORE_VERSION in const.py whenever a cached shape
+    changes, so stale entries are dropped rather than deserialized wrongly.
 
     """
 
@@ -102,7 +107,7 @@ class _BadgesStore(Store[dict[str, Any]]):
         old_major_version: int,
         old_minor_version: int,
         old_data: dict[str, Any],
-    ) -> dict[str, Any]:
+    ) -> DataT:
         """Discard any data from a previous store version.
 
         Args:
@@ -111,10 +116,10 @@ class _BadgesStore(Store[dict[str, Any]]):
             old_data (dict[str, Any]): Unused; the previous shape of the cached data.
 
         Returns:
-            dict[str, Any]: An empty cache, forcing a full refetch.
+            DataT: An empty cache, forcing a full refetch.
 
         """
-        return {}
+        return cast("DataT", {})
 
 
 def _badge_to_dict(badge: Badge) -> dict[str, Any]:
@@ -201,7 +206,7 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
             update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self.client = client
-        self.badges_store: Store[dict[str, Any]] = _BadgesStore(
+        self.badges_store: Store[dict[str, Any]] = _CacheStore[dict[str, Any]](
             hass, BADGES_STORE_VERSION, f"{BADGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
 
@@ -277,36 +282,6 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
         await self.async_refresh()
 
 
-class _PastPlanningStore(Store[dict[str, list[dict[str, Any]]]]):
-    """Store for the cached past months, discarding old data on a version bump.
-
-    This cache only ever holds a performance optimization (avoid re-fetching
-    past months' episodes, see PlanningCoordinator) - it's always safe/cheap
-    to start empty and let the coordinator refetch every month as "missing"
-    instead of writing a real migration for each past schema change.
-
-    """
-
-    async def _async_migrate_func(  # pylint: disable=unused-argument
-        self,
-        old_major_version: int,
-        old_minor_version: int,
-        old_data: dict[str, Any],
-    ) -> dict[str, list[dict[str, Any]]]:
-        """Discard any data from a previous store version.
-
-        Args:
-            old_major_version (int): Unused; any past version is discarded the same way.
-            old_minor_version (int): Unused; any past version is discarded the same way.
-            old_data (dict[str, Any]): Unused; the previous shape of the cached data.
-
-        Returns:
-            dict[str, list[dict[str, Any]]]: An empty cache, forcing a full refetch.
-
-        """
-        return {}
-
-
 class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
     """Fetch the member's planning via Client.fetch_planning() (see CLAUDE.md §4).
 
@@ -344,7 +319,7 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
             update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self.client = client
-        self.store: Store[dict[str, list[dict[str, Any]]]] = _PastPlanningStore(
+        self.store: Store[dict[str, list[dict[str, Any]]]] = _CacheStore[dict[str, list[dict[str, Any]]]](
             hass, PLANNING_STORE_VERSION, f"{PLANNING_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
 

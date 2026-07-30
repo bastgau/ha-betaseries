@@ -193,7 +193,7 @@ async def test_incompatible_badges_cache_version_is_discarded_not_crashed(
 ) -> None:
     """Discard a badges cache from an older, incompatible store version instead of crashing.
 
-    Mirrors _PastPlanningStore's discard-on-migrate behavior (see
+    Mirrors _CacheStore's discard-on-migrate behavior (see
     test_planning_coordinator.py::test_incompatible_cache_version_is_discarded_not_crashed):
     this cache is only a performance optimization, so it's always safe/cheap
     to start empty and refetch rather than migrate an incompatible shape.

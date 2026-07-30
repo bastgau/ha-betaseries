@@ -50,7 +50,7 @@ SUPPORTED_LOCALES = ["fr", "en"]
 
 # Storage key for the cached past-months planning (see PlanningCoordinator).
 # Bump this whenever the cached Episode dict shape changes (see
-# coordinator._episode_to_dict/_episode_from_dict) - _PastPlanningStore discards
+# coordinator._episode_to_dict/_episode_from_dict) - _CacheStore discards
 # any data from an older version instead of trying to migrate it, since this
 # cache is just a performance optimization that's always safe/cheap to refill
 # from the API. Bumped 1 -> 2: Episode's "number" field used to be persisted

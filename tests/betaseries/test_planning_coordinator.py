@@ -318,7 +318,7 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
 
     Regression test: PLANNING_STORE_VERSION was bumped after Episode's cached
     dict shape changed ("episode" -> "number" - see coordinator._episode_to_dict).
-    Without _PastPlanningStore's discard-on-migrate, an existing cache from
+    Without _CacheStore's discard-on-migrate, an existing cache from
     before that rename made _episode_from_dict raise KeyError: 'number',
     permanently failing PlanningCoordinator's setup for any pre-existing user.
 
