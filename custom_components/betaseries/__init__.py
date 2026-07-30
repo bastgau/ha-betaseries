@@ -39,8 +39,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -
 
     member_coordinator = MemberCoordinator(hass, entry, client)
     planning_coordinator = PlanningCoordinator(hass, entry, client)
+
+    # Only the member data is required for the entry to be usable: it backs the
+    # sensors/binary sensors and is the single request that proves the stored
+    # credentials still work, so a failure here must retry the whole setup.
     await member_coordinator.async_config_entry_first_refresh()
-    await planning_coordinator.async_config_entry_first_refresh()
+
+    # The planning is fetched with async_refresh() (which logs failures instead
+    # of raising) so a planning outage degrades to unavailable calendar/next
+    # episode entities rather than taking the whole entry - and every member
+    # sensor with it - down. It issues up to one request per month in the
+    # configured window, against a single one for the member data, so it is by
+    # far the likelier of the two to fail. CoordinatorEntity.available already
+    # reflects last_update_success, so the affected entities mark themselves
+    # unavailable until the next successful refresh with no extra code.
+    await planning_coordinator.async_refresh()
 
     entry.runtime_data = BetaSeriesData(member=member_coordinator, planning=planning_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -88,10 +88,20 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event.
 
+        The coordinator's data is None until its first successful refresh
+        (DataUpdateCoordinator types it as _DataT but initializes it to None),
+        and the planning is fetched without blocking the entry's setup - see
+        __init__.py - so this entity can be added before any planning data
+        exists. HA reads this property while adding the entity, hence the
+        guard on last_update_success rather than on data itself, which the
+        type checker believes can never be None.
+
         Returns:
             CalendarEvent | None: The earliest unseen episode, or None if there is none.
 
         """
+        if not self.coordinator.last_update_success:
+            return None
         for episode in self.coordinator.data:
             if not episode.seen:
                 return _to_calendar_event(episode)
@@ -121,6 +131,8 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
             list[CalendarEvent]: Events for episodes airing within the range.
 
         """
+        if not self.coordinator.last_update_success:
+            return []
         start = dt_util.as_local(start_date).date()
         end = dt_util.as_local(end_date).date()
         return [_to_calendar_event(episode) for episode in self.coordinator.data if start <= episode.air_date <= end]

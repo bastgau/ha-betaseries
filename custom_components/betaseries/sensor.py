@@ -326,10 +326,17 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
     def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value of this sensor.
 
+        The planning is fetched without blocking the entry's setup (see
+        __init__.py), so this entity can be added before any planning data
+        exists - guard on last_update_success, since the coordinator's data
+        is still None at that point (see BetaSeriesCalendar.event).
+
         Returns:
             datetime | None: The value extracted from the coordinator's planning data.
 
         """
+        if not self.coordinator.last_update_success:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
 
@@ -344,13 +351,15 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @property
-    def native_value(self) -> int:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self) -> int | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the total number of episodes currently loaded in the planning.
 
         Returns:
-            int: The number of events the calendar currently exposes.
+            int | None: The number of events the calendar currently exposes, or None before the first successful refresh.
 
         """
+        if not self.coordinator.last_update_success:
+            return None
         return len(self.coordinator.data)
 
     @property
@@ -361,4 +370,6 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
             dict[str, int]: Number of episodes per "YYYY-MM" month currently loaded.
 
         """
+        if not self.coordinator.last_update_success:
+            return {}
         return _episode_counts_by_month(self.coordinator.data)
