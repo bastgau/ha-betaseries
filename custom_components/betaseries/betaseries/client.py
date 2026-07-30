@@ -46,6 +46,27 @@ if TYPE_CHECKING:
     from .timeline_event import TimelineEvent
 
 
+def _to_int(value: Any, default: int = 0) -> int:
+    """Coerce a payload value to an int, falling back when it is missing or malformed.
+
+    BetaSeries returns numeric show fields as strings ("2", "5998"), so a
+    plain int() is needed - but a missing key (None) or an unexpected value
+    must not raise and fail the whole refresh over one optional detail.
+
+    Args:
+        value (Any): The raw payload value to coerce.
+        default (int): Value returned when `value` is missing or not numeric.
+
+    Returns:
+        int: The coerced integer, or `default`.
+
+    """
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 class Client:
     """Fetch authenticated BetaSeries member data.
 
@@ -489,6 +510,19 @@ class Client:
     def _parse_show_additional_information(show: dict[str, Any]) -> ShowAdditionalInformation:
         """Build a ShowAdditionalInformation from a single /shows/display payload entry.
 
+        Every field is read with .get() and a fallback: this endpoint returns
+        by far the richest and most variable payload of the ones this client
+        consumes, and a single missing key would otherwise raise a bare
+        KeyError that fails the whole refresh rather than degrading one show's
+        optional details. Fallbacks match each field's declared type, so
+        callers never see a None where the model promises a value.
+
+        Every field uses `.get(key) or <fallback>` rather than
+        `.get(key, <fallback>)`: the two-argument form only covers a *missing*
+        key, and this endpoint routinely sends the key with a null/empty value
+        instead of omitting it (verified: empty imdb_id, zero themoviedb_id,
+        null picture). The `or` form normalizes both cases to the fallback.
+
         Args:
             show (dict[str, Any]): One entry of the "shows"/"show" payload.
 
@@ -502,23 +536,24 @@ class Client:
         notes: dict[str, Any] = show.get("notes") or {}
         themoviedb_id = show.get("themoviedb_id")
         return ShowAdditionalInformation(
-            original_title=show["original_title"],
+            original_title=show.get("original_title") or "",
             imdb_id=show.get("imdb_id") or None,
             themoviedb_id=str(themoviedb_id) if themoviedb_id else None,
             genres=tuple(genres.values()),
-            showrunners=tuple(person["name"] for person in showrunners),
+            showrunners=tuple(person["name"] for person in showrunners if person.get("name")),
             aliases=tuple(aliases.values()),
-            seasons=int(show["seasons"]),
-            followers=int(show["followers"]),
-            network=show["network"],
+            # Numeric fields come back as strings ("2", "5998"), hence the int().
+            seasons=_to_int(show.get("seasons")),
+            followers=_to_int(show.get("followers")),
+            network=show.get("network") or "",
             country=show.get("country") or None,
             original_language=show.get("originalLanguage"),
-            length=int(show["length"]),
-            rating=show["rating"],
-            notes_mean=notes.get("mean", 0),
-            notes_total=notes.get("total", 0),
+            length=_to_int(show.get("length")),
+            rating=show.get("rating") or "",
+            notes_mean=notes.get("mean") or 0,
+            notes_total=notes.get("total") or 0,
             next_trailer=show.get("next_trailer"),
-            resource_url=show["resource_url"],
+            resource_url=show.get("resource_url") or "",
             images=Client._parse_show_images(show.get("images") or {}),
         )
 

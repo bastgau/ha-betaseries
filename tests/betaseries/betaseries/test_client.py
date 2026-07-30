@@ -613,6 +613,89 @@ async def test_fetch_shows_normalizes_empty_and_zero_ids() -> None:
     assert info.additional_information.followers == 0
 
 
+async def test_fetch_shows_tolerates_missing_optional_fields() -> None:
+    """Parse a show whose payload is missing every non-essential field.
+
+    /shows/display returns the richest and most variable payload this client
+    consumes: a missing key must degrade that show's optional details rather
+    than raise a KeyError that fails the whole refresh.
+    """
+    payload = {"shows": [{"id": "38605", "title": "Achtsam Morden"}]}
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605"])
+
+    show = result.for_show("38605")
+    assert show is not None
+    assert show.title == "Achtsam Morden"
+    info = show.additional_information
+    assert info is not None
+    assert info.original_title == ""
+    assert info.network == ""
+    assert info.rating == ""
+    assert info.resource_url == ""
+    assert info.seasons == 0
+    assert info.followers == 0
+    assert info.length == 0
+
+
+async def test_fetch_shows_tolerates_non_numeric_values() -> None:
+    """Fall back to 0 for a numeric field that is not parseable as an int."""
+    payload = {"shows": [{"id": "38605", "title": "Achtsam Morden", "seasons": "n/a", "length": None}]}
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605"])
+
+    show = result.for_show("38605")
+    assert show is not None
+    assert show.additional_information is not None
+    assert show.additional_information.seasons == 0
+    assert show.additional_information.length == 0
+
+
+async def test_fetch_shows_normalizes_null_notes() -> None:
+    """Fall back to 0 when "notes" holds explicit nulls rather than omitting the keys.
+
+    A two-argument .get("mean", 0) would only cover a missing key and would
+    let an explicit null through, breaking the declared float/int types.
+    """
+    payload = {"shows": [{"id": "38605", "title": "Achtsam Morden", "notes": {"mean": None, "total": None}}]}
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605"])
+
+    show = result.for_show("38605")
+    assert show is not None
+    assert show.additional_information is not None
+    assert show.additional_information.notes_mean == 0
+    assert show.additional_information.notes_total == 0
+
+
+async def test_fetch_shows_skips_showrunners_without_a_name() -> None:
+    """Drop showrunner entries missing a "name" instead of raising a KeyError."""
+    payload = {
+        "shows": [
+            {
+                "id": "38605",
+                "title": "Achtsam Morden",
+                "showrunners": [{"id": "1"}, {"id": "2", "name": "Karsten Dusse"}],
+            }
+        ]
+    }
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605"])
+
+    show = result.for_show("38605")
+    assert show is not None
+    assert show.additional_information is not None
+    assert show.additional_information.showrunners == ("Karsten Dusse",)
+
+
 async def test_fetch_shows_unknown_show_returns_none() -> None:
     """Return None from for_show() for a show id absent from the response."""
     session = FakeSession(get_responses=[FakeResponse(200, SHOW_SINGLE_PAYLOAD)])
