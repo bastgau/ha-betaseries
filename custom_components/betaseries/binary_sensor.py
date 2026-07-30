@@ -65,9 +65,7 @@ async def async_setup_entry(  # pylint: disable=unused-argument
 
     """
     coordinator = entry.runtime_data.member
-    async_add_entities(
-        BetaSeriesBinarySensor(coordinator, description) for description in BINARY_SENSOR_DESCRIPTIONS
-    )
+    async_add_entities(BetaSeriesBinarySensor(coordinator, description) for description in BINARY_SENSOR_DESCRIPTIONS)
 
 
 class BetaSeriesBinarySensor(BetaSeriesEntity, BinarySensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]

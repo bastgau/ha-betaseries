@@ -64,8 +64,7 @@ class BetaSeriesSensorEntityDescription(SensorEntityDescription):
 
     Attributes:
         value_fn (Callable[[MemberData], StateType]): Extracts this sensor's value.
-        attrs_fn (Callable[[MemberData], dict[str, Any]] | None): Extracts this sensor's
-            extra_state_attributes, if any (None for sensors with no attributes).
+        attrs_fn (Callable[[MemberData], dict[str, Any]] | None): Extracts this sensor's extra_state_attributes, if any (None for sensors with no attributes).
 
     """
 

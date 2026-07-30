@@ -21,9 +21,7 @@ class MemberData:
     Attributes:
         identity (MemberIdentity): The member's id and login.
         stats (MemberStats): The member's viewing statistics, including xp.
-        badges (CollectionBadge): The member's earned badges, empty until fetched
-            via Client.fetch_badges() (GET /members/infos doesn't return them,
-            only their count in stats.badges - see MemberCoordinator).
+        badges (CollectionBadge): The member's earned badges, empty until fetched via Client.fetch_badges() (GET /members/infos doesn't return them, only their count in stats.badges - see MemberCoordinator).
 
     """
 

@@ -37,6 +37,16 @@ else
   exit_code=1
 fi
 
+echo -e "\n${YELLOW}> Format with Ruff :${NC}\n"
+prek run ruff-format --files $files
+ruff_format_exit=$?
+if [ $ruff_format_exit -eq 0 ]; then
+  echo -e "\n${BLUE}[ruff-format]${NC} ${GREEN}✓ Done.${NC}"
+else
+  echo -e "\n${BLUE}[ruff-format]${NC} ${RED}✗ Failed.${NC}"
+  exit_code=1
+fi
+
 echo -e "\n${YELLOW}> Lint with Pylint :${NC}"
 
 pylint_files=$(echo "$files" | grep -v '^tests.*')

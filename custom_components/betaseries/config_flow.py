@@ -357,9 +357,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Required(
                     CONF_PLANNING_MONTHS_BEHIND,
-                    default=self.config_entry.options.get(
-                        CONF_PLANNING_MONTHS_BEHIND, DEFAULT_PLANNING_MONTHS_BEHIND
-                    ),
+                    default=self.config_entry.options.get(CONF_PLANNING_MONTHS_BEHIND, DEFAULT_PLANNING_MONTHS_BEHIND),
                 ): NumberSelector(
                     NumberSelectorConfig(
                         min=MIN_PLANNING_MONTHS_BEHIND,
@@ -369,9 +367,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Required(
                     CONF_PLANNING_MONTHS_AHEAD,
-                    default=self.config_entry.options.get(
-                        CONF_PLANNING_MONTHS_AHEAD, DEFAULT_PLANNING_MONTHS_AHEAD
-                    ),
+                    default=self.config_entry.options.get(CONF_PLANNING_MONTHS_AHEAD, DEFAULT_PLANNING_MONTHS_AHEAD),
                 ): NumberSelector(
                     NumberSelectorConfig(
                         min=MIN_PLANNING_MONTHS_AHEAD,

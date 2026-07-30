@@ -60,9 +60,7 @@ class Client:
 
     """
 
-    def __init__(
-        self, session: aiohttp.ClientSession, api_key: str, access_token: str, locale: str = "fr"
-    ) -> None:
+    def __init__(self, session: aiohttp.ClientSession, api_key: str, access_token: str, locale: str = "fr") -> None:
         """Initialize the client with an injected aiohttp session.
 
         Args:
