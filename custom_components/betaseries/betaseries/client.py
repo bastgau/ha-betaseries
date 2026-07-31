@@ -30,6 +30,7 @@ from .const import (
     MEMBERS_BADGES_ENDPOINT,
     MEMBERS_INFOS_ENDPOINT,
     PLANNING_MEMBER_ENDPOINT,
+    REQUEST_TIMEOUT_SECONDS,
     SHOWS_DISPLAY_ENDPOINT,
     SHOWS_EPISODES_ENDPOINT,
     TIMELINE_MEMBER_ENDPOINT,
@@ -59,6 +60,9 @@ if TYPE_CHECKING:
 # reauthentication prompt (see coordinator.py); a network blip must not ask the
 # user to authenticate again.
 _TRANSPORT_ERRORS = (aiohttp.ClientError, TimeoutError)
+
+# Built once: ClientTimeout is immutable, and every request uses the same one.
+_TIMEOUT = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_SECONDS)
 
 
 def _to_int(value: Any, default: int = 0) -> int:
@@ -204,6 +208,7 @@ class Client:
                 f"{BASE_URL}{endpoint}",
                 headers=self._headers,
                 params={**self._params, **(params or {})},
+                timeout=_TIMEOUT,
             ) as response:
                 # AuthError/Error raised here are this package's own and pass
                 # straight through the except below, which only sees aiohttp's.

@@ -19,6 +19,7 @@ from .const import (
     MEMBERS_INFOS_ENDPOINT,
     OAUTH_DEVICE_ENDPOINT,
     OAUTH_TOKEN_ENDPOINT,
+    REQUEST_TIMEOUT_SECONDS,
 )
 from .device_code import DeviceCodeData
 from .exceptions import AuthError, AuthTimeoutError
@@ -28,6 +29,9 @@ from .member_identity import MemberIdentity
 # connection, TLS, read timeout). Wrapped into AuthError so callers only ever
 # handle this package's own exceptions - see the module docstring.
 _TRANSPORT_ERRORS = (aiohttp.ClientError, TimeoutError)
+
+# Built once: ClientTimeout is immutable, and every request uses the same one.
+_TIMEOUT = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_SECONDS)
 
 
 class Auth:
@@ -85,6 +89,7 @@ class Auth:
                 f"{BASE_URL}{OAUTH_DEVICE_ENDPOINT}",
                 headers=self._headers,
                 data={"client_id": self._api_key},
+                timeout=_TIMEOUT,
             ) as response:
                 if response.status != 200:
                     msg = f"Failed to request a device code (HTTP {response.status})"
@@ -130,6 +135,7 @@ class Auth:
                         "client_secret": self._client_secret,
                         "code": device_code,
                     },
+                    timeout=_TIMEOUT,
                 ) as response:
                     if response.status == 200:
                         payload = await response.json()
@@ -176,6 +182,7 @@ class Auth:
             async with self._session.get(
                 f"{BASE_URL}{MEMBERS_INFOS_ENDPOINT}",
                 headers=headers,
+                timeout=_TIMEOUT,
             ) as response:
                 if response.status != 200:
                     msg = f"Failed to fetch member identity (HTTP {response.status})"

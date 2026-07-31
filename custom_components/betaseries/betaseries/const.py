@@ -28,6 +28,14 @@ MEMBERS_BADGES_ENDPOINT = "/members/badges"
 # included, so its heavy payload cannot be trimmed this way.
 EPISODES_LIST_EXCLUDE_CHARACTERS = "characters"
 
+# Deadline for a single request, in seconds. Declared rather than inherited:
+# aiohttp defaults to a 300 s total, which would let one call stall a
+# coordinator refresh for five minutes, and could change without us deciding.
+# Measured against a real account, a request takes 0.1-0.5 s (the heaviest
+# being one month of planning), so this leaves roughly sixty times the
+# observed worst case for slow links.
+REQUEST_TIMEOUT_SECONDS = 30
+
 # Required on every request (see api.betaseries.com docs).
 API_VERSION = "3.0"
 

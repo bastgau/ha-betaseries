@@ -15,6 +15,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 from custom_components.betaseries.betaseries.auth import Auth
+from custom_components.betaseries.betaseries.const import REQUEST_TIMEOUT_SECONDS
 from custom_components.betaseries.betaseries.exceptions import (
     AuthError,
     AuthTimeoutError,
@@ -102,9 +103,14 @@ class FakeSession:
         self.post_responses = list(post_responses or [])
         self.get_responses = list(get_responses or [])
         self.get_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
+        self.post_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 
-    def post(self, *_args: object, **_kwargs: object) -> FakeResponse:
-        """Return the next queued POST response, or raise it if it is an exception.
+    def post(self, *args: Any, **kwargs: Any) -> FakeResponse:
+        """Return the next queued POST response, recording the call's args/kwargs.
+
+        Args:
+            *args (Any): Positional arguments the caller passed to .post().
+            **kwargs (Any): Keyword arguments the caller passed to .post().
 
         Returns:
             FakeResponse: The next queued response.
@@ -113,6 +119,7 @@ class FakeSession:
             Exception: The next queued item, when it is an exception rather than a response.
 
         """
+        self.post_calls.append((args, kwargs))
         return _unqueue(self.post_responses)
 
     def get(self, *args: Any, **kwargs: Any) -> FakeResponse:
@@ -324,3 +331,33 @@ async def test_transport_failure_surfaces_as_auth_error(
         await call(auth)
 
     assert raised.value.__cause__ is transport_error
+
+
+async def test_every_request_declares_its_own_timeout() -> None:
+    """Send an explicit ClientTimeout on the device flow too.
+
+    See the matching test in test_client.py: the point is that the deadline is
+    chosen by this package, not inherited from aiohttp's 300 s default.
+    """
+    session = FakeSession(
+        post_responses=[
+            FakeResponse(
+                200,
+                {
+                    "device_code": "abc123",
+                    "user_code": "XYZ789",
+                    "verification_url": "https://www.betaseries.com/device",
+                    "expires_in": 1800,
+                    "interval": 5,
+                },
+            )
+        ],
+        get_responses=[FakeResponse(200, {"member": {"id": 42, "login": "test_user"}})],
+    )
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+
+    await auth.request_device_code()
+    await auth.fetch_member_identity("token123")
+
+    assert session.post_calls[0][1]["timeout"].total == REQUEST_TIMEOUT_SECONDS
+    assert session.get_calls[0][1]["timeout"].total == REQUEST_TIMEOUT_SECONDS

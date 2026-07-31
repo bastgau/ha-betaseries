@@ -11,6 +11,7 @@ from typing import Any
 
 import aiohttp
 from custom_components.betaseries.betaseries.client import Client
+from custom_components.betaseries.betaseries.const import REQUEST_TIMEOUT_SECONDS
 from custom_components.betaseries.betaseries.episode_watched_event import EpisodeWatchedEvent
 from custom_components.betaseries.betaseries.exceptions import AuthError, Error
 from custom_components.betaseries.betaseries.season_watched_event import SeasonWatchedEvent
@@ -1196,3 +1197,20 @@ async def test_transport_failure_surfaces_as_error_never_auth_error(transport_er
     assert raised.value.__cause__ is transport_error
     assert raised.value.status is None
     assert raised.value.body is None
+
+
+async def test_every_request_declares_its_own_timeout() -> None:
+    """Send an explicit ClientTimeout rather than inheriting aiohttp's default.
+
+    aiohttp defaults to a 300 s total, which would let a single call stall a
+    coordinator refresh for five minutes - and that default is not ours to
+    rely on. Asserting the value here keeps a refactor from silently dropping
+    the keyword and falling back to it.
+    """
+    session = FakeSession(get_responses=[FakeResponse(200, MEMBER_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_member_data()
+
+    _, kwargs = session.get_calls[0]
+    assert kwargs["timeout"].total == REQUEST_TIMEOUT_SECONDS
