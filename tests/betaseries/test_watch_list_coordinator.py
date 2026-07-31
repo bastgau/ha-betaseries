@@ -221,10 +221,12 @@ async def test_sensor_reports_the_totals_and_lists_the_shows(hass: HomeAssistant
         CollectionShow({"38605": _show_with_images("https://pictures.betaseries.com/poster.jpg")}),
     )
 
-    state = hass.states.get("sensor.betaseries_test_user_watch_list")
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
     assert state is not None
-    # The totals are the endpoint's own: unaffected by the configured limits.
-    assert state.state == "726"
+    # The state is the show count, not the episode count, which episodes_to_watch
+    # already reports from another endpoint. Both totals are the endpoint's own:
+    # unaffected by the configured limits.
+    assert state.state == "37"
     assert state.attributes["total_episodes"] == 726
     assert state.attributes["total_shows"] == 37
 
@@ -250,7 +252,7 @@ async def test_sensor_falls_back_to_the_poster_carried_by_the_list(hass: HomeAss
     """Use the poster from /episodes/list when the artwork call brought nothing."""
     await _setup(hass, WATCH_LIST_RESPONSE, CollectionShow({"38605": _show_with_images(None)}))
 
-    state = hass.states.get("sensor.betaseries_test_user_watch_list")
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
     assert state is not None
     assert state.attributes["shows"][0]["show_images"] == {
         "poster": "https://pictures.betaseries.com/list-poster.jpg"
@@ -276,7 +278,7 @@ async def test_sensor_is_unavailable_when_the_watch_list_failed(hass: HomeAssist
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.betaseries_test_user_watch_list")
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -289,6 +291,6 @@ async def test_sensor_is_unavailable_when_the_watch_list_failed(hass: HomeAssist
     assert shows_state.state == "37"
 
     # Its own properties still answer, so nothing crashes while HA adds it.
-    entity = hass.data["entity_components"]["sensor"].get_entity("sensor.betaseries_test_user_watch_list")
+    entity = hass.data["entity_components"]["sensor"].get_entity("sensor.betaseries_test_user_shows_to_catch_up_on")
     assert entity is not None
     assert entity.extra_state_attributes == {"total_shows": 0, "total_episodes": 0, "shows": []}

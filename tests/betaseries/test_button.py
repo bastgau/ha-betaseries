@@ -78,7 +78,7 @@ async def test_clean_cache_buttons_disabled_by_default(hass: HomeAssistant) -> N
     for entity_id in (
         "button.betaseries_test_user_clean_badges_cache",
         "button.betaseries_test_user_clean_planning_cache",
-        "button.betaseries_test_user_clean_watch_list_cache",
+        "button.betaseries_test_user_clean_shows_to_catch_up_cache",
     ):
         assert hass.states.get(entity_id) is None
         entity_entry = registry.async_get(entity_id)
@@ -149,7 +149,7 @@ async def test_clean_watch_list_cache_button_clears_and_refreshes(hass: HomeAssi
     mock_client.fetch_planning.return_value = ()
     await _async_setup(hass, mock_client)
 
-    entity_id = "button.betaseries_test_user_clean_watch_list_cache"
+    entity_id = "button.betaseries_test_user_clean_shows_to_catch_up_cache"
     er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
     await hass.async_block_till_done()
 

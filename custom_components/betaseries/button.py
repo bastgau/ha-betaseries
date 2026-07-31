@@ -37,8 +37,8 @@ CLEAN_PLANNING_CACHE_DESCRIPTION = ButtonEntityDescription(
 )
 
 CLEAN_WATCH_LIST_CACHE_DESCRIPTION = ButtonEntityDescription(
-    key="clean_watch_list_cache",
-    translation_key="clean_watch_list_cache",
+    key="clean_shows_to_catch_up_cache",
+    translation_key="clean_shows_to_catch_up_cache",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
 )

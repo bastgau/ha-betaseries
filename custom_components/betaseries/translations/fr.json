@@ -87,8 +87,8 @@
       "shows_not_started": {
         "name": "Séries jamais commencées"
       },
-      "watch_list": {
-        "name": "Liste à voir"
+      "shows_to_catch_up_on": {
+        "name": "Séries à rattraper"
       },
       "movies_to_watch": {
         "name": "Films à voir"
@@ -159,8 +159,8 @@
       "clean_planning_cache": {
         "name": "Vider le cache du planning"
       },
-      "clean_watch_list_cache": {
-        "name": "Vider le cache de la liste à voir"
+      "clean_shows_to_catch_up_cache": {
+        "name": "Vider le cache des séries à rattraper"
       }
     }
   },

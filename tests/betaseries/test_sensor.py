@@ -589,7 +589,7 @@ async def test_episode_sensors_have_no_picture_without_a_poster(hass: HomeAssist
 @pytest.mark.parametrize(
     ("entity_id", "attribute"),
     [
-        ("sensor.betaseries_test_user_watch_list", "shows"),
+        ("sensor.betaseries_test_user_shows_to_catch_up_on", "shows"),
         ("sensor.betaseries_test_user_badges", "badges"),
         ("sensor.betaseries_test_user_latest_unwatched_episode", "show_images"),
     ],

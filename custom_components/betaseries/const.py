@@ -27,8 +27,8 @@ MAX_PLANNING_SCAN_INTERVAL_MINUTES = 360
 MIN_EPISODES_SCAN_INTERVAL_MINUTES = 5
 MAX_EPISODES_SCAN_INTERVAL_MINUTES = 120
 
-# How much of the "still to watch" list is exposed as the watch_list sensor's
-# `shows` attribute (see WatchListCoordinator). Both are sent to
+# How much of the "still to watch" list is exposed as the shows_to_catch_up_on
+# sensor's `shows` attribute (see WatchListCoordinator). Both are sent to
 # GET /episodes/list as showsLimit/limit, so the payload stays small: the
 # endpoint's own counters (total/totalEpisodes) are unaffected by them.
 CONF_SHOWS_LIMIT = "shows_limit"

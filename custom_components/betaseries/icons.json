@@ -13,7 +13,7 @@
       "shows_not_started": {
         "default": "mdi:television-classic"
       },
-      "watch_list": {
+      "shows_to_catch_up_on": {
         "default": "mdi:format-list-bulleted"
       },
       "movies_to_watch": {
@@ -91,7 +91,7 @@
       "clean_planning_cache": {
         "default": "mdi:cached"
       },
-      "clean_watch_list_cache": {
+      "clean_shows_to_catch_up_cache": {
         "default": "mdi:cached"
       }
     }

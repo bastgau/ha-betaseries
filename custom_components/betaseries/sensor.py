@@ -278,8 +278,8 @@ NEXT_EPISODE_AIRING_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
 )
 
 WATCH_LIST_DESCRIPTION = SensorEntityDescription(
-    key="watch_list",
-    translation_key="watch_list",
+    key="shows_to_catch_up_on",
+    translation_key="shows_to_catch_up_on",
     state_class=SensorStateClass.MEASUREMENT,
 )
 
@@ -531,10 +531,26 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
 class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """List what the member has left to watch, show by show.
 
-    Kept apart from the episodes_to_watch / shows_not_started statistics
-    sensors, which it would otherwise saddle with a bulky attribute: those
-    two only ever hold a number, so this list weighing on nothing but its own
-    entity leaves the plain counters untouched.
+    An entity of its own rather than an attribute of one of the member
+    statistics, for three reasons that survive the list itself being kept out
+    of the recorder (see below - that used to be the justification, and no
+    longer is):
+
+    Its coordinator is not theirs. GET /episodes/list is a separate request on
+    its own interval, and the entry deliberately tolerates it failing while
+    the member statistics still refresh (see __init__.py). Hanging this off a
+    MemberCoordinator entity would force a choice between marking a working
+    counter unavailable and serving a stale list beside a fresh one.
+
+    It is the only entity that coordinator feeds, so disabling it removes that
+    coordinator's last listener and stops the request altogether
+    (DataUpdateCoordinator unschedules its refresh once no listener is left).
+    That gives the user a switch over a recurring network call, which merging
+    would take away.
+
+    Its population matches no member statistic: the endpoint covers the shows
+    with at least one unseen episode, which is neither shows_not_started (shows
+    never begun) nor shows_in_progress (shows begun and unfinished).
 
     Attributes:
         coordinator (WatchListCoordinator): The coordinator providing the watch list.
@@ -559,13 +575,19 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
 
     @property
     def native_value(self) -> int:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return how many episodes are left to watch, across every show.
+        """Return how many shows still have something left to watch.
+
+        Deliberately the show count rather than the episode count: the latter
+        is already what episodes_to_watch reports, from a different endpoint,
+        so exposing it here again would give two entities the same number.
+        This one is the only place the show count surfaces at all. The episode
+        count stays available as the total_episodes attribute.
 
         Returns:
             int: The endpoint's own count, unaffected by the configured list limits.
 
         """
-        return self.coordinator.total_episodes
+        return self.coordinator.total_shows
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]

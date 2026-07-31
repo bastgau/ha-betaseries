@@ -87,8 +87,8 @@
       "shows_not_started": {
         "name": "Shows not started"
       },
-      "watch_list": {
-        "name": "Watch list"
+      "shows_to_catch_up_on": {
+        "name": "Shows to catch up on"
       },
       "movies_to_watch": {
         "name": "Movies to watch"
@@ -159,8 +159,8 @@
       "clean_planning_cache": {
         "name": "Clean planning cache"
       },
-      "clean_watch_list_cache": {
-        "name": "Clean watch list cache"
+      "clean_shows_to_catch_up_cache": {
+        "name": "Clean shows to catch up cache"
       }
     }
   },
