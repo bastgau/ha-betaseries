@@ -64,6 +64,26 @@ def _compact(text: str | None) -> str | None:
     return " ".join(text.split()) if text is not None else None
 
 
+def _cause(err: Error) -> str | None:
+    """Describe why a request failed, quoting the response only when there was one.
+
+    Error.status/.body are None when the request never got an HTTP response at
+    all - BetaSeries unreachable, DNS failure, read timeout (see the client's
+    _TRANSPORT_ERRORS). Logging "(HTTP None): None" in that case would say
+    nothing, so the exception's own message is used instead.
+
+    Args:
+        err (Error): The error raised by the client.
+
+    Returns:
+        str | None: The response's status and body, or the error message when there was no response.
+
+    """
+    if err.status is None:
+        return str(err)
+    return f"HTTP {err.status}: {_compact(err.body)}"
+
+
 def _log_auth_failure(title: str, err: AuthError) -> None:
     """Log the BetaSeries error that rejected the stored credentials, prompting reauthentication.
 
@@ -86,13 +106,12 @@ def _log_auth_failure(title: str, err: AuthError) -> None:
 
     """
     _LOGGER.warning(
-        "BetaSeries rejected the stored credentials for %s (HTTP %s): %s. A reauthentication "
+        "BetaSeries rejected the stored credentials for %s (%s). A reauthentication "
         "will be requested. If reauthenticating does not resolve this, the API key/secret "
         "themselves may no longer be valid - BetaSeries does not support regenerating just "
         "the secret, a new application must be created on betaseries.com",
         title,
-        err.status,
-        _compact(err.body),
+        _cause(err),
     )
 
 
@@ -224,7 +243,7 @@ async def _async_get_show_images(
             _LOGGER.debug("Fetching images for %s new show(s) of %s from BetaSeries", len(missing), title)
             shows = await client.fetch_shows(sorted(missing))
         except Error as err:
-            _LOGGER.debug("Fetching show images for %s failed (HTTP %s): %s", title, err.status, _compact(err.body))
+            _LOGGER.debug("Fetching show images for %s failed (%s)", title, _cause(err))
         else:
             for show_id in missing:
                 show = shows.for_show(show_id)
@@ -346,12 +365,7 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
             _log_auth_failure(self.config_entry.title, err)
             raise ConfigEntryAuthFailed from err
         except Error as err:
-            _LOGGER.debug(
-                "Fetching member data for %s failed (HTTP %s): %s",
-                self.config_entry.title,
-                err.status,
-                _compact(err.body),
-            )
+            _LOGGER.debug("Fetching member data for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
         return dataclasses.replace(member_data, badges=badges)
@@ -472,12 +486,7 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
             _log_auth_failure(self.config_entry.title, err)
             raise ConfigEntryAuthFailed from err
         except Error as err:
-            _LOGGER.debug(
-                "Fetching planning for %s failed (HTTP %s): %s",
-                self.config_entry.title,
-                err.status,
-                _compact(err.body),
-            )
+            _LOGGER.debug("Fetching planning for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
         episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
@@ -683,12 +692,7 @@ class WatchListCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
             _log_auth_failure(self.config_entry.title, err)
             raise ConfigEntryAuthFailed from err
         except Error as err:
-            _LOGGER.debug(
-                "Fetching watch list for %s failed (HTTP %s): %s",
-                self.config_entry.title,
-                err.status,
-                _compact(err.body),
-            )
+            _LOGGER.debug("Fetching watch list for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
         self.total_shows = total_shows

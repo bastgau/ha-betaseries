@@ -1,4 +1,9 @@
-"""BetaSeries API client for authenticated data endpoints."""
+"""BetaSeries API client for authenticated data endpoints.
+
+Never lets aiohttp's own exceptions escape: a caller of this package should
+only ever have to handle Error/AuthError, without knowing which HTTP library
+is used underneath (see the sub-package README).
+"""
 
 from __future__ import annotations
 
@@ -6,6 +11,8 @@ import contextlib
 from datetime import date, datetime
 import json
 from typing import TYPE_CHECKING
+
+import aiohttp
 
 from .badge import Badge
 from .collection_badge import CollectionBadge
@@ -43,9 +50,14 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any
 
-    import aiohttp
-
     from .timeline_event import TimelineEvent
+
+# Transport failures aiohttp raises before any HTTP status exists (DNS, refused
+# connection, TLS, read timeout). Wrapped into Error - never AuthError, which
+# callers read as "the credentials were rejected" and answer with a
+# reauthentication prompt (see coordinator.py); a network blip must not ask the
+# user to authenticate again.
+_TRANSPORT_ERRORS = (aiohttp.ClientError, TimeoutError)
 
 
 def _to_int(value: Any, default: int = 0) -> int:
@@ -167,6 +179,39 @@ class Client:
         """
         return {"locale": self._locale}
 
+    async def _get(self, endpoint: str, action: str, params: dict[str, str] | None = None) -> Any:
+        """Perform an authenticated GET and return the decoded payload.
+
+        Every endpoint this client reads shares this exact shape, so the
+        headers, the always-present params, the error check and the transport
+        error wrapping all live here rather than being repeated per method.
+
+        Args:
+            endpoint (str): Path to request, appended to BASE_URL.
+            action (str): Present-tense description of the request, used in error messages.
+            params (dict[str, str] | None): Query params for this endpoint, merged over the always-present ones.
+
+        Returns:
+            Any: The decoded JSON payload.
+
+        Raises:
+            Error: If the request failed, BetaSeries being unreachable included. _raise_for_error() narrows a rejected api_key or access token to the AuthError subclass, which callers answer with a reauthentication.
+
+        """
+        try:
+            async with self._session.get(
+                f"{BASE_URL}{endpoint}",
+                headers=self._headers,
+                params={**self._params, **(params or {})},
+            ) as response:
+                # AuthError/Error raised here are this package's own and pass
+                # straight through the except below, which only sees aiohttp's.
+                await self._raise_for_error(response, action)
+                return await response.json()
+        except _TRANSPORT_ERRORS as err:
+            msg = f"Could not reach BetaSeries to {action}: {err}"
+            raise Error(msg) from err
+
     async def fetch_member_data(self) -> MemberData:
         """Fetch the member's data and statistics (GET /members/infos).
 
@@ -174,13 +219,7 @@ class Client:
             MemberData: The member's identity and viewing statistics.
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{MEMBERS_INFOS_ENDPOINT}",
-            headers=self._headers,
-            params=self._params,
-        ) as response:
-            await self._raise_for_error(response, "fetch member data")
-            payload = await response.json()
+        payload = await self._get(MEMBERS_INFOS_ENDPOINT, "fetch member data")
 
         member = payload["member"]
         stats = member["stats"]
@@ -221,13 +260,7 @@ class Client:
             CollectionBadge: The member's earned badges, sorted by date earned (oldest first).
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{MEMBERS_BADGES_ENDPOINT}",
-            headers=self._headers,
-            params={**self._params, "id": member_id},
-        ) as response:
-            await self._raise_for_error(response, "fetch member badges")
-            payload = await response.json()
+        payload = await self._get(MEMBERS_BADGES_ENDPOINT, "fetch member badges", {"id": member_id})
 
         badges = (self._parse_badge(badge) for badge in payload["badges"])
         return CollectionBadge(tuple(sorted(badges, key=lambda badge: badge.date)))
@@ -242,13 +275,7 @@ class Client:
             CollectionEpisode: The member's episodes for that month, in API order.
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{PLANNING_MEMBER_ENDPOINT}",
-            headers=self._headers,
-            params={**self._params, "month": month},
-        ) as response:
-            await self._raise_for_error(response, "fetch planning")
-            payload = await response.json()
+        payload = await self._get(PLANNING_MEMBER_ENDPOINT, "fetch planning", {"month": month})
 
         return CollectionEpisode(self._parse_episodes(payload["episodes"]))
 
@@ -265,13 +292,7 @@ class Client:
             CollectionEpisode: The show's episodes, in API order.
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{SHOWS_EPISODES_ENDPOINT}",
-            headers=self._headers,
-            params={**self._params, "id": show_id},
-        ) as response:
-            await self._raise_for_error(response, "fetch show episodes")
-            payload = await response.json()
+        payload = await self._get(SHOWS_EPISODES_ENDPOINT, "fetch show episodes", {"id": show_id})
 
         return CollectionEpisode(self._parse_episodes(payload["episodes"]))
 
@@ -289,13 +310,7 @@ class Client:
             CollectionEpisode: The requested episodes, each with its show.
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{EPISODES_DISPLAY_ENDPOINT}",
-            headers=self._headers,
-            params={**self._params, "id": ",".join(episode_ids)},
-        ) as response:
-            await self._raise_for_error(response, "fetch episodes by id")
-            payload = await response.json()
+        payload = await self._get(EPISODES_DISPLAY_ENDPOINT, "fetch episodes by id", {"id": ",".join(episode_ids)})
 
         return CollectionEpisode(self._parse_episodes(payload["episodes"]))
 
@@ -329,7 +344,7 @@ class Client:
             CollectionTimelineEvent: The member's modeled timeline events, in API order (newest first).
 
         """
-        params: dict[str, str] = {**self._params, "id": member_id}
+        params: dict[str, str] = {"id": member_id}
         if nbpp is not None:
             params["nbpp"] = str(nbpp)
         if since_id is not None:
@@ -339,13 +354,7 @@ class Client:
         if types is not None:
             params["types"] = ",".join(types)
 
-        async with self._session.get(
-            f"{BASE_URL}{TIMELINE_MEMBER_ENDPOINT}",
-            headers=self._headers,
-            params=params,
-        ) as response:
-            await self._raise_for_error(response, "fetch timeline")
-            payload = await response.json()
+        payload = await self._get(TIMELINE_MEMBER_ENDPOINT, "fetch timeline", params)
 
         events = (self._parse_timeline_event(event) for event in payload["events"])
         return CollectionTimelineEvent(tuple(event for event in events if event is not None))
@@ -407,13 +416,11 @@ class Client:
             tuple[CollectionWatchListShow, int, int]: The listed shows, the total shows to watch, and the total episodes to watch.
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{EPISODES_LIST_ENDPOINT}",
-            headers=self._headers,
-            params={**self._params, "showsLimit": str(shows_limit), "limit": str(episodes_limit)},
-        ) as response:
-            await self._raise_for_error(response, "fetch watch list")
-            payload = await response.json()
+        payload = await self._get(
+            EPISODES_LIST_ENDPOINT,
+            "fetch watch list",
+            {"showsLimit": str(shows_limit), "limit": str(episodes_limit)},
+        )
 
         shows = CollectionWatchListShow(tuple(self._parse_watch_list_show(show) for show in payload["shows"]))
         return shows, _to_int(payload.get("total")), _to_int(payload.get("totalEpisodes"))
@@ -450,13 +457,7 @@ class Client:
             list[dict[str, Any]]: Each show, with its "unseen" episodes list.
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{EPISODES_LIST_ENDPOINT}",
-            headers=self._headers,
-            params=self._params,
-        ) as response:
-            await self._raise_for_error(response, "fetch episodes to watch")
-            payload = await response.json()
+        payload = await self._get(EPISODES_LIST_ENDPOINT, "fetch episodes to watch")
 
         return payload["shows"]
 
@@ -491,13 +492,7 @@ class Client:
             list[dict[str, Any]]: One raw show payload per requested id.
 
         """
-        async with self._session.get(
-            f"{BASE_URL}{SHOWS_DISPLAY_ENDPOINT}",
-            headers=self._headers,
-            params={**self._params, "id": ",".join(show_ids)},
-        ) as response:
-            await self._raise_for_error(response, "fetch shows")
-            payload = await response.json()
+        payload = await self._get(SHOWS_DISPLAY_ENDPOINT, "fetch shows", {"id": ",".join(show_ids)})
 
         return payload["shows"] if "shows" in payload else [payload["show"]]
 

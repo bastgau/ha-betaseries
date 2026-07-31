@@ -10,15 +10,19 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 from unittest.mock import AsyncMock
 
+import aiohttp
 from custom_components.betaseries.betaseries.auth import Auth
 from custom_components.betaseries.betaseries.exceptions import (
     AuthError,
     AuthTimeoutError,
 )
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 API_KEY = "test-api-key"
 CLIENT_SECRET = "test-client-secret"
@@ -72,23 +76,27 @@ class FakeResponse:
 class FakeSession:
     """Stand-in for aiohttp.ClientSession returning queued FakeResponses.
 
+    A queued Exception is raised instead of returned, standing in for a
+    transport failure: aiohttp raises those from the call itself, before any
+    response exists (see _TRANSPORT_ERRORS in auth.py/client.py).
+
     Attributes:
-        post_responses (list[FakeResponse]): Responses returned by .post(), in order.
-        get_responses (list[FakeResponse]): Responses returned by .get(), in order.
+        post_responses (list[FakeResponse | Exception]): Responses returned by .post(), in order.
+        get_responses (list[FakeResponse | Exception]): Responses returned by .get(), in order.
         get_calls (list[tuple[tuple[Any, ...], dict[str, Any]]]): Args/kwargs of each .get() call, in order.
 
     """
 
     def __init__(
         self,
-        post_responses: list[FakeResponse] | None = None,
-        get_responses: list[FakeResponse] | None = None,
+        post_responses: list[FakeResponse | Exception] | None = None,
+        get_responses: list[FakeResponse | Exception] | None = None,
     ) -> None:
         """Initialize the fake session with queued responses.
 
         Args:
-            post_responses (list[FakeResponse] | None): Responses for .post(), in order.
-            get_responses (list[FakeResponse] | None): Responses for .get(), in order.
+            post_responses (list[FakeResponse | Exception] | None): Responses for .post(), in order.
+            get_responses (list[FakeResponse | Exception] | None): Responses for .get(), in order.
 
         """
         self.post_responses = list(post_responses or [])
@@ -96,13 +104,16 @@ class FakeSession:
         self.get_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 
     def post(self, *_args: object, **_kwargs: object) -> FakeResponse:
-        """Return the next queued POST response.
+        """Return the next queued POST response, or raise it if it is an exception.
 
         Returns:
             FakeResponse: The next queued response.
 
+        Raises:
+            Exception: The next queued item, when it is an exception rather than a response.
+
         """
-        return self.post_responses.pop(0)
+        return _unqueue(self.post_responses)
 
     def get(self, *args: Any, **kwargs: Any) -> FakeResponse:
         """Return the next queued GET response, recording the call's args/kwargs.
@@ -114,9 +125,31 @@ class FakeSession:
         Returns:
             FakeResponse: The next queued response.
 
+        Raises:
+            Exception: The next queued item, when it is an exception rather than a response.
+
         """
         self.get_calls.append((args, kwargs))
-        return self.get_responses.pop(0)
+        return _unqueue(self.get_responses)
+
+
+def _unqueue(queued: list[FakeResponse | Exception]) -> FakeResponse:
+    """Pop the next queued item, raising it when it stands in for a transport failure.
+
+    Args:
+        queued (list[FakeResponse | Exception]): The queue to pop from.
+
+    Returns:
+        FakeResponse: The popped response.
+
+    Raises:
+        Exception: The popped item, when it is an exception rather than a response.
+
+    """
+    item = queued.pop(0)
+    if isinstance(item, Exception):
+        raise item
+    return item
 
 
 async def test_request_device_code_success() -> None:
@@ -256,3 +289,38 @@ async def test_fetch_member_identity_failure(status: int) -> None:
 
     with pytest.raises(AuthError):
         await auth.fetch_member_identity("token123")
+
+
+@pytest.mark.parametrize(
+    ("queue_kwarg", "call"),
+    [
+        ("post_responses", lambda auth: auth.request_device_code()),
+        ("post_responses", lambda auth: auth.poll_for_token("device-code", 1800, 0)),
+        ("get_responses", lambda auth: auth.fetch_member_identity("token123")),
+    ],
+    ids=["request_device_code", "poll_for_token", "fetch_member_identity"],
+)
+@pytest.mark.parametrize(
+    "transport_error",
+    [aiohttp.ClientConnectionError("cannot connect"), TimeoutError()],
+    ids=["connection", "timeout"],
+)
+async def test_transport_failure_surfaces_as_auth_error(
+    queue_kwarg: str,
+    call: Callable[[Auth], Coroutine[Any, Any, object]],
+    transport_error: Exception,
+) -> None:
+    """Wrap aiohttp's own failures into AuthError, on every request Auth makes.
+
+    A caller only ever handles this package's exceptions: before this, a
+    network failure escaped as a raw aiohttp error and the config flow, which
+    catches AuthError, showed "Unknown error occurred" instead of its
+    translated "cannot connect" message.
+    """
+    session = FakeSession(**{queue_kwarg: [transport_error]})
+    auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
+
+    with pytest.raises(AuthError) as raised:
+        await call(auth)
+
+    assert raised.value.__cause__ is transport_error

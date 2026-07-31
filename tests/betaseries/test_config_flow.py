@@ -374,3 +374,24 @@ async def test_reauth_flow_defaults_locale_to_entrys_current_option(hass: HomeAs
     assert result["data_schema"] is not None
     locale_key = next(key for key in result["data_schema"].schema if key.schema == CONF_LOCALE)
     assert locale_key.default() == "en"
+
+
+async def test_network_failure_shows_cannot_connect(hass: HomeAssistant) -> None:
+    """Show the translated "cannot connect" error when BetaSeries is unreachable.
+
+    Regression test: the flow only ever caught AuthError, so a raw
+    aiohttp.ClientError from the device code request escaped the step
+    entirely and Home Assistant reported "Unknown error occurred" with a
+    traceback. Auth now wraps transport failures into AuthError, so the
+    unreachable case reaches the same form error as any other failure.
+    """
+    mock_auth = AsyncMock()
+    mock_auth.request_device_code.side_effect = AuthError("Could not reach BetaSeries")
+
+    with patch("custom_components.betaseries.config_flow.BetaSeriesAuth", return_value=mock_auth):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_STEP_INPUT)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}

@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 
+import aiohttp
 from custom_components.betaseries.betaseries.client import Client
 from custom_components.betaseries.betaseries.episode_watched_event import EpisodeWatchedEvent
 from custom_components.betaseries.betaseries.exceptions import AuthError, Error
@@ -1143,3 +1144,29 @@ async def test_fetch_watch_list_tolerates_a_show_without_episodes() -> None:
     assert show.remaining == 0
     assert not tuple(show.episodes)
     assert total_shows == 0
+
+
+@pytest.mark.parametrize(
+    "transport_error",
+    [aiohttp.ClientConnectionError("cannot connect"), TimeoutError()],
+    ids=["connection", "timeout"],
+)
+async def test_transport_failure_surfaces_as_error_never_auth_error(transport_error: Exception) -> None:
+    """Wrap aiohttp's own failures into Error - and deliberately not AuthError.
+
+    Callers read AuthError as "BetaSeries rejected the credentials" and answer
+    it by prompting the user to authenticate again (see coordinator.py). A
+    network blip must therefore never surface as one, or every outage would
+    ask the user to reauthenticate. It also carries no status/body, since the
+    request never got a response at all.
+    """
+    session = FakeSession(get_responses=[transport_error])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error) as raised:
+        await client.fetch_member_data()
+
+    assert not isinstance(raised.value, AuthError)
+    assert raised.value.__cause__ is transport_error
+    assert raised.value.status is None
+    assert raised.value.body is None

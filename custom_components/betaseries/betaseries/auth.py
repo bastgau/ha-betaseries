@@ -1,10 +1,16 @@
-"""OAuth device flow client for the BetaSeries API."""
+"""OAuth device flow client for the BetaSeries API.
+
+Never lets aiohttp's own exceptions escape: a caller of this package should
+only ever have to handle AuthError/AuthTimeoutError, without knowing which
+HTTP library is used underneath (see the sub-package README).
+"""
 
 from __future__ import annotations
 
 import asyncio
 import time
-from typing import TYPE_CHECKING
+
+import aiohttp
 
 from .const import (
     API_VERSION,
@@ -18,8 +24,10 @@ from .device_code import DeviceCodeData
 from .exceptions import AuthError, AuthTimeoutError
 from .member_identity import MemberIdentity
 
-if TYPE_CHECKING:
-    import aiohttp
+# Transport failures aiohttp raises before any HTTP status exists (DNS, refused
+# connection, TLS, read timeout). Wrapped into AuthError so callers only ever
+# handle this package's own exceptions - see the module docstring.
+_TRANSPORT_ERRORS = (aiohttp.ClientError, TimeoutError)
 
 
 class Auth:
@@ -69,18 +77,22 @@ class Auth:
             DeviceCodeData: The device code and verification details.
 
         Raises:
-            AuthError: If the request fails.
+            AuthError: If the request fails, or BetaSeries cannot be reached at all.
 
         """
-        async with self._session.post(
-            f"{BASE_URL}{OAUTH_DEVICE_ENDPOINT}",
-            headers=self._headers,
-            data={"client_id": self._api_key},
-        ) as response:
-            if response.status != 200:
-                msg = f"Failed to request a device code (HTTP {response.status})"
-                raise AuthError(msg)
-            payload = await response.json()
+        try:
+            async with self._session.post(
+                f"{BASE_URL}{OAUTH_DEVICE_ENDPOINT}",
+                headers=self._headers,
+                data={"client_id": self._api_key},
+            ) as response:
+                if response.status != 200:
+                    msg = f"Failed to request a device code (HTTP {response.status})"
+                    raise AuthError(msg)
+                payload = await response.json()
+        except _TRANSPORT_ERRORS as err:
+            msg = f"Could not reach BetaSeries to request a device code: {err}"
+            raise AuthError(msg) from err
 
         return DeviceCodeData(
             device_code=payload["device_code"],
@@ -102,38 +114,46 @@ class Auth:
             str: The access token once the device code has been validated.
 
         Raises:
-            AuthError: If the device flow fails definitively.
+            AuthError: If the device flow fails definitively, or BetaSeries cannot be reached at all.
             AuthTimeoutError: If expires_in elapses before validation.
 
         """
         deadline = time.monotonic() + expires_in
 
         while True:
-            async with self._session.post(
-                f"{BASE_URL}{OAUTH_TOKEN_ENDPOINT}",
-                headers=self._headers,
-                data={
-                    "client_id": self._api_key,
-                    "client_secret": self._client_secret,
-                    "code": device_code,
-                },
-            ) as response:
-                if response.status == 200:
-                    payload = await response.json()
-                    return payload["access_token"]
+            try:
+                async with self._session.post(
+                    f"{BASE_URL}{OAUTH_TOKEN_ENDPOINT}",
+                    headers=self._headers,
+                    data={
+                        "client_id": self._api_key,
+                        "client_secret": self._client_secret,
+                        "code": device_code,
+                    },
+                ) as response:
+                    if response.status == 200:
+                        payload = await response.json()
+                        return payload["access_token"]
 
-                if response.status == 400:
-                    payload = await response.json()
-                    errors = payload.get("errors", [])
-                    if errors and errors[0].get("code") == ERROR_CODE_PENDING:
-                        if time.monotonic() >= deadline:
-                            msg = "Device code expired before it was validated"
-                            raise AuthTimeoutError(msg)
-                        await asyncio.sleep(interval)
-                        continue
+                    if response.status == 400:
+                        payload = await response.json()
+                        errors = payload.get("errors", [])
+                        if errors and errors[0].get("code") == ERROR_CODE_PENDING:
+                            if time.monotonic() >= deadline:
+                                msg = "Device code expired before it was validated"
+                                raise AuthTimeoutError(msg)
+                            await asyncio.sleep(interval)
+                            continue
 
-                msg = f"Failed to obtain an access token (HTTP {response.status})"
-                raise AuthError(msg)
+                    msg = f"Failed to obtain an access token (HTTP {response.status})"
+                    raise AuthError(msg)
+            except _TRANSPORT_ERRORS as err:
+                # Deliberately not retried until the deadline, unlike the
+                # "pending" case above: a poll that cannot reach BetaSeries at
+                # all ends the flow, so the user gets told straight away
+                # rather than staring at the code screen for 30 minutes.
+                msg = f"Could not reach BetaSeries while polling for an access token: {err}"
+                raise AuthError(msg) from err
 
     async def fetch_member_identity(self, access_token: str) -> MemberIdentity:
         """Fetch the member id and login (GET /members/infos).
@@ -148,18 +168,22 @@ class Auth:
             MemberIdentity: The member id and login.
 
         Raises:
-            AuthError: If the request fails.
+            AuthError: If the request fails, or BetaSeries cannot be reached at all.
 
         """
         headers = {**self._headers, "Authorization": f"Bearer {access_token}"}
-        async with self._session.get(
-            f"{BASE_URL}{MEMBERS_INFOS_ENDPOINT}",
-            headers=headers,
-        ) as response:
-            if response.status != 200:
-                msg = f"Failed to fetch member identity (HTTP {response.status})"
-                raise AuthError(msg)
-            payload = await response.json()
+        try:
+            async with self._session.get(
+                f"{BASE_URL}{MEMBERS_INFOS_ENDPOINT}",
+                headers=headers,
+            ) as response:
+                if response.status != 200:
+                    msg = f"Failed to fetch member identity (HTTP {response.status})"
+                    raise AuthError(msg)
+                payload = await response.json()
+        except _TRANSPORT_ERRORS as err:
+            msg = f"Could not reach BetaSeries to fetch the member identity: {err}"
+            raise AuthError(msg) from err
 
         member = payload["member"]
         return MemberIdentity(id=str(member["id"]), login=member["login"])
