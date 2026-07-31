@@ -1,4 +1,4 @@
-"""Tests for WatchListCoordinator and the shows_to_watch sensor's list attribute."""
+"""Tests for WatchListCoordinator and the watch_list sensor's list attribute."""
 
 from __future__ import annotations
 
@@ -284,7 +284,7 @@ async def test_sensor_is_unavailable_when_the_watch_list_failed(hass: HomeAssist
     episodes_state = hass.states.get("sensor.betaseries_test_user_episodes_to_watch")
     assert episodes_state is not None
     assert episodes_state.state == "726"
-    shows_state = hass.states.get("sensor.betaseries_test_user_shows_to_watch")
+    shows_state = hass.states.get("sensor.betaseries_test_user_shows_not_started")
     assert shows_state is not None
     assert shows_state.state == "37"
 

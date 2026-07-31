@@ -103,8 +103,8 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
         value_fn=lambda data: data.stats.progress,
     ),
     BetaSeriesSensorEntityDescription(
-        key="shows_to_watch",
-        translation_key="shows_to_watch",
+        key="shows_not_started",
+        translation_key="shows_not_started",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.shows_to_watch,
     ),
@@ -115,8 +115,8 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
         value_fn=lambda data: data.stats.movies_to_watch,
     ),
     BetaSeriesSensorEntityDescription(
-        key="shows_current",
-        translation_key="shows_current",
+        key="shows_in_progress",
+        translation_key="shows_in_progress",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.shows_current,
     ),
@@ -175,8 +175,8 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
         value_fn=lambda data: data.stats.streak_days,
     ),
     BetaSeriesSensorEntityDescription(
-        key="member_since_days",
-        translation_key="member_since_days",
+        key="membership_duration",
+        translation_key="membership_duration",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -531,7 +531,7 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
 class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """List what the member has left to watch, show by show.
 
-    Kept apart from the episodes_to_watch / shows_to_watch statistics
+    Kept apart from the episodes_to_watch / shows_not_started statistics
     sensors, which it would otherwise saddle with a bulky attribute: those
     two only ever hold a number, so this list weighing on nothing but its own
     entity leaves the plain counters untouched.

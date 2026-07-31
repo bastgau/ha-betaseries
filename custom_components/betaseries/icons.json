@@ -10,7 +10,7 @@
       "progress": {
         "default": "mdi:progress-check"
       },
-      "shows_to_watch": {
+      "shows_not_started": {
         "default": "mdi:television-classic"
       },
       "watch_list": {
@@ -19,7 +19,7 @@
       "movies_to_watch": {
         "default": "mdi:movie-open-outline"
       },
-      "shows_current": {
+      "shows_in_progress": {
         "default": "mdi:television"
       },
       "badges": {
@@ -46,7 +46,7 @@
       "streak_days": {
         "default": "mdi:fire"
       },
-      "member_since_days": {
+      "membership_duration": {
         "default": "mdi:calendar-account-outline"
       },
       "episodes_per_month": {

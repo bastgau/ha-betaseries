@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -
     await planning_coordinator.async_refresh()
 
     # Same reasoning as the planning: the watch list only backs the
-    # shows_to_watch sensor's attribute, so a failure there must not take the
+    # watch_list sensor's attribute, so a failure there must not take the
     # whole entry down.
     watch_list_coordinator = WatchListCoordinator(hass, entry, client)
     await watch_list_coordinator.async_refresh()

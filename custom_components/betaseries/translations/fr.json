@@ -84,8 +84,8 @@
       "progress": {
         "name": "Progression"
       },
-      "shows_to_watch": {
-        "name": "Séries à voir"
+      "shows_not_started": {
+        "name": "Séries jamais commencées"
       },
       "watch_list": {
         "name": "Liste à voir"
@@ -93,8 +93,8 @@
       "movies_to_watch": {
         "name": "Films à voir"
       },
-      "shows_current": {
-        "name": "Séries en cours"
+      "shows_in_progress": {
+        "name": "Séries en cours de visionnage"
       },
       "badges": {
         "name": "Badges"
@@ -120,8 +120,8 @@
       "streak_days": {
         "name": "Jours consécutifs"
       },
-      "member_since_days": {
-        "name": "Membre depuis"
+      "membership_duration": {
+        "name": "Ancienneté du compte"
       },
       "episodes_per_month": {
         "name": "Épisodes par mois"

@@ -84,8 +84,8 @@
       "progress": {
         "name": "Progress"
       },
-      "shows_to_watch": {
-        "name": "Shows to watch"
+      "shows_not_started": {
+        "name": "Shows not started"
       },
       "watch_list": {
         "name": "Watch list"
@@ -93,8 +93,8 @@
       "movies_to_watch": {
         "name": "Movies to watch"
       },
-      "shows_current": {
-        "name": "Shows current"
+      "shows_in_progress": {
+        "name": "Shows in progress"
       },
       "badges": {
         "name": "Badges"
@@ -120,8 +120,8 @@
       "streak_days": {
         "name": "Streak days"
       },
-      "member_since_days": {
-        "name": "Member since"
+      "membership_duration": {
+        "name": "Membership duration"
       },
       "episodes_per_month": {
         "name": "Episodes per month"

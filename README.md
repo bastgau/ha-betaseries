@@ -84,18 +84,18 @@ All entities below are enabled by default and grouped under a single device per 
 | Episodes to watch | - | Number of episodes available to watch |
 | Time to spend | min | Minutes left to watch everything pending |
 | Progress | % | Overall watch progress |
-| Shows to watch | - | Number of shows with unwatched episodes |
+| Shows not started | - | Number of shows never started, archived ones included |
 | Movies to watch | - | Number of movies not yet watched |
-| Shows current | - | Number of shows currently being followed |
+| Shows in progress | - | Number of shows started and not yet finished |
 | Badges | - | Number of badges earned |
-| Shows total | - | Total number of shows followed |
-| Shows finished | - | Number of shows fully watched |
+| Shows total | - | Total number of shows followed, archived ones included |
+| Shows finished | - | Number of shows BetaSeries counts as finished, archived ones included |
 | Episodes watched | - | Total number of episodes watched |
 | Time on TV | min | Total minutes spent watching episodes |
 | Movies total | - | Total number of movies watched |
 | XP | - | Member experience points |
 | Streak days | d | Current daily streak |
-| Member since | d | Number of days since account creation |
+| Membership duration | d | Number of days since account creation |
 | Episodes per month | - | Average number of episodes watched per month |
 | Favorite genre | - | Most watched genre |
 | Latest unwatched episode | - | Air date of the most recently aired episode not yet marked as watched (excluding today, see below) |
