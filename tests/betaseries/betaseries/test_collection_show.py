@@ -101,7 +101,10 @@ async def test_fetch_additional_information_replaces_each_show_with_the_fetched_
         }
     )
     fetched_a = Show(
-        id="10", title="Show A", description="Fresh description A", additional_information="info-10"  # type: ignore[arg-type]
+        id="10",
+        title="Show A",
+        description="Fresh description A",
+        additional_information="info-10",  # type: ignore[arg-type]
     )
     client = AsyncMock()
     client.fetch_shows.return_value = CollectionShow({"10": fetched_a})

@@ -107,9 +107,7 @@ async def test_clean_badges_cache_button_clears_and_refreshes(hass: HomeAssistan
         "custom_components.betaseries.coordinator.MemberCoordinator.async_clean_badges_cache",
         new_callable=AsyncMock,
     ) as mock_clean_cache:
-        await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True
-        )
+        await hass.services.async_call(BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True)
 
     mock_clean_cache.assert_awaited_once()
 
@@ -134,9 +132,7 @@ async def test_clean_planning_cache_button_clears_and_refreshes(hass: HomeAssist
         "custom_components.betaseries.coordinator.PlanningCoordinator.async_clean_planning_cache",
         new_callable=AsyncMock,
     ) as mock_clean_cache:
-        await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True
-        )
+        await hass.services.async_call(BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True)
 
     mock_clean_cache.assert_awaited_once()
 

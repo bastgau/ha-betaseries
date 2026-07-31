@@ -349,9 +349,7 @@ async def test_user_step_rejects_invalid_locale(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
 
     with pytest.raises(vol.Invalid):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {**USER_INPUT, CONF_LOCALE: "es"}
-        )
+        await hass.config_entries.flow.async_configure(result["flow_id"], {**USER_INPUT, CONF_LOCALE: "es"})
 
 
 async def test_reauth_flow_defaults_locale_to_entrys_current_option(hass: HomeAssistant) -> None:

@@ -185,7 +185,9 @@ async def test_show_images_failure_does_not_fail_the_refresh(hass: HomeAssistant
     assert coordinator.data.total_shows == 37
 
 
-async def _setup(hass: HomeAssistant, watch_list: tuple[CollectionWatchListShow, int, int], shows: CollectionShow) -> MockConfigEntry:
+async def _setup(
+    hass: HomeAssistant, watch_list: tuple[CollectionWatchListShow, int, int], shows: CollectionShow
+) -> MockConfigEntry:
     """Set up an entry whose watch list and show artwork are mocked.
 
     Args:
@@ -254,9 +256,7 @@ async def test_sensor_falls_back_to_the_poster_carried_by_the_list(hass: HomeAss
 
     state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
     assert state is not None
-    assert state.attributes["shows"][0]["show_images"] == {
-        "poster": "https://pictures.betaseries.com/list-poster.jpg"
-    }
+    assert state.attributes["shows"][0]["show_images"] == {"poster": "https://pictures.betaseries.com/list-poster.jpg"}
 
 
 async def test_sensor_is_unavailable_when_the_watch_list_failed(hass: HomeAssistant) -> None:
