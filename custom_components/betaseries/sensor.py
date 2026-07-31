@@ -342,6 +342,7 @@ class BetaSeriesSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[repor
     Attributes:
         entity_description (BetaSeriesSensorEntityDescription): Describes this sensor.
         coordinator (MemberCoordinator): The coordinator providing the member data.
+        _unrecorded_attributes (frozenset[str]): Attributes too bulky to write to the recorder.
 
     """
 
@@ -384,6 +385,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
     Attributes:
         entity_description (BetaSeriesPlanningSensorEntityDescription): Describes this sensor.
         coordinator (PlanningCoordinator): The coordinator providing the planning data.
+        _unrecorded_attributes (frozenset[str]): Attributes too bulky to write to the recorder.
 
     """
 
@@ -536,6 +538,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
 
     Attributes:
         coordinator (WatchListCoordinator): The coordinator providing the watch list.
+        _unrecorded_attributes (frozenset[str]): Attributes too bulky to write to the recorder.
 
     """
 

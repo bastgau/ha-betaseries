@@ -13,8 +13,9 @@ collection types described below. Each maps to a single BetaSeries endpoint.
 | `fetch_planning(month)` | `GET /planning/member` | `CollectionEpisode` | The member's schedule for one `"YYYY-MM"` month. |
 | `fetch_show_episodes(show_id)` | `GET /shows/episodes` | `CollectionEpisode` | All episodes of **one** show. |
 | `fetch_episodes_by_id(episode_ids)` | `GET /episodes/display` | `CollectionEpisode` | Accepts any number of ids in one request (bulk, like `fetch_shows`). |
-| `fetch_episodes_to_watch()` | `GET /episodes/list` | `CollectionEpisode` | The member's unseen episodes, across shows. |
-| `fetch_episodes_to_watch_by_show()` | `GET /episodes/list` | `CollectionShow` | The member's unseen episodes, across shows grouped by show. |
+| `fetch_episodes_to_watch(*, exclude_characters=)` | `GET /episodes/list` | `CollectionEpisode` | The member's unseen episodes, across shows. |
+| `fetch_episodes_to_watch_by_show(*, exclude_characters=)` | `GET /episodes/list` | `CollectionShow` | The member's unseen episodes, across shows grouped by show. |
+| `fetch_watch_list(shows_limit, episodes_limit, *, exclude_characters=)` | `GET /episodes/list` | `tuple[CollectionWatchListShow, int, int]` | Same endpoint, capped to `shows_limit` shows of `episodes_limit` episodes; keeps each show's `remaining` and returns the endpoint's own global counters, which the caps do not affect. |
 | `fetch_shows(show_ids)` | `GET /shows/display` | `CollectionShow` | Accepts any number of ids in one request; each `Show` comes back with `additional_information` populated. |
 | `fetch_timeline(member_id, *, nbpp=, since_id=, last_id=, types=)` | `GET /timeline/member` | `CollectionTimelineEvent` | The member's recent activity, paginated by event-id cursor (`since_id`/`last_id`), not by date - see [`docs/watch-history-calendar-exploration.md`](../../../docs/watch-history-calendar-exploration.md). Only `EpisodeWatchedEvent`/`SeasonWatchedEvent` are modeled; any other event type is silently dropped. |
 
@@ -25,6 +26,12 @@ see its own docstrings).
 `Client(session, api_key, access_token, locale="fr")` sends `locale` as a query param on every
 request above (BetaSeries' own documented default, see its OpenAPI spec's `LocaleParam`) -
 it controls the language of returned text (genres, descriptions, error messages).
+
+The three `/episodes/list` methods take `exclude_characters` (default `False`, the endpoint's own
+behavior): pass `True` to send `excludes=characters` and drop the cast the client never parses.
+The key still comes back, as an empty list - the payload shrinks without changing shape. The param
+is a boolean rather than a list of values because `excludes`, despite accepting comma-separated
+values, only honors `characters` (verified).
 
 ## Classes and how to enrich them
 

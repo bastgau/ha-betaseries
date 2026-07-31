@@ -160,6 +160,8 @@ async def test_sends_the_configured_limits(hass: HomeAssistant) -> None:
 
     # NumberSelector stores floats; the client must still receive ints.
     assert mock_client.fetch_watch_list.await_args.args == (3, 2)
+    # No entity exposes the cast, so it is left out of the payload.
+    assert mock_client.fetch_watch_list.await_args.kwargs == {"exclude_characters": True}
     assert coordinator.total_episodes == 726
     assert coordinator.total_shows == 37
 

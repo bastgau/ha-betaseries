@@ -423,6 +423,19 @@ async def test_fetch_episodes_to_watch_success() -> None:
     assert second.show.id == "6947"
     assert second.show.title == "Below Deck"
 
+    # Nothing is excluded unless the caller asks for it.
+    assert "excludes" not in session.get_calls[0][1]["params"]
+
+
+async def test_fetch_episodes_to_watch_can_exclude_the_cast() -> None:
+    """Send excludes=characters only when the caller opted in."""
+    session = FakeSession(get_responses=[FakeResponse(200, EPISODES_TO_WATCH_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_episodes_to_watch(exclude_characters=True)
+
+    assert session.get_calls[0][1]["params"]["excludes"] == "characters"
+
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_episodes_to_watch_failure(status: int) -> None:
@@ -1129,6 +1142,19 @@ async def test_fetch_watch_list_success() -> None:
 
     assert session.get_calls[0][1]["params"]["showsLimit"] == "10"
     assert session.get_calls[0][1]["params"]["limit"] == "2"
+    # Nothing is excluded unless the caller asks for it.
+    assert "excludes" not in session.get_calls[0][1]["params"]
+
+
+async def test_fetch_watch_list_can_exclude_the_cast() -> None:
+    """Send excludes=characters only when the caller opted in."""
+    payload = {"shows": [], "total": 0, "totalEpisodes": 0}
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.fetch_watch_list(10, 2, exclude_characters=True)
+
+    assert session.get_calls[0][1]["params"]["excludes"] == "characters"
 
 
 async def test_fetch_watch_list_tolerates_a_show_without_episodes() -> None:

@@ -687,7 +687,10 @@ class WatchListCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
 
         try:
             _LOGGER.debug("Fetching watch list for %s from BetaSeries", self.config_entry.title)
-            watch_list, total_shows, total_episodes = await self.client.fetch_watch_list(shows_limit, episodes_limit)
+            # No entity exposes the cast, so drop it from the payload.
+            watch_list, total_shows, total_episodes = await self.client.fetch_watch_list(
+                shows_limit, episodes_limit, exclude_characters=True
+            )
         except AuthError as err:
             _log_auth_failure(self.config_entry.title, err)
             raise ConfigEntryAuthFailed from err

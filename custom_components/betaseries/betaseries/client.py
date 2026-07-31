@@ -25,6 +25,7 @@ from .const import (
     BASE_URL,
     EPISODES_DISPLAY_ENDPOINT,
     EPISODES_LIST_ENDPOINT,
+    EPISODES_LIST_EXCLUDE_CHARACTERS,
     INVALID_CREDENTIALS_ERROR_CODES,
     MEMBERS_BADGES_ENDPOINT,
     MEMBERS_INFOS_ENDPOINT,
@@ -359,7 +360,7 @@ class Client:
         events = (self._parse_timeline_event(event) for event in payload["events"])
         return CollectionTimelineEvent(tuple(event for event in events if event is not None))
 
-    async def fetch_episodes_to_watch(self) -> CollectionEpisode:
+    async def fetch_episodes_to_watch(self, *, exclude_characters: bool = False) -> CollectionEpisode:
         """Fetch the member's episodes still to watch, flattened across shows (GET /episodes/list).
 
         Unlike fetch_planning/fetch_show_episodes, the payload nests episodes
@@ -368,25 +369,31 @@ class Client:
         deal with CollectionEpisode. See fetch_episodes_to_watch_by_show() to
         keep the per-show grouping instead.
 
+        Args:
+            exclude_characters (bool): Ask the API to leave out each episode's cast, which this client never parses (Optional, defaults to False - the API's own behavior).
+
         Returns:
             CollectionEpisode: The member's unseen episodes, across shows.
 
         """
-        shows = await self._fetch_episodes_to_watch()
+        shows = await self._fetch_episodes_to_watch(exclude_characters=exclude_characters)
         return CollectionEpisode(self._parse_episodes(episode for show in shows for episode in show["unseen"]))
 
-    async def fetch_episodes_to_watch_by_show(self) -> CollectionShow:
+    async def fetch_episodes_to_watch_by_show(self, *, exclude_characters: bool = False) -> CollectionShow:
         """Fetch the member's episodes still to watch, grouped by show (GET /episodes/list).
 
         Same payload/request as fetch_episodes_to_watch(), kept grouped by
         show instead of flattened: each Show comes back with its `episodes`
         already populated.
 
+        Args:
+            exclude_characters (bool): Ask the API to leave out each episode's cast, which this client never parses (Optional, defaults to False - the API's own behavior).
+
         Returns:
             CollectionShow: Each show mapped to its unseen episodes.
 
         """
-        shows = await self._fetch_episodes_to_watch()
+        shows = await self._fetch_episodes_to_watch(exclude_characters=exclude_characters)
         return CollectionShow(
             {
                 str(show["id"]): Show(
@@ -398,7 +405,9 @@ class Client:
             }
         )
 
-    async def fetch_watch_list(self, shows_limit: int, episodes_limit: int) -> tuple[CollectionWatchListShow, int, int]:
+    async def fetch_watch_list(
+        self, shows_limit: int, episodes_limit: int, *, exclude_characters: bool = False
+    ) -> tuple[CollectionWatchListShow, int, int]:
         """Fetch the shows still to watch, capped to a few episodes each (GET /episodes/list).
 
         Unlike fetch_episodes_to_watch(), this keeps each show's `remaining`
@@ -411,6 +420,7 @@ class Client:
         Args:
             shows_limit (int): Maximum number of shows to return (showsLimit).
             episodes_limit (int): Maximum number of episodes per show (limit).
+            exclude_characters (bool): Ask the API to leave out each episode's cast, which this client never parses (Optional, defaults to False - the API's own behavior).
 
         Returns:
             tuple[CollectionWatchListShow, int, int]: The listed shows, the total shows to watch, and the total episodes to watch.
@@ -419,7 +429,11 @@ class Client:
         payload = await self._get(
             EPISODES_LIST_ENDPOINT,
             "fetch watch list",
-            {"showsLimit": str(shows_limit), "limit": str(episodes_limit)},
+            {
+                "showsLimit": str(shows_limit),
+                "limit": str(episodes_limit),
+                **self._episodes_list_excludes(exclude_characters=exclude_characters),
+            },
         )
 
         shows = CollectionWatchListShow(tuple(self._parse_watch_list_show(show) for show in payload["shows"]))
@@ -450,14 +464,38 @@ class Client:
             episodes=CollectionEpisode(Client._parse_episodes(unseen)),
         )
 
-    async def _fetch_episodes_to_watch(self) -> list[dict[str, Any]]:
+    @staticmethod
+    def _episodes_list_excludes(*, exclude_characters: bool) -> dict[str, str]:
+        """Build the `excludes` query param of GET /episodes/list, if any.
+
+        Left to the caller rather than always sent: the endpoint's default is
+        to include everything, and this client has no business shrinking a
+        payload its user may want whole.
+
+        Args:
+            exclude_characters (bool): Whether to leave out each episode's cast.
+
+        Returns:
+            dict[str, str]: The `excludes` param, or nothing to exclude.
+
+        """
+        return {"excludes": EPISODES_LIST_EXCLUDE_CHARACTERS} if exclude_characters else {}
+
+    async def _fetch_episodes_to_watch(self, *, exclude_characters: bool) -> list[dict[str, Any]]:
         """Fetch the raw show payloads for GET /episodes/list.
+
+        Args:
+            exclude_characters (bool): Ask the API to leave out each episode's cast.
 
         Returns:
             list[dict[str, Any]]: Each show, with its "unseen" episodes list.
 
         """
-        payload = await self._get(EPISODES_LIST_ENDPOINT, "fetch episodes to watch")
+        payload = await self._get(
+            EPISODES_LIST_ENDPOINT,
+            "fetch episodes to watch",
+            self._episodes_list_excludes(exclude_characters=exclude_characters),
+        )
 
         return payload["shows"]
 

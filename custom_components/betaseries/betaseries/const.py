@@ -14,6 +14,20 @@ SHOWS_EPISODES_ENDPOINT = "/shows/episodes"
 TIMELINE_MEMBER_ENDPOINT = "/timeline/member"
 MEMBERS_BADGES_ENDPOINT = "/members/badges"
 
+# GET /episodes/list embeds the full cast of every returned episode under
+# "characters". Value of the `excludes` query param that drops it, sent only
+# when the caller asks for it (see Client.fetch_watch_list). Verified via Bruno
+# (bruno/Episodes/list.bru): the key then comes back as an empty list, so the
+# payload shrinks without changing its shape.
+#
+# `excludes` takes a comma-separated list, but "characters" is the only value
+# that actually removes anything (verified) - hence a single constant and a
+# boolean flag on the client, rather than a caller-supplied list of values that
+# would suggest a flexibility the endpoint does not have. It is also specific to
+# this endpoint: the other ones this client reads ignore it, /planning/member
+# included, so its heavy payload cannot be trimmed this way.
+EPISODES_LIST_EXCLUDE_CHARACTERS = "characters"
+
 # Required on every request (see api.betaseries.com docs).
 API_VERSION = "3.0"
 
