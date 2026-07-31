@@ -83,6 +83,17 @@
       "release_calendar": {
         "default": "mdi:calendar-month"
       }
+    },
+    "button": {
+      "clean_badges_cache": {
+        "default": "mdi:cached"
+      },
+      "clean_planning_cache": {
+        "default": "mdi:cached"
+      },
+      "clean_watch_list_cache": {
+        "default": "mdi:cached"
+      }
     }
   }
 }

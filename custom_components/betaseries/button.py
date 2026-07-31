@@ -1,11 +1,10 @@
 """Button platform for the BetaSeries integration.
 
-Two buttons let the user force a full refetch, bypassing each coordinator's
-own caching (badges_store/store - see coordinator.py): "Refresh badges" and
-"Refresh planning" clear their respective Store before requesting a refresh,
-so pressing them always re-fetches from BetaSeries even when nothing would
-normally trigger a re-fetch (e.g. stats.badges unchanged, or a past month
-already cached).
+Each button clears one coordinator's cache and refreshes it, so pressing it
+re-fetches from BetaSeries even when nothing would normally trigger a
+re-fetch - badge details whose count hasn't changed, past planning months
+that can no longer change, or show artwork already known. Without these,
+that data would never be requested again.
 """
 
 from __future__ import annotations
@@ -21,18 +20,25 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import BetaSeriesConfigEntry, MemberCoordinator, PlanningCoordinator
+    from .coordinator import BetaSeriesConfigEntry, EpisodeCoordinator, MemberCoordinator, PlanningCoordinator
 
-REFRESH_BADGES_DESCRIPTION = ButtonEntityDescription(
-    key="refresh_badges",
-    translation_key="refresh_badges",
+CLEAN_BADGES_CACHE_DESCRIPTION = ButtonEntityDescription(
+    key="clean_badges_cache",
+    translation_key="clean_badges_cache",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
 )
 
-REFRESH_PLANNING_DESCRIPTION = ButtonEntityDescription(
-    key="refresh_planning",
-    translation_key="refresh_planning",
+CLEAN_PLANNING_CACHE_DESCRIPTION = ButtonEntityDescription(
+    key="clean_planning_cache",
+    translation_key="clean_planning_cache",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+)
+
+CLEAN_WATCH_LIST_CACHE_DESCRIPTION = ButtonEntityDescription(
+    key="clean_watch_list_cache",
+    translation_key="clean_watch_list_cache",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
 )
@@ -56,13 +62,14 @@ async def async_setup_entry(  # pylint: disable=unused-argument
     """
     async_add_entities(
         [
-            BetaSeriesRefreshBadgesButton(entry.runtime_data.member, REFRESH_BADGES_DESCRIPTION),
-            BetaSeriesRefreshPlanningButton(entry.runtime_data.planning, REFRESH_PLANNING_DESCRIPTION),
+            BetaSeriesCleanBadgesCacheButton(entry.runtime_data.member, CLEAN_BADGES_CACHE_DESCRIPTION),
+            BetaSeriesCleanPlanningCacheButton(entry.runtime_data.planning, CLEAN_PLANNING_CACHE_DESCRIPTION),
+            BetaSeriesCleanWatchListCacheButton(entry.runtime_data.episodes, CLEAN_WATCH_LIST_CACHE_DESCRIPTION),
         ]
     )
 
 
-class BetaSeriesRefreshBadgesButton(BetaSeriesEntity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+class BetaSeriesCleanBadgesCacheButton(BetaSeriesEntity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Force a full refetch of badge details, bypassing the count-based cache.
 
     Attributes:
@@ -79,10 +86,10 @@ class BetaSeriesRefreshBadgesButton(BetaSeriesEntity, ButtonEntity):  # pyright:
             None: The coordinator's data is updated in place.
 
         """
-        await self.coordinator.async_force_refresh_badges()
+        await self.coordinator.async_clean_badges_cache()
 
 
-class BetaSeriesRefreshPlanningButton(BetaSeriesEntity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+class BetaSeriesCleanPlanningCacheButton(BetaSeriesEntity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Force a full refetch of the planning, including cached past months.
 
     Attributes:
@@ -99,4 +106,24 @@ class BetaSeriesRefreshPlanningButton(BetaSeriesEntity, ButtonEntity):  # pyrigh
             None: The coordinator's data is updated in place.
 
         """
-        await self.coordinator.async_force_refresh_planning()
+        await self.coordinator.async_clean_planning_cache()
+
+
+class BetaSeriesCleanWatchListCacheButton(BetaSeriesEntity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+    """Force a full refetch of the watch list, artwork included.
+
+    Attributes:
+        coordinator (EpisodeCoordinator): The coordinator whose show_images_store this button clears.
+
+    """
+
+    coordinator: EpisodeCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    async def async_press(self) -> None:
+        """Clear the cached show images and refresh now.
+
+        Returns:
+            None: The coordinator's data is updated in place.
+
+        """
+        await self.coordinator.async_clean_watch_list_cache()

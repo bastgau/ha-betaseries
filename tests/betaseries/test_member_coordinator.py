@@ -224,7 +224,7 @@ async def test_incompatible_badges_cache_version_is_discarded_not_crashed(
     assert tuple(coordinator.data.badges) == (BADGE,)
 
 
-async def test_force_refresh_badges_refetches_even_with_unchanged_count(
+async def test_clean_badges_cache_refetches_even_with_unchanged_count(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
     caplog: pytest.LogCaptureFixture,
@@ -250,7 +250,7 @@ async def test_force_refresh_badges_refetches_even_with_unchanged_count(
     mock_client.fetch_badges.return_value = CollectionBadge((updated_badge,))
 
     with caplog.at_level(logging.DEBUG):
-        await coordinator.async_force_refresh_badges()
+        await coordinator.async_clean_badges_cache()
     await hass.async_block_till_done()
 
     assert mock_client.fetch_badges.await_count == 1

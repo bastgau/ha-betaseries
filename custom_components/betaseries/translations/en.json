@@ -153,11 +153,14 @@
       }
     },
     "button": {
-      "refresh_badges": {
-        "name": "Refresh badges"
+      "clean_badges_cache": {
+        "name": "Clean badges cache"
       },
-      "refresh_planning": {
-        "name": "Refresh planning"
+      "clean_planning_cache": {
+        "name": "Clean planning cache"
+      },
+      "clean_watch_list_cache": {
+        "name": "Clean watch list cache"
       }
     }
   },

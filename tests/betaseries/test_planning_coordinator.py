@@ -23,10 +23,10 @@ from custom_components.betaseries.const import (
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
     DOMAIN,
+    PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX,
+    PLANNING_SHOW_IMAGES_STORE_VERSION,
     PLANNING_STORE_KEY_PREFIX,
     PLANNING_STORE_VERSION,
-    SHOW_IMAGES_STORE_KEY_PREFIX,
-    SHOW_IMAGES_STORE_VERSION,
 )
 from custom_components.betaseries.coordinator import (
     PlanningCoordinator,
@@ -248,7 +248,7 @@ async def test_past_months_persist_across_coordinator_instances(
     assert tuple(second_coordinator.data) == (EPISODE, EPISODE)
 
 
-async def test_force_refresh_planning_refetches_cached_past_months(
+async def test_clean_planning_cache_refetches_cached_past_months(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
     caplog: pytest.LogCaptureFixture,
@@ -270,7 +270,7 @@ async def test_force_refresh_planning_refetches_cached_past_months(
 
     mock_client.fetch_planning.reset_mock()
     with caplog.at_level(logging.DEBUG):
-        await coordinator.async_force_refresh_planning()
+        await coordinator.async_clean_planning_cache()
 
     # Both the past month and the current month are re-fetched, bypassing the cache.
     assert mock_client.fetch_planning.await_count == 2
@@ -302,7 +302,7 @@ async def test_cache_prunes_months_that_slid_out_of_window(
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()  # caches 2026-07
 
-    stored = await coordinator.store.async_load()
+    stored = await coordinator.planning_store.async_load()
     assert stored is not None
     assert set(stored) == {"2026-07"}
 
@@ -313,7 +313,7 @@ async def test_cache_prunes_months_that_slid_out_of_window(
     mock_client.fetch_planning.reset_mock()
     await coordinator.async_refresh()
 
-    stored = await coordinator.store.async_load()
+    stored = await coordinator.planning_store.async_load()
     assert stored is not None
     assert set(stored) == {"2027-07"}
 
@@ -507,8 +507,8 @@ async def test_show_images_of_shows_leaving_the_window_are_purged(
         options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
     )
     entry.add_to_hass(hass)
-    hass_storage[f"{SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"] = {
-        "version": SHOW_IMAGES_STORE_VERSION,
+    hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"] = {
+        "version": PLANNING_SHOW_IMAGES_STORE_VERSION,
         "data": {"999": "https://pictures.betaseries.com/gone.jpg"},
     }
     mock_client = client_mock()
@@ -521,7 +521,7 @@ async def test_show_images_of_shows_leaving_the_window_are_purged(
     await coordinator.async_refresh()
 
     assert coordinator.show_images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
-    stored = hass_storage[f"{SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
+    stored = hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
     assert "999" not in stored
 
 

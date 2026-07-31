@@ -132,6 +132,16 @@ It is deliberately a separate entity: its list would otherwise weigh on the plai
 | New episode available | On when at least one episode is available to watch |
 | Movies to watch available | On when at least one movie is not yet watched |
 
+### Button
+
+Three buttons force a full refresh, bypassing the caches the integration keeps to spare the API. They are **disabled by default**: the data refreshes on its own, these are only useful when something looks stale.
+
+| Name | Effect |
+|---|---|
+| Refresh badges | Refetches the badge details, even when the badge count hasn't changed |
+| Refresh planning | Refetches every month, including past ones (which never change once over) and the show artwork |
+| Refresh watch list | Refetches the watch list and its show artwork |
+
 ### Calendar
 
 One calendar entity ("Planning") lists episodes of the shows you follow as all-day events, titled `<show> - <SxxEyy>`, including both watched and unwatched episodes. The window of months shown (past and future) is configurable from the integration options (2 months each way by default). The calendar's own "next event" points to the earliest episode not yet marked as watched.

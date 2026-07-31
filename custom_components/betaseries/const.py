@@ -84,8 +84,8 @@ PLANNING_STORE_KEY_PREFIX = "betaseries_planning_past"
 # GET /shows/display call for every show currently in the planning window. A
 # show's images essentially never change, so only shows missing from this cache
 # are fetched on each refresh, and shows that left the window are purged.
-SHOW_IMAGES_STORE_VERSION = 1
-SHOW_IMAGES_STORE_KEY_PREFIX = "betaseries_show_images"
+PLANNING_SHOW_IMAGES_STORE_VERSION = 1
+PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX = "betaseries_planning_show_images"
 
 # Same cache, for the shows listed by EpisodeCoordinator. Kept separate from
 # the planning's rather than shared: the two coordinators cover different sets

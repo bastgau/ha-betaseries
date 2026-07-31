@@ -35,10 +35,10 @@ from .const import (
     DOMAIN,
     EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX,
     EPISODE_SHOW_IMAGES_STORE_VERSION,
+    PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX,
+    PLANNING_SHOW_IMAGES_STORE_VERSION,
     PLANNING_STORE_KEY_PREFIX,
     PLANNING_STORE_VERSION,
-    SHOW_IMAGES_STORE_KEY_PREFIX,
-    SHOW_IMAGES_STORE_VERSION,
 )
 
 if TYPE_CHECKING:
@@ -381,12 +381,12 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
         )
         return badges
 
-    async def async_force_refresh_badges(self) -> None:
+    async def async_clean_badges_cache(self) -> None:
         """Force a full refetch of badge details on the next refresh, then refresh now.
 
         Clears the badges_store cache first: _async_get_badges() only skips
         re-fetching when the cached count matches stats.badges, so without
-        this, pressing the "Refresh badges" button would silently do nothing
+        this, pressing the "Clean badges cache" button would silently do nothing
         if the count hadn't changed (e.g. a badge's description changed
         without a new badge being earned).
 
@@ -410,7 +410,7 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
     Attributes:
         config_entry (BetaSeriesConfigEntry): The config entry this coordinator serves.
         client (Client): The BetaSeries API client used to fetch the planning.
-        store (Store[dict[str, list[dict[str, Any]]]]): Persisted cache of past months' episodes.
+        planning_store (Store[dict[str, list[dict[str, Any]]]]): Persisted cache of past months' episodes.
         show_images_store (Store[dict[str, Any]]): Persisted cache of each show's image URLs.
         show_images (dict[str, dict[str, str]]): Image URLs per show id currently in the window, empty dicts included.
 
@@ -438,11 +438,11 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
             update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self.client = client
-        self.store: Store[dict[str, list[dict[str, Any]]]] = _CacheStore[dict[str, list[dict[str, Any]]]](
+        self.planning_store: Store[dict[str, list[dict[str, Any]]]] = _CacheStore[dict[str, list[dict[str, Any]]]](
             hass, PLANNING_STORE_VERSION, f"{PLANNING_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
         self.show_images_store: Store[dict[str, Any]] = _CacheStore[dict[str, Any]](
-            hass, SHOW_IMAGES_STORE_VERSION, f"{SHOW_IMAGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
+            hass, PLANNING_SHOW_IMAGES_STORE_VERSION, f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
         self.show_images: dict[str, dict[str, str]] = {}
 
@@ -487,21 +487,21 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
         )
         return planning
 
-    async def async_force_refresh_planning(self) -> None:
+    async def async_clean_planning_cache(self) -> None:
         """Force a full refetch of every month, including cached past ones, then refresh now.
 
         Clears both stores first: _async_get_cached_past_months() and
         _async_get_show_images() only fetch what is missing from their cache, so
         without this, past months (which never change once over) and already
         known show images would keep being served from the store untouched by the
-        "Refresh planning" button.
+        "Clean planning cache" button.
 
         Returns:
             None: The coordinator's data is updated in place, like any refresh.
 
         """
         _LOGGER.debug("Clearing cached past months for %s, forcing a full refetch", self.config_entry.title)
-        await self.store.async_remove()
+        await self.planning_store.async_remove()
         await self.show_images_store.async_remove()
         await self.async_refresh()
 
@@ -532,7 +532,7 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
             dict[str, tuple[Episode, ...]]: Episodes for each requested month.
 
         """
-        stored = await self.store.async_load() or {}
+        stored = await self.planning_store.async_load() or {}
         stale = [month for month in stored if month not in months]
         missing = [month for month in months if month not in stored]
 
@@ -546,7 +546,7 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
             stored[month] = [_episode_to_dict(episode) for episode in episodes]
 
         if stale or missing:
-            await self.store.async_save(stored)
+            await self.planning_store.async_save(stored)
 
         return {month: tuple(_episode_from_dict(data) for data in stored[month]) for month in months}
 
@@ -697,6 +697,22 @@ class EpisodeCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
             self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
         )
         return watch_list
+
+    async def async_clean_watch_list_cache(self) -> None:
+        """Force a full refetch of the watch list, artwork included, then refresh now.
+
+        The list itself is always refetched, so only the cached show images
+        need clearing: _async_get_show_images() otherwise serves them from the
+        store untouched, and a show whose artwork changed would keep its stale
+        one until it left and re-entered the list.
+
+        Returns:
+            None: The coordinator's data is updated in place, like any refresh.
+
+        """
+        _LOGGER.debug("Clearing cached show images for %s, forcing a full refetch", self.config_entry.title)
+        await self.show_images_store.async_remove()
+        await self.async_refresh()
 
 
 @dataclass
