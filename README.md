@@ -134,13 +134,13 @@ It is deliberately a separate entity: its list would otherwise weigh on the plai
 
 ### Button
 
-Three buttons force a full refresh, bypassing the caches the integration keeps to spare the API. They are **disabled by default**: the data refreshes on its own, these are only useful when something looks stale.
+The integration caches what BetaSeries never changes - badge details, past planning months, show artwork - so it stops asking for them. These three buttons drop that cache and refresh, which is the only way to get such data re-fetched. They are **disabled by default**: everything else refreshes on its own, so these are only useful when something looks stale.
 
-| Name | Effect |
+| Name | Drops |
 |---|---|
-| Refresh badges | Refetches the badge details, even when the badge count hasn't changed |
-| Refresh planning | Refetches every month, including past ones (which never change once over) and the show artwork |
-| Refresh watch list | Refetches the watch list and its show artwork |
+| Clean badges cache | The badge details, re-fetched even when the badge count hasn't changed |
+| Clean planning cache | The past months (which never change once over) and the planning's show artwork |
+| Clean watch list cache | The watch list's show artwork |
 
 ### Calendar
 
