@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from custom_components.betaseries.config_flow import SECTION_EPISODES, SECTION_MEMBER, SECTION_PLANNING
 from custom_components.betaseries.const import (
+    CONF_EPISODES_LIMIT,
+    CONF_EPISODES_SCAN_INTERVAL,
     CONF_LOCALE,
     CONF_MEMBER_SCAN_INTERVAL,
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
+    CONF_SHOWS_LIMIT,
     DEFAULT_LOCALE,
     DOMAIN,
 )
@@ -18,7 +22,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, section
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -28,10 +32,32 @@ USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-sec
 DEFAULT_USER_INPUT = {
     CONF_MEMBER_SCAN_INTERVAL: 15,
     CONF_PLANNING_SCAN_INTERVAL: 60,
+    CONF_EPISODES_SCAN_INTERVAL: 30,
+    CONF_SHOWS_LIMIT: 10,
+    CONF_EPISODES_LIMIT: 2,
     CONF_PLANNING_MONTHS_BEHIND: 2,
     CONF_PLANNING_MONTHS_AHEAD: 2,
     CONF_LOCALE: DEFAULT_LOCALE,
 }
+
+
+def _section_defaults(schema: vol.Schema) -> dict[str, object]:
+    """Collect every field's default, looking inside the form's sections.
+
+    Args:
+        schema (vol.Schema): The options form's schema.
+
+    Returns:
+        dict[str, object]: Each field key mapped to its default value.
+
+    """
+    defaults: dict[str, object] = {}
+    for key, value in schema.schema.items():
+        if isinstance(value, section):
+            defaults.update({inner.schema: inner.default() for inner in value.schema.schema})
+        else:
+            defaults[key.schema] = key.default()
+    return defaults
 
 
 @pytest.fixture
@@ -57,9 +83,12 @@ async def test_options_flow_shows_current_defaults(hass: HomeAssistant, config_e
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"] is not None
-    schema_defaults = {key.schema: key.default() for key in result["data_schema"].schema}
+    schema_defaults = _section_defaults(result["data_schema"])
     assert schema_defaults[CONF_MEMBER_SCAN_INTERVAL] == 15
     assert schema_defaults[CONF_PLANNING_SCAN_INTERVAL] == 60
+    assert schema_defaults[CONF_EPISODES_SCAN_INTERVAL] == 30
+    assert schema_defaults[CONF_SHOWS_LIMIT] == 10
+    assert schema_defaults[CONF_EPISODES_LIMIT] == 2
     assert schema_defaults[CONF_PLANNING_MONTHS_BEHIND] == 2
     assert schema_defaults[CONF_PLANNING_MONTHS_AHEAD] == 2
     assert schema_defaults[CONF_LOCALE] == DEFAULT_LOCALE
@@ -69,18 +98,36 @@ async def test_options_flow_updates_intervals(hass: HomeAssistant, config_entry:
     """Persist the submitted scan intervals and months window as the entry's options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
+    # The form nests its fields under one section per coordinator...
     user_input = {
-        CONF_MEMBER_SCAN_INTERVAL: 30,
-        CONF_PLANNING_SCAN_INTERVAL: 120,
-        CONF_PLANNING_MONTHS_BEHIND: 3,
-        CONF_PLANNING_MONTHS_AHEAD: 1,
+        SECTION_MEMBER: {CONF_MEMBER_SCAN_INTERVAL: 30},
+        SECTION_PLANNING: {
+            CONF_PLANNING_SCAN_INTERVAL: 120,
+            CONF_PLANNING_MONTHS_BEHIND: 3,
+            CONF_PLANNING_MONTHS_AHEAD: 1,
+        },
+        SECTION_EPISODES: {
+            CONF_EPISODES_SCAN_INTERVAL: 45,
+            CONF_SHOWS_LIMIT: 5,
+            CONF_EPISODES_LIMIT: 3,
+        },
         CONF_LOCALE: "en",
     }
     result = await hass.config_entries.options.async_configure(result["flow_id"], user_input)
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == user_input
+    # ... but they are stored flat, so the coordinators read them unchanged.
+    assert config_entry.options == {
+        CONF_MEMBER_SCAN_INTERVAL: 30,
+        CONF_PLANNING_SCAN_INTERVAL: 120,
+        CONF_PLANNING_MONTHS_BEHIND: 3,
+        CONF_PLANNING_MONTHS_AHEAD: 1,
+        CONF_EPISODES_SCAN_INTERVAL: 45,
+        CONF_SHOWS_LIMIT: 5,
+        CONF_EPISODES_LIMIT: 3,
+        CONF_LOCALE: "en",
+    }
 
 
 async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:  # pylint: disable=redefined-outer-name
@@ -90,6 +137,9 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
         options={
             CONF_MEMBER_SCAN_INTERVAL: 45,
             CONF_PLANNING_SCAN_INTERVAL: 180,
+            CONF_EPISODES_SCAN_INTERVAL: 60,
+            CONF_SHOWS_LIMIT: 20,
+            CONF_EPISODES_LIMIT: 1,
             CONF_PLANNING_MONTHS_BEHIND: 1,
             CONF_PLANNING_MONTHS_AHEAD: 4,
             CONF_LOCALE: "en",
@@ -99,7 +149,7 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["data_schema"] is not None
-    schema_defaults = {key.schema: key.default() for key in result["data_schema"].schema}
+    schema_defaults = _section_defaults(result["data_schema"])
     assert schema_defaults[CONF_MEMBER_SCAN_INTERVAL] == 45
     assert schema_defaults[CONF_PLANNING_SCAN_INTERVAL] == 180
     assert schema_defaults[CONF_PLANNING_MONTHS_BEHIND] == 1

@@ -12,6 +12,7 @@ from .collection_badge import CollectionBadge
 from .collection_episode import CollectionEpisode
 from .collection_show import CollectionShow
 from .collection_timeline_event import CollectionTimelineEvent
+from .collection_watch_list_show import CollectionWatchListShow
 from .const import (
     API_VERSION,
     BASE_URL,
@@ -36,6 +37,7 @@ from .show import Show
 from .show_additional_information import ShowAdditionalInformation
 from .show_images import ShowImages
 from .timeline_event_type import TimelineEventType
+from .watch_list_show import WatchListShow
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -385,6 +387,60 @@ class Client:
                 )
                 for show in shows
             }
+        )
+
+    async def fetch_watch_list(self, shows_limit: int, episodes_limit: int) -> tuple[CollectionWatchListShow, int, int]:
+        """Fetch the shows still to watch, capped to a few episodes each (GET /episodes/list).
+
+        Unlike fetch_episodes_to_watch(), this keeps each show's `remaining`
+        count, and caps the payload through the showsLimit/limit query params.
+        Those only truncate the returned shows: the two counters are the
+        endpoint's own and stay global (verified - the list may hold 10 shows
+        while `total_shows` reports 37), which is why they are returned
+        alongside the collection rather than inside it.
+
+        Args:
+            shows_limit (int): Maximum number of shows to return (showsLimit).
+            episodes_limit (int): Maximum number of episodes per show (limit).
+
+        Returns:
+            tuple[CollectionWatchListShow, int, int]: The listed shows, the total shows to watch, and the total episodes to watch.
+
+        """
+        async with self._session.get(
+            f"{BASE_URL}{EPISODES_LIST_ENDPOINT}",
+            headers=self._headers,
+            params={**self._params, "showsLimit": str(shows_limit), "limit": str(episodes_limit)},
+        ) as response:
+            await self._raise_for_error(response, "fetch watch list")
+            payload = await response.json()
+
+        shows = CollectionWatchListShow(tuple(self._parse_watch_list_show(show) for show in payload["shows"]))
+        return shows, _to_int(payload.get("total")), _to_int(payload.get("totalEpisodes"))
+
+    @staticmethod
+    def _parse_watch_list_show(show: dict[str, Any]) -> WatchListShow:
+        """Build a WatchListShow from one entry of the /episodes/list payload.
+
+        The poster is read from the episodes' embedded show object, which is
+        where this endpoint carries it - the top-level show entry has no
+        images of its own.
+
+        Args:
+            show (dict[str, Any]): One entry of the "shows" payload list.
+
+        Returns:
+            WatchListShow: The parsed show, with its unseen episodes.
+
+        """
+        unseen: list[dict[str, Any]] = show["unseen"]
+        embedded: dict[str, Any] = unseen[0]["show"] if unseen else {}
+        return WatchListShow(
+            id=str(show["id"]),
+            title=show["title"],
+            remaining=show.get("remaining") or 0,
+            poster=embedded.get("poster") or None,
+            episodes=CollectionEpisode(Client._parse_episodes(unseen)),
         )
 
     async def _fetch_episodes_to_watch(self) -> list[dict[str, Any]]:

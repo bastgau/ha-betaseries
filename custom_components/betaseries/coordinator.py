@@ -18,15 +18,23 @@ from .betaseries import AuthError, Badge, CollectionBadge, CollectionEpisode, Ep
 from .const import (
     BADGES_STORE_KEY_PREFIX,
     BADGES_STORE_VERSION,
+    CONF_EPISODES_LIMIT,
+    CONF_EPISODES_SCAN_INTERVAL,
     CONF_MEMBER_SCAN_INTERVAL,
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
+    CONF_SHOWS_LIMIT,
+    DEFAULT_EPISODES_LIMIT,
+    DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES,
     DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES,
     DEFAULT_PLANNING_MONTHS_AHEAD,
     DEFAULT_PLANNING_MONTHS_BEHIND,
     DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES,
+    DEFAULT_SHOWS_LIMIT,
     DOMAIN,
+    EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX,
+    EPISODE_SHOW_IMAGES_STORE_VERSION,
     PLANNING_STORE_KEY_PREFIX,
     PLANNING_STORE_VERSION,
     SHOW_IMAGES_STORE_KEY_PREFIX,
@@ -36,7 +44,7 @@ from .const import (
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-    from .betaseries import Client, MemberData
+    from .betaseries import Client, CollectionWatchListShow, MemberData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,6 +185,58 @@ def _images_to_dict(images: ShowImages) -> dict[str, str]:
         )
         if url
     }
+
+
+async def _async_get_show_images(
+    client: Client,
+    store: Store[dict[str, Any]],
+    show_ids: frozenset[str],
+    title: str,
+) -> dict[str, dict[str, str]]:
+    """Return each show's image URLs, fetching only the ones not already cached.
+
+    Shared by the coordinators that display shows: a show's images essentially
+    never change, so cached ones are never refetched; shows no longer in the
+    caller's set are dropped so the cache doesn't grow unbounded. Shows that
+    have no image at all are cached as an empty dict, which stops them being
+    refetched on every refresh.
+
+    Failures are swallowed on purpose: these images are decoration, and the
+    caller's own data refreshed fine by the time this runs - failing the whole
+    update over a missing image would take its entities down with it.
+
+    Args:
+        client (Client): The BetaSeries API client used to fetch the shows.
+        store (Store[dict[str, Any]]): The caller's own persisted image cache.
+        show_ids (frozenset[str]): Show ids the caller currently displays.
+        title (str): The config entry's title, for logging.
+
+    Returns:
+        dict[str, dict[str, str]]: Image URLs per show id, each without its unset entries.
+
+    """
+    stored: dict[str, Any] = await store.async_load() or {}
+    cached: dict[str, dict[str, str]] = {show_id: stored[show_id] for show_id in show_ids if show_id in stored}
+    missing = show_ids - cached.keys()
+
+    if missing:
+        try:
+            _LOGGER.debug("Fetching images for %s new show(s) of %s from BetaSeries", len(missing), title)
+            shows = await client.fetch_shows(sorted(missing))
+        except Error as err:
+            _LOGGER.debug("Fetching show images for %s failed (HTTP %s): %s", title, err.status, _compact(err.body))
+        else:
+            for show_id in missing:
+                show = shows.for_show(show_id)
+                information = show.additional_information if show is not None else None
+                cached[show_id] = _images_to_dict(information.images) if information is not None else {}
+
+    if cached != stored:
+        # Either new images were fetched, or shows left the caller's set and
+        # their entries were dropped by the comprehension above.
+        await store.async_save(cached)
+
+    return cached
 
 
 def _badge_to_dict(badge: Badge) -> dict[str, Any]:
@@ -422,60 +482,10 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
 
         episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
         planning = CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
-        self.show_images = await self._async_get_show_images(planning.show_ids)
+        self.show_images = await _async_get_show_images(
+            self.client, self.show_images_store, planning.show_ids, self.config_entry.title
+        )
         return planning
-
-    async def _async_get_show_images(self, show_ids: frozenset[str]) -> dict[str, dict[str, str]]:
-        """Return the image URLs of each show in the window, fetching only the missing ones.
-
-        A show's images essentially never change, so shows already cached are
-        never refetched; shows that left the window are dropped so the cache
-        doesn't grow unbounded. Shows that have no image at all are cached as
-        an empty dict, which stops them being refetched on every refresh.
-
-        Failures are swallowed on purpose: these images are decoration, and
-        the planning itself refreshed fine by the time this runs - failing the
-        whole update over a missing image would take the calendar and both
-        episode sensors down with it.
-
-        Args:
-            show_ids (frozenset[str]): Show ids currently present in the planning window.
-
-        Returns:
-            dict[str, dict[str, str]]: Image URLs per show id, each without its unset entries.
-
-        """
-        stored: dict[str, Any] = await self.show_images_store.async_load() or {}
-        cached: dict[str, dict[str, str]] = {show_id: stored[show_id] for show_id in show_ids if show_id in stored}
-        missing = show_ids - cached.keys()
-
-        if missing:
-            try:
-                _LOGGER.debug(
-                    "Fetching images for %s new show(s) of %s from BetaSeries",
-                    len(missing),
-                    self.config_entry.title,
-                )
-                shows = await self.client.fetch_shows(sorted(missing))
-            except Error as err:
-                _LOGGER.debug(
-                    "Fetching show images for %s failed (HTTP %s): %s",
-                    self.config_entry.title,
-                    err.status,
-                    _compact(err.body),
-                )
-            else:
-                for show_id in missing:
-                    show = shows.for_show(show_id)
-                    information = show.additional_information if show is not None else None
-                    cached[show_id] = _images_to_dict(information.images) if information is not None else {}
-
-        if cached != stored:
-            # Either new images were fetched, or shows left the window and
-            # their entries were dropped by the comprehension above.
-            await self.show_images_store.async_save(cached)
-
-        return cached
 
     async def async_force_refresh_planning(self) -> None:
         """Force a full refetch of every month, including cached past ones, then refresh now.
@@ -603,6 +613,92 @@ def _episode_from_dict(data: dict[str, Any]) -> Episode:
     )
 
 
+class EpisodeCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
+    """Fetch the shows still to watch via Client.fetch_watch_list() (GET /episodes/list).
+
+    Kept apart from PlanningCoordinator rather than derived from it: the
+    planning is bounded by its month window, so a show whose last unseen
+    episode aired before that window would silently drop out of the watch
+    list. This endpoint also carries each show's `remaining` count and the
+    global totals, which the planning has no equivalent for.
+
+    Attributes:
+        config_entry (BetaSeriesConfigEntry): The config entry this coordinator serves.
+        client (Client): The BetaSeries API client used to fetch the watch list.
+        show_images_store (Store[dict[str, Any]]): Persisted cache of each listed show's image URLs.
+        show_images (dict[str, dict[str, str]]): Image URLs per listed show id.
+        total_shows (int): Shows with at least one unseen episode, ignoring the configured limits.
+        total_episodes (int): Unseen episodes across every show, ignoring the configured limits.
+
+    """
+
+    config_entry: BetaSeriesConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: BetaSeriesConfigEntry, client: Client) -> None:
+        """Initialize the coordinator.
+
+        Args:
+            hass (HomeAssistant): The Home Assistant instance.
+            config_entry (BetaSeriesConfigEntry): The config entry this coordinator serves.
+            client (Client): The BetaSeries API client used to fetch the watch list.
+
+        """
+        scan_interval_minutes = config_entry.options.get(
+            CONF_EPISODES_SCAN_INTERVAL, DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES
+        )
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_episodes",
+            update_interval=timedelta(minutes=scan_interval_minutes),
+        )
+        self.client = client
+        self.show_images_store: Store[dict[str, Any]] = _CacheStore[dict[str, Any]](
+            hass, EPISODE_SHOW_IMAGES_STORE_VERSION, f"{EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
+        )
+        self.show_images: dict[str, dict[str, str]] = {}
+        self.total_shows = 0
+        self.total_episodes = 0
+
+    async def _async_update_data(self) -> CollectionWatchListShow:
+        """Fetch the shows still to watch, capped by the configured limits.
+
+        Returns:
+            CollectionWatchListShow: The listed shows with their unseen episodes, plus the global counters.
+
+        Raises:
+            ConfigEntryAuthFailed: If the stored access token was rejected.
+            UpdateFailed: If the request fails for any other reason.
+
+        """
+        # NumberSelector-backed options always come back as float (see config_flow.py).
+        shows_limit = int(self.config_entry.options.get(CONF_SHOWS_LIMIT, DEFAULT_SHOWS_LIMIT))
+        episodes_limit = int(self.config_entry.options.get(CONF_EPISODES_LIMIT, DEFAULT_EPISODES_LIMIT))
+
+        try:
+            _LOGGER.debug("Fetching watch list for %s from BetaSeries", self.config_entry.title)
+            watch_list, total_shows, total_episodes = await self.client.fetch_watch_list(shows_limit, episodes_limit)
+        except AuthError as err:
+            _log_auth_failure(self.config_entry.title, err)
+            raise ConfigEntryAuthFailed from err
+        except Error as err:
+            _LOGGER.debug(
+                "Fetching watch list for %s failed (HTTP %s): %s",
+                self.config_entry.title,
+                err.status,
+                _compact(err.body),
+            )
+            raise UpdateFailed(str(err)) from err
+
+        self.total_shows = total_shows
+        self.total_episodes = total_episodes
+        self.show_images = await _async_get_show_images(
+            self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
+        )
+        return watch_list
+
+
 @dataclass
 class BetaSeriesData:
     """Hold the coordinators stored on the config entry's runtime_data.
@@ -610,11 +706,13 @@ class BetaSeriesData:
     Attributes:
         member (MemberCoordinator): Coordinator for member data/stats (v1).
         planning (PlanningCoordinator): Coordinator for the upcoming episodes planning (v2).
+        episodes (EpisodeCoordinator): Coordinator for the shows still to watch.
 
     """
 
     member: MemberCoordinator
     planning: PlanningCoordinator
+    episodes: EpisodeCoordinator
 
 
 def _upcoming_months(today: date, months_ahead: int) -> list[str]:

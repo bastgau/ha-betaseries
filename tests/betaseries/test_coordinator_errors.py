@@ -1,4 +1,4 @@
-"""Shared error-handling tests for MemberCoordinator and PlanningCoordinator.
+"""Shared error-handling tests for every BetaSeries coordinator.
 
 Both coordinators translate the client's exceptions the same way
 (AuthError -> ConfigEntryAuthFailed, Error -> UpdateFailed); this is
@@ -9,21 +9,20 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock
 
 from custom_components.betaseries.betaseries.exceptions import AuthError, Error
 from custom_components.betaseries.const import DOMAIN
-from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
+from custom_components.betaseries.coordinator import EpisodeCoordinator, MemberCoordinator, PlanningCoordinator
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from tests.conftest import client_mock
-
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from tests.conftest import client_mock
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from unittest.mock import AsyncMock
 
     from custom_components.betaseries.coordinator import BetaSeriesConfigEntry
 
@@ -32,6 +31,7 @@ if TYPE_CHECKING:
 COORDINATOR_PARAMS = [
     (MemberCoordinator, "fetch_member_data"),
     (PlanningCoordinator, "fetch_planning"),
+    (EpisodeCoordinator, "fetch_watch_list"),
 ]
 
 
@@ -45,7 +45,7 @@ async def test_auth_error_marks_refresh_failed(
 
     Args:
         hass (HomeAssistant): The Home Assistant test instance.
-        coordinator_class (Callable): MemberCoordinator or PlanningCoordinator.
+        coordinator_class (Callable): The coordinator class under test.
         mocked_method (str): Name of the client method this coordinator calls.
 
     """
@@ -77,7 +77,7 @@ async def test_auth_error_logs_reauth_guidance(
 
     Args:
         hass (HomeAssistant): The Home Assistant test instance.
-        coordinator_class (Callable): MemberCoordinator or PlanningCoordinator.
+        coordinator_class (Callable): The coordinator class under test.
         mocked_method (str): Name of the client method this coordinator calls.
         caplog (pytest.LogCaptureFixture): Captures log records emitted during the test.
 
@@ -110,7 +110,7 @@ async def test_error_marks_refresh_failed(
 
     Args:
         hass (HomeAssistant): The Home Assistant test instance.
-        coordinator_class (Callable): MemberCoordinator or PlanningCoordinator.
+        coordinator_class (Callable): The coordinator class under test.
         mocked_method (str): Name of the client method this coordinator calls.
 
     """

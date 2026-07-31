@@ -1075,3 +1075,71 @@ async def test_fetch_badges_raises_auth_error_on_invalid_credentials() -> None:
 
     with pytest.raises(AuthError):
         await client.fetch_badges("42")
+
+
+async def test_fetch_watch_list_success() -> None:
+    """Parse the shows to watch, their remaining count and the global counters."""
+    payload = {
+        "shows": [
+            {
+                "id": 38605,
+                "title": "Achtsam Morden",
+                "remaining": 8,
+                "unseen": [
+                    {
+                        "id": 3905073,
+                        "title": "Urlaub",
+                        "season": 2,
+                        "episode": 1,
+                        "code": "S02E01",
+                        "description": "A summary.",
+                        "date": "2026-05-29",
+                        "user": {"seen": False},
+                        "platform_links": [{"platform": "Netflix"}],
+                        "resource_url": "https://www.betaseries.com/episode/3905073",
+                        "show": {
+                            "id": 38605,
+                            "title": "Achtsam Morden",
+                            "poster": "https://pictures.betaseries.com/poster.jpg",
+                        },
+                    }
+                ],
+            }
+        ],
+        "total": 37,
+        "totalEpisodes": 726,
+    }
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    shows, total_shows, total_episodes = await client.fetch_watch_list(10, 2)
+
+    # The counters are the endpoint's own, unaffected by the requested limits.
+    assert total_shows == 37
+    assert total_episodes == 726
+    assert len(shows) == 1
+    assert shows.show_ids == frozenset({"38605"})
+
+    show = next(iter(shows))
+    assert show.id == "38605"
+    assert show.remaining == 8
+    assert show.poster == "https://pictures.betaseries.com/poster.jpg"
+    assert next(iter(show.episodes)).code == "S02E01"
+
+    assert session.get_calls[0][1]["params"]["showsLimit"] == "10"
+    assert session.get_calls[0][1]["params"]["limit"] == "2"
+
+
+async def test_fetch_watch_list_tolerates_a_show_without_episodes() -> None:
+    """Fall back to no poster when a listed show carries no unseen episode."""
+    payload = {"shows": [{"id": 38605, "title": "Achtsam Morden", "unseen": []}]}
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    shows, total_shows, _total_episodes = await client.fetch_watch_list(10, 2)
+
+    show = next(iter(shows))
+    assert show.poster is None
+    assert show.remaining == 0
+    assert not tuple(show.episodes)
+    assert total_shows == 0

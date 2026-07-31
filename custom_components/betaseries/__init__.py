@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .betaseries import Client
 from .const import CONF_LOCALE, DEFAULT_LOCALE
-from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator
+from .coordinator import BetaSeriesData, EpisodeCoordinator, MemberCoordinator, PlanningCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -55,7 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -
     # unavailable until the next successful refresh with no extra code.
     await planning_coordinator.async_refresh()
 
-    entry.runtime_data = BetaSeriesData(member=member_coordinator, planning=planning_coordinator)
+    # Same reasoning as the planning: the watch list only backs the
+    # shows_to_watch sensor's attribute, so a failure there must not take the
+    # whole entry down.
+    episode_coordinator = EpisodeCoordinator(hass, entry, client)
+    await episode_coordinator.async_refresh()
+
+    entry.runtime_data = BetaSeriesData(
+        member=member_coordinator, planning=planning_coordinator, episodes=episode_coordinator
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

@@ -12,6 +12,7 @@ from .collection_badge import CollectionBadge
 from .collection_episode import CollectionEpisode
 from .collection_show import CollectionShow
 from .collection_timeline_event import CollectionTimelineEvent
+from .collection_watch_list_show import CollectionWatchListShow
 from .device_code import DeviceCodeData
 from .episode import Episode
 from .episode_watched_event import EpisodeWatchedEvent
@@ -25,6 +26,7 @@ from .show_additional_information import ShowAdditionalInformation
 from .show_images import ShowImages
 from .timeline_event import TimelineEvent
 from .timeline_event_type import TimelineEventType
+from .watch_list_show import WatchListShow
 
 __all__ = [
     "Auth",
@@ -36,6 +38,7 @@ __all__ = [
     "CollectionEpisode",
     "CollectionShow",
     "CollectionTimelineEvent",
+    "CollectionWatchListShow",
     "DeviceCodeData",
     "Episode",
     "EpisodeWatchedEvent",
@@ -49,4 +52,5 @@ __all__ = [
     "ShowImages",
     "TimelineEvent",
     "TimelineEventType",
+    "WatchListShow",
 ]

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 from custom_components.betaseries.betaseries.collection_show import CollectionShow
+from custom_components.betaseries.betaseries.collection_watch_list_show import CollectionWatchListShow
 import pytest
 
 if TYPE_CHECKING:
@@ -46,6 +47,7 @@ def client_mock(**kwargs: object) -> AsyncMock:
     """
     client = AsyncMock()
     client.fetch_shows.return_value = CollectionShow({})
+    client.fetch_watch_list.return_value = (CollectionWatchListShow(()), 0, 0)
     for name, value in kwargs.items():
         setattr(client, name, value)
     return client

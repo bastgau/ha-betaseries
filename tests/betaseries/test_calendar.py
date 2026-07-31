@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from custom_components.betaseries.betaseries.collection_episode import CollectionEpisode
 from custom_components.betaseries.betaseries.episode import Episode
@@ -15,10 +15,9 @@ from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.const import CONF_PLANNING_MONTHS_BEHIND, DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from tests.conftest import client_mock
-
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.util import dt as dt_util
+from tests.conftest import client_mock
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

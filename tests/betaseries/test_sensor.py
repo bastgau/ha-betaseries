@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from custom_components.betaseries.betaseries.badge import Badge
 from custom_components.betaseries.betaseries.collection_badge import CollectionBadge

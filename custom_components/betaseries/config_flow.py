@@ -23,6 +23,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     NumberSelector,  # pyright: ignore[reportUnknownVariableType]
@@ -41,25 +42,37 @@ from .betaseries import (
     DeviceCodeData,
 )
 from .const import (
+    CONF_EPISODES_LIMIT,
+    CONF_EPISODES_SCAN_INTERVAL,
     CONF_LOCALE,
     CONF_MEMBER_SCAN_INTERVAL,
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
+    CONF_SHOWS_LIMIT,
+    DEFAULT_EPISODES_LIMIT,
+    DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES,
     DEFAULT_LOCALE,
     DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES,
     DEFAULT_PLANNING_MONTHS_AHEAD,
     DEFAULT_PLANNING_MONTHS_BEHIND,
     DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES,
+    DEFAULT_SHOWS_LIMIT,
     DOMAIN,
+    MAX_EPISODES_LIMIT,
+    MAX_EPISODES_SCAN_INTERVAL_MINUTES,
     MAX_MEMBER_SCAN_INTERVAL_MINUTES,
     MAX_PLANNING_MONTHS_AHEAD,
     MAX_PLANNING_MONTHS_BEHIND,
     MAX_PLANNING_SCAN_INTERVAL_MINUTES,
+    MAX_SHOWS_LIMIT,
+    MIN_EPISODES_LIMIT,
+    MIN_EPISODES_SCAN_INTERVAL_MINUTES,
     MIN_MEMBER_SCAN_INTERVAL_MINUTES,
     MIN_PLANNING_MONTHS_AHEAD,
     MIN_PLANNING_MONTHS_BEHIND,
     MIN_PLANNING_SCAN_INTERVAL_MINUTES,
+    MIN_SHOWS_LIMIT,
     SUPPORTED_LOCALES,
 )
 
@@ -91,6 +104,36 @@ def _user_data_schema(default_locale: str) -> vol.Schema:
             ),
         }
     )
+
+
+# The options form groups its fields into one section per coordinator. These
+# keys only ever exist in the form: _flatten_sections() unwraps them before the
+# options are stored, so entry.options stays the flat mapping the coordinators
+# read (and pre-existing entries need no migration).
+SECTION_MEMBER = "member"
+SECTION_PLANNING = "planning"
+SECTION_EPISODES = "episodes"
+
+_OPTION_SECTIONS = (SECTION_MEMBER, SECTION_PLANNING, SECTION_EPISODES)
+
+
+def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Merge the options form's sections back into a flat mapping.
+
+    Home Assistant returns a section's fields nested under the section's own
+    key; the coordinators expect them alongside the ungrouped ones.
+
+    Args:
+        user_input (dict[str, Any]): The submitted form data, with its sections nested.
+
+    Returns:
+        dict[str, Any]: The same values, flattened.
+
+    """
+    flattened = {key: value for key, value in user_input.items() if key not in _OPTION_SECTIONS}
+    for name in _OPTION_SECTIONS:
+        flattened.update(user_input.get(name, {}))
+    return flattened
 
 
 class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -319,6 +362,11 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Let the user configure the scan intervals, months window and locale.
 
+        The form groups its fields into one collapsed section per coordinator,
+        but the submitted values are flattened back before being stored: the
+        options stay a flat mapping, so the coordinators keep reading them
+        with a plain options.get(KEY, DEFAULT).
+
         Args:
             user_input (dict[str, Any] | None): Form data, or None to show the form.
 
@@ -327,57 +375,105 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
 
         """
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(data=_flatten_sections(user_input))
 
+        options = self.config_entry.options
         options_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_MEMBER_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_MEMBER_SCAN_INTERVAL, DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES
+                vol.Required(SECTION_MEMBER): section(
+                    vol.Schema(
+                        {
+                            vol.Required(
+                                CONF_MEMBER_SCAN_INTERVAL,
+                                default=options.get(CONF_MEMBER_SCAN_INTERVAL, DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES),
+                            ): NumberSelector(
+                                NumberSelectorConfig(
+                                    min=MIN_MEMBER_SCAN_INTERVAL_MINUTES,
+                                    max=MAX_MEMBER_SCAN_INTERVAL_MINUTES,
+                                    mode=NumberSelectorMode.BOX,
+                                )
+                            ),
+                        }
                     ),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=MIN_MEMBER_SCAN_INTERVAL_MINUTES,
-                        max=MAX_MEMBER_SCAN_INTERVAL_MINUTES,
-                        mode=NumberSelectorMode.BOX,
-                    )
+                    {"collapsed": True},
                 ),
-                vol.Required(
-                    CONF_PLANNING_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_PLANNING_SCAN_INTERVAL, DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES
+                vol.Required(SECTION_PLANNING): section(
+                    vol.Schema(
+                        {
+                            vol.Required(
+                                CONF_PLANNING_SCAN_INTERVAL,
+                                default=options.get(
+                                    CONF_PLANNING_SCAN_INTERVAL, DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES
+                                ),
+                            ): NumberSelector(
+                                NumberSelectorConfig(
+                                    min=MIN_PLANNING_SCAN_INTERVAL_MINUTES,
+                                    max=MAX_PLANNING_SCAN_INTERVAL_MINUTES,
+                                    mode=NumberSelectorMode.BOX,
+                                )
+                            ),
+                            vol.Required(
+                                CONF_PLANNING_MONTHS_BEHIND,
+                                default=options.get(CONF_PLANNING_MONTHS_BEHIND, DEFAULT_PLANNING_MONTHS_BEHIND),
+                            ): NumberSelector(
+                                NumberSelectorConfig(
+                                    min=MIN_PLANNING_MONTHS_BEHIND,
+                                    max=MAX_PLANNING_MONTHS_BEHIND,
+                                    mode=NumberSelectorMode.BOX,
+                                )
+                            ),
+                            vol.Required(
+                                CONF_PLANNING_MONTHS_AHEAD,
+                                default=options.get(CONF_PLANNING_MONTHS_AHEAD, DEFAULT_PLANNING_MONTHS_AHEAD),
+                            ): NumberSelector(
+                                NumberSelectorConfig(
+                                    min=MIN_PLANNING_MONTHS_AHEAD,
+                                    max=MAX_PLANNING_MONTHS_AHEAD,
+                                    mode=NumberSelectorMode.BOX,
+                                )
+                            ),
+                        }
                     ),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=MIN_PLANNING_SCAN_INTERVAL_MINUTES,
-                        max=MAX_PLANNING_SCAN_INTERVAL_MINUTES,
-                        mode=NumberSelectorMode.BOX,
-                    )
+                    {"collapsed": True},
                 ),
-                vol.Required(
-                    CONF_PLANNING_MONTHS_BEHIND,
-                    default=self.config_entry.options.get(CONF_PLANNING_MONTHS_BEHIND, DEFAULT_PLANNING_MONTHS_BEHIND),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=MIN_PLANNING_MONTHS_BEHIND,
-                        max=MAX_PLANNING_MONTHS_BEHIND,
-                        mode=NumberSelectorMode.BOX,
-                    )
-                ),
-                vol.Required(
-                    CONF_PLANNING_MONTHS_AHEAD,
-                    default=self.config_entry.options.get(CONF_PLANNING_MONTHS_AHEAD, DEFAULT_PLANNING_MONTHS_AHEAD),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=MIN_PLANNING_MONTHS_AHEAD,
-                        max=MAX_PLANNING_MONTHS_AHEAD,
-                        mode=NumberSelectorMode.BOX,
-                    )
+                vol.Required(SECTION_EPISODES): section(
+                    vol.Schema(
+                        {
+                            vol.Required(
+                                CONF_EPISODES_SCAN_INTERVAL,
+                                default=options.get(
+                                    CONF_EPISODES_SCAN_INTERVAL, DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES
+                                ),
+                            ): NumberSelector(
+                                NumberSelectorConfig(
+                                    min=MIN_EPISODES_SCAN_INTERVAL_MINUTES,
+                                    max=MAX_EPISODES_SCAN_INTERVAL_MINUTES,
+                                    mode=NumberSelectorMode.BOX,
+                                )
+                            ),
+                            vol.Required(
+                                CONF_SHOWS_LIMIT,
+                                default=options.get(CONF_SHOWS_LIMIT, DEFAULT_SHOWS_LIMIT),
+                            ): NumberSelector(
+                                NumberSelectorConfig(
+                                    min=MIN_SHOWS_LIMIT, max=MAX_SHOWS_LIMIT, mode=NumberSelectorMode.BOX
+                                )
+                            ),
+                            vol.Required(
+                                CONF_EPISODES_LIMIT,
+                                default=options.get(CONF_EPISODES_LIMIT, DEFAULT_EPISODES_LIMIT),
+                            ): NumberSelector(
+                                NumberSelectorConfig(
+                                    min=MIN_EPISODES_LIMIT, max=MAX_EPISODES_LIMIT, mode=NumberSelectorMode.BOX
+                                )
+                            ),
+                        }
+                    ),
+                    {"collapsed": True},
                 ),
                 vol.Required(
                     CONF_LOCALE,
-                    default=self.config_entry.options.get(CONF_LOCALE, DEFAULT_LOCALE),
+                    default=options.get(CONF_LOCALE, DEFAULT_LOCALE),
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=SUPPORTED_LOCALES, mode=SelectSelectorMode.DROPDOWN, translation_key=CONF_LOCALE

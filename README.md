@@ -62,6 +62,7 @@ During setup you will be asked for your BetaSeries `client_id` and `client_secre
 
 - The member stats / planning polling intervals.
 - How many past and future months of episodes the calendar and sensors load (2 months each way by default).
+- How many shows, and how many episodes per show, the "Watch list" sensor holds (10 shows x 2 episodes by default).
 - The preferred language for BetaSeries responses (French or English).
 
 > [!NOTE]
@@ -99,6 +100,7 @@ All entities below are enabled by default and grouped under a single device per 
 | Favorite genre | - | Most watched genre |
 | Latest unwatched episode | - | Air date of the most recently aired episode not yet marked as watched (excluding today, see below) |
 | Next episode airing | - | Air date of the next episode due to air, watched or not (including today) |
+| Watch list | - | Episodes left to watch, with the first few shows listed in its attributes (see below) |
 | Calendar event count | - | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes |
 
 BetaSeries only ever tells which day an episode airs, never at what time, so each sensor pins its timestamp to the end of the day it cannot be wrong about: "next episode airing" uses 23:59:59 and "latest unwatched episode" uses midnight. Home Assistant's relative display ("in 3 days", "2 days ago") then always agrees with what the sensor announces. For the same reason an episode airing today belongs to "next episode airing" until the day is over - claiming it is already watchable would be a guess - so the two sensors never point at the same episode.
@@ -106,6 +108,22 @@ BetaSeries only ever tells which day an episode airs, never at what time, so eac
 Both expose the same attributes, describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms` and `resource_url`. `episode_id` and `show_id` are the identifiers BetaSeries actions will target, so a dashboard card can act on the episode the sensor points at.
 
 They also carry the show's poster as their picture, so they render nicely in a `picture-entity` card. The `show_images` attribute holds every artwork the show has (`poster`, `banner`, `box`, `show`, `clearlogo`) so a card can use a different one - a banner for a wide layout, a clearlogo to overlay. Artwork the show doesn't have is left out of that attribute, and shows with no artwork at all simply get no picture.
+
+The **Watch list** sensor is what a `markdown` card can render to show what to watch next, with no custom component involved. Its `shows` attribute holds one entry per show - `show_id`, `show_title`, `show_images`, `episode_remaining` (episodes left for that show) and an `episodes` list of `id`, `code`, `title`, `air_date`, `platforms` and `resource_url` - alongside `total_shows` and `total_episodes`, which count the whole watch list rather than the listed part. How much it lists is set by the two options above; the totals ignore them.
+
+It is deliberately a separate entity: its list would otherwise weigh on the plain statistics sensors above every time they change.
+
+> [!TIP]
+> **Keeping it out of your history.** Home Assistant records an entity's attributes alongside its state, so this list is written to the database every time it changes. If you only care about the current value, exclude this one entity from the `recorder` - the plain counters above keep their history, since they are separate entities:
+>
+> ```yaml
+> recorder:
+>   exclude:
+>     entities:
+>       - sensor.betaseries_<your_login>_watch_list
+> ```
+>
+> Lowering the "Shows listed in the watch list" and "Episodes listed per show" options has the same effect to a lesser degree, by making the list smaller. Disabling the entity altogether, from its settings in the UI, removes it entirely.
 
 ### Binary sensor
 

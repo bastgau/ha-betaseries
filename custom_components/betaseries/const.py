@@ -12,15 +12,36 @@ DOMAIN = "betaseries"
 # user-configurable via OptionsFlow, in minutes.
 CONF_MEMBER_SCAN_INTERVAL = "member_scan_interval"
 CONF_PLANNING_SCAN_INTERVAL = "planning_scan_interval"
+CONF_EPISODES_SCAN_INTERVAL = "episodes_scan_interval"
 
 DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES = 15
 DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES = 60
+DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES = 30
 
 MIN_MEMBER_SCAN_INTERVAL_MINUTES = 5
 MAX_MEMBER_SCAN_INTERVAL_MINUTES = 120
 
 MIN_PLANNING_SCAN_INTERVAL_MINUTES = 15
 MAX_PLANNING_SCAN_INTERVAL_MINUTES = 360
+
+MIN_EPISODES_SCAN_INTERVAL_MINUTES = 5
+MAX_EPISODES_SCAN_INTERVAL_MINUTES = 120
+
+# How much of the "still to watch" list is exposed as the shows_to_watch
+# sensor's `shows` attribute (see EpisodeCoordinator). Both are sent to
+# GET /episodes/list as showsLimit/limit, so the payload stays small: the
+# endpoint's own counters (total/totalEpisodes) are unaffected by them.
+CONF_SHOWS_LIMIT = "shows_limit"
+CONF_EPISODES_LIMIT = "episodes_limit"
+
+DEFAULT_SHOWS_LIMIT = 10
+DEFAULT_EPISODES_LIMIT = 2
+
+MIN_SHOWS_LIMIT = 1
+MAX_SHOWS_LIMIT = 50
+
+MIN_EPISODES_LIMIT = 1
+MAX_EPISODES_LIMIT = 10
 
 # Number of months fetched per planning refresh, both directions around the
 # current month (see CLAUDE.md §4/§6). Configurable via OptionsFlow like the
@@ -65,6 +86,14 @@ PLANNING_STORE_KEY_PREFIX = "betaseries_planning_past"
 # are fetched on each refresh, and shows that left the window are purged.
 SHOW_IMAGES_STORE_VERSION = 1
 SHOW_IMAGES_STORE_KEY_PREFIX = "betaseries_show_images"
+
+# Same cache, for the shows listed by EpisodeCoordinator. Kept separate from
+# the planning's rather than shared: the two coordinators cover different sets
+# of shows (the planning is bounded by its month window, the watch list is
+# not), so a shared store would need its purge driven by the union of both -
+# all that for a single extra /shows/display call on the first refresh.
+EPISODE_SHOW_IMAGES_STORE_VERSION = 1
+EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX = "betaseries_episode_show_images"
 
 # Storage key for the cached badge details (see MemberCoordinator). Badges are
 # only refetched when stats.badges (the count from GET /members/infos) changes

@@ -11,11 +11,10 @@ from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from tests.conftest import client_mock
-
 from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.helpers import entity_registry as er
+from tests.conftest import client_mock
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

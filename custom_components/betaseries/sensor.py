@@ -26,8 +26,13 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .betaseries import CollectionEpisode, Episode, MemberData
-    from .coordinator import BetaSeriesConfigEntry, MemberCoordinator, PlanningCoordinator
+    from .betaseries import CollectionEpisode, Episode, MemberData, WatchListShow
+    from .coordinator import (
+        BetaSeriesConfigEntry,
+        EpisodeCoordinator,
+        MemberCoordinator,
+        PlanningCoordinator,
+    )
 
 type StateType = int | float | str | None
 
@@ -272,6 +277,12 @@ NEXT_EPISODE_AIRING_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
     at_end_of_day=True,
 )
 
+WATCH_LIST_DESCRIPTION = SensorEntityDescription(
+    key="watch_list",
+    translation_key="watch_list",
+    state_class=SensorStateClass.MEASUREMENT,
+)
+
 CALENDAR_EVENT_COUNT_DESCRIPTION = SensorEntityDescription(
     key="calendar_event_count",
     translation_key="calendar_event_count",
@@ -313,9 +324,11 @@ async def async_setup_entry(  # pylint: disable=unused-argument
     """
     member_coordinator = entry.runtime_data.member
     planning_coordinator = entry.runtime_data.planning
+    episode_coordinator = entry.runtime_data.episodes
     async_add_entities(
         [
             *(BetaSeriesSensor(member_coordinator, description) for description in SENSOR_DESCRIPTIONS),
+            BetaSeriesWatchListSensor(episode_coordinator, WATCH_LIST_DESCRIPTION),
             BetaSeriesPlanningSensor(planning_coordinator, LATEST_UNWATCHED_EPISODE_DESCRIPTION),
             BetaSeriesPlanningSensor(planning_coordinator, NEXT_EPISODE_AIRING_DESCRIPTION),
             BetaSeriesCalendarEventCountSensor(planning_coordinator, CALENDAR_EVENT_COUNT_DESCRIPTION),
@@ -499,3 +512,87 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
         if not self.coordinator.last_update_success:
             return {}
         return _episode_counts_by_month(self.coordinator.data)
+
+
+class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+    """List what the member has left to watch, show by show.
+
+    Kept apart from the episodes_to_watch / shows_to_watch statistics
+    sensors, which it would otherwise saddle with a bulky attribute: those
+    two only ever hold a number, so excluding this entity from the recorder
+    costs nothing but this list, while the plain counters keep their history.
+
+    Attributes:
+        coordinator (EpisodeCoordinator): The coordinator providing the watch list.
+
+    """
+
+    coordinator: EpisodeCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    @property
+    def native_value(self) -> int:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return how many episodes are left to watch, across every show.
+
+        Returns:
+            int: The endpoint's own count, unaffected by the configured list limits.
+
+        """
+        return self.coordinator.total_episodes
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the totals, and the first few shows with their next episodes.
+
+        How many shows and episodes appear here is set by the shows_limit /
+        episodes_limit options; the two totals are the endpoint's own and
+        ignore them. Empty until the watch list has been fetched successfully.
+
+        Returns:
+            dict[str, Any]: The totals to watch, plus the listed shows.
+
+        """
+        if not self.coordinator.last_update_success:
+            return {"total_shows": 0, "total_episodes": 0, "shows": []}
+        return {
+            "total_shows": self.coordinator.total_shows,
+            "total_episodes": self.coordinator.total_episodes,
+            "shows": [
+                {
+                    "show_id": show.id,
+                    "show_title": show.title,
+                    "show_images": self._show_images(show),
+                    "episode_remaining": show.remaining,
+                    "episodes": [
+                        {
+                            "id": episode.id,
+                            "code": episode.code,
+                            "title": episode.title,
+                            "air_date": episode.air_date.isoformat(),
+                            "platforms": list(episode.platforms),
+                            "resource_url": episode.resource_url,
+                        }
+                        for episode in show.episodes
+                    ],
+                }
+                for show in self.coordinator.data
+            ],
+        }
+
+    def _show_images(self, show: WatchListShow) -> dict[str, str]:
+        """Return a show's artwork, falling back to the poster the list itself carries.
+
+        GET /shows/display gives every artwork kind but is only fetched for
+        shows not already cached; GET /episodes/list always carries a poster,
+        so it covers the gap when the images call failed.
+
+        Args:
+            show (WatchListShow): The show to return the artwork of.
+
+        Returns:
+            dict[str, str]: The show's image URLs, possibly just its poster.
+
+        """
+        images = self.coordinator.show_images.get(show.id, {})
+        if images:
+            return images
+        return {"poster": show.poster} if show.poster else {}

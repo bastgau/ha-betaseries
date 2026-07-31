@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from custom_components.betaseries.betaseries.exceptions import Error
 from custom_components.betaseries.betaseries.member_data import MemberData
@@ -14,12 +14,11 @@ from custom_components.betaseries.const import CONF_LOCALE, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from tests.conftest import client_mock
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from tests.conftest import client_mock
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
