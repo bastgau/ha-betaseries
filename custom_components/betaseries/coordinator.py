@@ -613,7 +613,7 @@ def _episode_from_dict(data: dict[str, Any]) -> Episode:
     )
 
 
-class EpisodeCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
+class WatchListCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
     """Fetch the shows still to watch via Client.fetch_watch_list() (GET /episodes/list).
 
     Kept apart from PlanningCoordinator rather than derived from it: the
@@ -722,13 +722,13 @@ class BetaSeriesData:
     Attributes:
         member (MemberCoordinator): Coordinator for member data/stats (v1).
         planning (PlanningCoordinator): Coordinator for the upcoming episodes planning (v2).
-        episodes (EpisodeCoordinator): Coordinator for the shows still to watch.
+        watch_list (WatchListCoordinator): Coordinator for the shows still to watch.
 
     """
 
     member: MemberCoordinator
     planning: PlanningCoordinator
-    episodes: EpisodeCoordinator
+    watch_list: WatchListCoordinator
 
 
 def _upcoming_months(today: date, months_ahead: int) -> list[str]:

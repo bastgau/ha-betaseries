@@ -29,9 +29,9 @@ if TYPE_CHECKING:
     from .betaseries import CollectionEpisode, Episode, MemberData, WatchListShow
     from .coordinator import (
         BetaSeriesConfigEntry,
-        EpisodeCoordinator,
         MemberCoordinator,
         PlanningCoordinator,
+        WatchListCoordinator,
     )
 
 type StateType = int | float | str | None
@@ -324,11 +324,11 @@ async def async_setup_entry(  # pylint: disable=unused-argument
     """
     member_coordinator = entry.runtime_data.member
     planning_coordinator = entry.runtime_data.planning
-    episode_coordinator = entry.runtime_data.episodes
+    watch_list_coordinator = entry.runtime_data.watch_list
     async_add_entities(
         [
             *(BetaSeriesSensor(member_coordinator, description) for description in SENSOR_DESCRIPTIONS),
-            BetaSeriesWatchListSensor(episode_coordinator, WATCH_LIST_DESCRIPTION),
+            BetaSeriesWatchListSensor(watch_list_coordinator, WATCH_LIST_DESCRIPTION),
             BetaSeriesPlanningSensor(planning_coordinator, LATEST_UNWATCHED_EPISODE_DESCRIPTION),
             BetaSeriesPlanningSensor(planning_coordinator, NEXT_EPISODE_AIRING_DESCRIPTION),
             BetaSeriesCalendarEventCountSensor(planning_coordinator, CALENDAR_EVENT_COUNT_DESCRIPTION),
@@ -523,11 +523,11 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
     costs nothing but this list, while the plain counters keep their history.
 
     Attributes:
-        coordinator (EpisodeCoordinator): The coordinator providing the watch list.
+        coordinator (WatchListCoordinator): The coordinator providing the watch list.
 
     """
 
-    coordinator: EpisodeCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
+    coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @property
     def native_value(self) -> int:  # pyright: ignore[reportIncompatibleVariableOverride]

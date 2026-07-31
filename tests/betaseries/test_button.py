@@ -142,7 +142,7 @@ async def test_clean_planning_cache_button_clears_and_refreshes(hass: HomeAssist
 
 
 async def test_clean_watch_list_cache_button_clears_and_refreshes(hass: HomeAssistant) -> None:
-    """Call EpisodeCoordinator.async_clean_watch_list_cache() when the button is pressed."""
+    """Call WatchListCoordinator.async_clean_watch_list_cache() when the button is pressed."""
     mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
@@ -158,7 +158,7 @@ async def test_clean_watch_list_cache_button_clears_and_refreshes(hass: HomeAssi
         await hass.async_block_till_done()
 
     with patch(
-        "custom_components.betaseries.coordinator.EpisodeCoordinator.async_clean_watch_list_cache",
+        "custom_components.betaseries.coordinator.WatchListCoordinator.async_clean_watch_list_cache",
         new_callable=AsyncMock,
     ) as mock_clean_cache:
         await hass.services.async_call(BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True)
@@ -174,7 +174,7 @@ async def test_clean_watch_list_cache_clears_the_show_images_cache(hass: HomeAss
     mock_client.fetch_planning.return_value = ()
     entry = await _async_setup(hass, mock_client)
 
-    coordinator = entry.runtime_data.episodes
+    coordinator = entry.runtime_data.watch_list
     with patch.object(coordinator.show_images_store, "async_remove", new_callable=AsyncMock) as mock_remove:
         await coordinator.async_clean_watch_list_cache()
 

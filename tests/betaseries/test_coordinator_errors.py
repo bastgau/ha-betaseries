@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from custom_components.betaseries.betaseries.exceptions import AuthError, Error
 from custom_components.betaseries.const import DOMAIN
-from custom_components.betaseries.coordinator import EpisodeCoordinator, MemberCoordinator, PlanningCoordinator
+from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 COORDINATOR_PARAMS = [
     (MemberCoordinator, "fetch_member_data"),
     (PlanningCoordinator, "fetch_planning"),
-    (EpisodeCoordinator, "fetch_watch_list"),
+    (WatchListCoordinator, "fetch_watch_list"),
 ]
 
 

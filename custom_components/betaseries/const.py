@@ -28,7 +28,7 @@ MIN_EPISODES_SCAN_INTERVAL_MINUTES = 5
 MAX_EPISODES_SCAN_INTERVAL_MINUTES = 120
 
 # How much of the "still to watch" list is exposed as the shows_to_watch
-# sensor's `shows` attribute (see EpisodeCoordinator). Both are sent to
+# sensor's `shows` attribute (see WatchListCoordinator). Both are sent to
 # GET /episodes/list as showsLimit/limit, so the payload stays small: the
 # endpoint's own counters (total/totalEpisodes) are unaffected by them.
 CONF_SHOWS_LIMIT = "shows_limit"
@@ -87,7 +87,7 @@ PLANNING_STORE_KEY_PREFIX = "betaseries_planning_past"
 PLANNING_SHOW_IMAGES_STORE_VERSION = 1
 PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX = "betaseries_planning_show_images"
 
-# Same cache, for the shows listed by EpisodeCoordinator. Kept separate from
+# Same cache, for the shows listed by WatchListCoordinator. Kept separate from
 # the planning's rather than shared: the two coordinators cover different sets
 # of shows (the planning is bounded by its month window, the watch list is
 # not), so a shared store would need its purge driven by the union of both -

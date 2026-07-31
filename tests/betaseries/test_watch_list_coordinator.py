@@ -1,4 +1,4 @@
-"""Tests for EpisodeCoordinator and the shows_to_watch sensor's list attribute."""
+"""Tests for WatchListCoordinator and the shows_to_watch sensor's list attribute."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from custom_components.betaseries.const import (
     CONF_SHOWS_LIMIT,
     DOMAIN,
 )
-from custom_components.betaseries.coordinator import EpisodeCoordinator
+from custom_components.betaseries.coordinator import WatchListCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, STATE_UNAVAILABLE
@@ -129,7 +129,7 @@ async def test_uses_default_scan_interval(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)
 
-    coordinator = EpisodeCoordinator(hass, entry, client_mock())
+    coordinator = WatchListCoordinator(hass, entry, client_mock())
 
     assert coordinator.update_interval == timedelta(minutes=30)
 
@@ -139,7 +139,7 @@ async def test_uses_configured_scan_interval(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", options={CONF_EPISODES_SCAN_INTERVAL: 45})
     entry.add_to_hass(hass)
 
-    coordinator = EpisodeCoordinator(hass, entry, client_mock())
+    coordinator = WatchListCoordinator(hass, entry, client_mock())
 
     assert coordinator.update_interval == timedelta(minutes=45)
 
@@ -155,7 +155,7 @@ async def test_sends_the_configured_limits(hass: HomeAssistant) -> None:
     mock_client = client_mock()
     mock_client.fetch_watch_list.return_value = WATCH_LIST_RESPONSE
 
-    coordinator = EpisodeCoordinator(hass, entry, mock_client)
+    coordinator = WatchListCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
 
     # NumberSelector stores floats; the client must still receive ints.
@@ -172,7 +172,7 @@ async def test_show_images_failure_does_not_fail_the_refresh(hass: HomeAssistant
     mock_client.fetch_watch_list.return_value = WATCH_LIST_RESPONSE
     mock_client.fetch_shows.side_effect = Error("shows endpoint is down")
 
-    coordinator = EpisodeCoordinator(hass, entry, mock_client)
+    coordinator = WatchListCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is True

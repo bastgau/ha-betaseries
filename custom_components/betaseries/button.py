@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import BetaSeriesConfigEntry, EpisodeCoordinator, MemberCoordinator, PlanningCoordinator
+    from .coordinator import BetaSeriesConfigEntry, MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 
 CLEAN_BADGES_CACHE_DESCRIPTION = ButtonEntityDescription(
     key="clean_badges_cache",
@@ -64,7 +64,7 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         [
             BetaSeriesCleanBadgesCacheButton(entry.runtime_data.member, CLEAN_BADGES_CACHE_DESCRIPTION),
             BetaSeriesCleanPlanningCacheButton(entry.runtime_data.planning, CLEAN_PLANNING_CACHE_DESCRIPTION),
-            BetaSeriesCleanWatchListCacheButton(entry.runtime_data.episodes, CLEAN_WATCH_LIST_CACHE_DESCRIPTION),
+            BetaSeriesCleanWatchListCacheButton(entry.runtime_data.watch_list, CLEAN_WATCH_LIST_CACHE_DESCRIPTION),
         ]
     )
 
@@ -113,11 +113,11 @@ class BetaSeriesCleanWatchListCacheButton(BetaSeriesEntity, ButtonEntity):  # py
     """Force a full refetch of the watch list, artwork included.
 
     Attributes:
-        coordinator (EpisodeCoordinator): The coordinator whose show_images_store this button clears.
+        coordinator (WatchListCoordinator): The coordinator whose show_images_store this button clears.
 
     """
 
-    coordinator: EpisodeCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
+    coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     async def async_press(self) -> None:
         """Clear the cached show images and refresh now.
