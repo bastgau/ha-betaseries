@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 
 from .betaseries import Client
-from .const import CONF_LOCALE, DEFAULT_LOCALE
+from .const import CACHE_STORES, CONF_LOCALE, DEFAULT_LOCALE
 from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 
 if TYPE_CHECKING:
@@ -80,3 +81,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) 
 
     """
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -> None:
+    """Delete the caches this entry persisted, once it is removed.
+
+    Each coordinator keeps its own Store keyed by the entry id (see
+    coordinator.py). Home Assistant never deletes those files on its own, so
+    without this every add/remove cycle would strand one file per cache in
+    .storage indefinitely. They only ever hold refetchable API responses, so
+    dropping them costs nothing beyond the next refresh.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (BetaSeriesConfigEntry): The config entry being removed.
+
+    Returns:
+        None: The cache files are deleted; nothing is returned.
+
+    """
+    for version, key_prefix in CACHE_STORES:
+        # async_remove() already suppresses FileNotFoundError, so caches this
+        # entry never happened to write need no special casing here.
+        await Store(hass, version, f"{key_prefix}_{entry.entry_id}").async_remove()

@@ -10,7 +10,7 @@ from custom_components.betaseries.betaseries.exceptions import Error
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
-from custom_components.betaseries.const import CONF_LOCALE, DOMAIN
+from custom_components.betaseries.const import CACHE_STORES, CONF_LOCALE, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -21,6 +21,8 @@ from homeassistant.util import dt as dt_util
 from tests.conftest import client_mock
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret"}
@@ -211,6 +213,42 @@ async def test_setup_entry_passes_configured_locale_to_client(hass: HomeAssistan
         await hass.async_block_till_done()
 
     assert mock_client_class.call_args.args[-1] == "en"
+
+
+async def test_remove_entry_deletes_every_cached_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Delete each per-entry cache file when the entry is removed.
+
+    Home Assistant never cleans .storage up on its own, so without
+    async_remove_entry every add/remove cycle would strand one file per cache.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**USER_INPUT, "access_token": "token123"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = ()
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Written after the setup rather than before: which caches a refresh
+    # actually persists depends on what the API returned, and this test is
+    # about the removal, not about who wrote what.
+    keys = [f"{key_prefix}_{entry.entry_id}" for _, key_prefix in CACHE_STORES]
+    for key in keys:
+        hass_storage[key] = {"version": 1, "data": {}}
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [key for key in keys if key in hass_storage] == []
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

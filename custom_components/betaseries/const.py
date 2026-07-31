@@ -101,3 +101,15 @@ EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX = "betaseries_episode_show_images"
 # badge list so a HA restart doesn't force a refetch even when nothing changed.
 BADGES_STORE_VERSION = 1
 BADGES_STORE_KEY_PREFIX = "betaseries_badges"
+
+# Every cache Store the coordinators create per config entry, as
+# (version, key prefix) pairs. async_remove_entry (see __init__.py) walks this
+# list to delete them when the entry is removed: Home Assistant never cleans
+# .storage files up on its own, so a cache added above and left out here would
+# outlive every entry that ever created it.
+CACHE_STORES: tuple[tuple[int, str], ...] = (
+    (PLANNING_STORE_VERSION, PLANNING_STORE_KEY_PREFIX),
+    (PLANNING_SHOW_IMAGES_STORE_VERSION, PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX),
+    (EPISODE_SHOW_IMAGES_STORE_VERSION, EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX),
+    (BADGES_STORE_VERSION, BADGES_STORE_KEY_PREFIX),
+)
