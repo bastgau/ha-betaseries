@@ -6,6 +6,7 @@ shared, parametrized tests in test_coordinator_errors.py instead of here.
 
 from __future__ import annotations
 
+import dataclasses
 from datetime import date, timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -58,6 +59,12 @@ EPISODE = Episode(
     resource_url="https://www.betaseries.com/episode/1001",
     show=Show(id="55", title="Example Show", description="A show about tests.", slug="example-show"),
 )
+
+# The same episode as the coordinator hands it back once it has been through
+# the past-months cache, which deliberately forgets the watch status (see
+# _episode_to_dict). Past months go through it even on the refresh that
+# fetches them, so this is what every past month yields, never EPISODE itself.
+CACHED_EPISODE = dataclasses.replace(EPISODE, seen=None)
 
 
 @pytest.mark.parametrize(
@@ -134,7 +141,7 @@ async def test_update_success_aggregates_all_months(hass: HomeAssistant) -> None
 
     assert coordinator.last_update_success is True
     # Default: 2 months behind + current + 2 months ahead = 5 fetches.
-    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE, EPISODE, EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (CACHED_EPISODE, CACHED_EPISODE, EPISODE, EPISODE, EPISODE)
     assert mock_client.fetch_planning.await_count == 5
 
 
@@ -197,6 +204,70 @@ async def test_update_success_sorts_by_air_date(hass: HomeAssistant) -> None:
     assert tuple(coordinator.data.episodes) == (earlier_episode, later_episode)
 
 
+async def test_cached_episodes_come_back_with_an_unknown_watch_status(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Never carry a watch status on a past month, fetched or cached.
+
+    A cached month is never refetched, so a watch status persisted with it
+    would still claim "unwatched" long after the member watched the episode.
+    None says "not known", which is the truth and which `is False` filters
+    reject - unlike a plain falsy test.
+
+    A past month goes through the cache even on the refresh that fetches it
+    (it is written, then read back), so this holds from the very first one:
+    "was it seen" is simply not a question a past month answers, and there is
+    no refresh where it briefly does.
+    """
+    freezer.move_to("2026-08-15")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 1, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    watched_last_month = Episode(
+        id="1001",
+        season=3,
+        number=4,
+        code="S03E04",
+        title="Aired Last Month",
+        description="",
+        air_date=date(2026, 7, 15),
+        seen=False,
+        platforms=(),
+        resource_url="https://www.betaseries.com/episode/1001",
+        show=Show(id="55", title="Example Show", description=None, slug="example-show"),
+    )
+    mock_client = client_mock()
+    mock_client.fetch_planning.side_effect = [
+        CollectionEpisode((watched_last_month,)),  # 2026-07, cached from here on
+        CollectionEpisode(()),  # 2026-08
+    ]
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    # Written to the cache then read back, so already unknown on this refresh.
+    assert next(iter(coordinator.data.episodes)).seen is None
+
+    mock_client.fetch_planning.side_effect = [CollectionEpisode(())]  # only 2026-08 is refetched
+    await coordinator.async_refresh()
+
+    cached_episode = next(iter(coordinator.data.episodes))
+    assert cached_episode.id == "1001"
+    assert cached_episode.seen is None
+    # Everything a past month *can* legitimately still assert survives.
+    assert cached_episode.air_date == date(2026, 7, 15)
+    assert cached_episode.title == "Aired Last Month"
+    assert cached_episode.show.slug == "example-show"
+    # And the watch status is gone from disk too, not merely ignored on read.
+    stored = hass_storage[f"{PLANNING_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
+    assert "seen" not in stored["2026-07"][0]
+
+
 async def test_past_months_are_cached_and_not_refetched(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
@@ -220,7 +291,7 @@ async def test_past_months_are_cached_and_not_refetched(
 
     # The past month is served from the store: only the current month is re-fetched.
     assert mock_client.fetch_planning.await_count == 1
-    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (CACHED_EPISODE, EPISODE)
 
 
 async def test_past_months_persist_across_coordinator_instances(
@@ -245,7 +316,7 @@ async def test_past_months_persist_across_coordinator_instances(
     await second_coordinator.async_refresh()
 
     assert mock_client.fetch_planning.await_count == 1  # only the current month
-    assert tuple(second_coordinator.data.episodes) == (EPISODE, EPISODE)
+    assert tuple(second_coordinator.data.episodes) == (CACHED_EPISODE, EPISODE)
 
 
 async def test_clean_planning_cache_refetches_cached_past_months(
@@ -274,7 +345,7 @@ async def test_clean_planning_cache_refetches_cached_past_months(
 
     # Both the past month and the current month are re-fetched, bypassing the cache.
     assert mock_client.fetch_planning.await_count == 2
-    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (CACHED_EPISODE, EPISODE)
     assert "Clearing cached past months for Test Account" in caplog.text
 
 
@@ -379,7 +450,7 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
     # The incompatible cache is discarded, so both the past and current month
     # are freshly fetched instead of the past month being served (and crashing).
     assert mock_client.fetch_planning.await_count == 2
-    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (CACHED_EPISODE, EPISODE)
 
 
 def _show_with_poster(show_id: str, poster: str | None, rating: float = 0.0) -> Show:
@@ -659,4 +730,4 @@ async def test_cache_newer_than_supported_is_discarded_not_fatal(
     assert "Discarding the" in caplog.text
     # Both months are refetched, as if nothing had ever been cached.
     assert mock_client.fetch_planning.await_count == 2
-    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (CACHED_EPISODE, EPISODE)

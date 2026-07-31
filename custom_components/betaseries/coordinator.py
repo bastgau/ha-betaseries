@@ -632,6 +632,13 @@ def _episode_to_dict(episode: Episode) -> dict[str, Any]:
     only ever populated on demand via Episode.fetch_show()/Show.fetch_episodes(),
     not by this planning cache.
 
+    `seen` is deliberately left out. This cache exists because a past month's
+    *schedule* can no longer change - which is true of an air date and a
+    title, and false of a watch status: the member may watch a months-old
+    episode at any time, and a cached month is never refetched. Persisting it
+    would hand back an answer that is not merely old but wrong, so it comes
+    back as None ("unknown") instead - see Episode.
+
     Args:
         episode (Episode): The episode to serialize.
 
@@ -647,7 +654,6 @@ def _episode_to_dict(episode: Episode) -> dict[str, Any]:
         "title": episode.title,
         "description": episode.description,
         "air_date": episode.air_date.isoformat(),
-        "seen": episode.seen,
         "platforms": episode.platforms,
         "resource_url": episode.resource_url,
         "show_id": episode.show.id,
@@ -658,13 +664,18 @@ def _episode_to_dict(episode: Episode) -> dict[str, Any]:
 
 
 def _episode_from_dict(data: dict[str, Any]) -> Episode:
-    """Deserialize an Episode from storage (ISO string -> date).
+    """Deserialize an Episode from storage (ISO string -> date, `seen` unknown).
+
+    `seen` always comes back None, whether or not the file on disk still holds
+    one: entries written before _episode_to_dict stopped persisting it carry a
+    value that is stale by construction, so it is ignored rather than trusted
+    (which is also why dropping it needed no store version bump).
 
     Args:
         data (dict[str, Any]): The stored representation of the episode.
 
     Returns:
-        Episode: The deserialized episode.
+        Episode: The deserialized episode, with an unknown watch status.
 
     """
     return Episode(
@@ -675,7 +686,7 @@ def _episode_from_dict(data: dict[str, Any]) -> Episode:
         title=data["title"],
         description=data["description"],
         air_date=date.fromisoformat(data["air_date"]),
-        seen=data["seen"],
+        seen=None,
         platforms=tuple(data["platforms"]),
         resource_url=data["resource_url"],
         show=Show(

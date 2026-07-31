@@ -128,7 +128,10 @@ async def test_diagnostics_report_aggregates_only(hass: HomeAssistant) -> None:
     result = await async_get_config_entry_diagnostics(hass, entry)
 
     assert result["planning"]["episodes"] == 1
+    # Reported apart: an episode restored from the cache carries no watch
+    # status at all, so counting it as unseen would understate the total.
     assert result["planning"]["episodes_seen"] == 0
+    assert result["planning"]["episodes_seen_unknown"] == 0
     assert result["planning"]["episodes_per_month"] == {"2026-08": 1}
     assert result["planning"]["shows"] == 1
     assert result["watch_list"]["total_shows"] == 37

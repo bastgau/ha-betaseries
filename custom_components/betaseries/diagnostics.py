@@ -107,7 +107,12 @@ async def _planning_diagnostics(coordinator: PlanningCoordinator) -> dict[str, A
     return {
         **state,
         "episodes": len(episodes),
-        "episodes_seen": sum(1 for episode in episodes if episode.seen),
+        # Episodes restored from the cache carry no watch status at all (see
+        # _episode_to_dict), so the two counters are reported side by side:
+        # "seen" alone would silently read as "the rest are unwatched", and
+        # the unknown count doubles as how much of the window came off disk.
+        "episodes_seen": sum(1 for episode in episodes if episode.seen is True),
+        "episodes_seen_unknown": sum(1 for episode in episodes if episode.seen is None),
         "episodes_per_month": dict(sorted(Counter(e.air_date.strftime("%Y-%m") for e in episodes).items())),
         "shows": len(coordinator.data.episodes.show_ids),
         "shows_with_images": sum(1 for artwork in images.values() if artwork),
