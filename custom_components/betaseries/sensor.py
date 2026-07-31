@@ -412,7 +412,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         """
         if not self.coordinator.last_update_success:
             return None
-        return self.entity_description.episode_fn(self.coordinator.data)
+        return self.entity_description.episode_fn(self.coordinator.data.episodes)
 
     @property
     def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -457,7 +457,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         episode = self._episode
         if episode is None:
             return None
-        return self.coordinator.show_images.get(episode.show.id, {}).get("poster")
+        return self.coordinator.data.images.get(episode.show.id, {}).get("poster")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -480,7 +480,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
             # so a card can pick a different one than entity_picture's poster -
             # a banner for a wide card, a clearlogo to overlay, ... Kinds the
             # show has no image for are absent rather than null.
-            "show_images": self.coordinator.show_images.get(episode.show.id, {}),
+            "show_images": self.coordinator.data.images.get(episode.show.id, {}),
             "episode_id": episode.id,
             "show_id": episode.show.id,
             "code": episode.code,
@@ -513,7 +513,7 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
         """
         if not self.coordinator.last_update_success:
             return None
-        return len(self.coordinator.data)
+        return len(self.coordinator.data.episodes)
 
     @property
     def extra_state_attributes(self) -> dict[str, int]:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -525,7 +525,7 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
         """
         if not self.coordinator.last_update_success:
             return {}
-        return _episode_counts_by_month(self.coordinator.data)
+        return _episode_counts_by_month(self.coordinator.data.episodes)
 
 
 class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -587,7 +587,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
             int: The endpoint's own count, unaffected by the configured list limits.
 
         """
-        return self.coordinator.total_shows
+        return self.coordinator.data.total_shows
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -604,8 +604,8 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
         if not self.coordinator.last_update_success:
             return {"total_shows": 0, "total_episodes": 0, "shows": []}
         return {
-            "total_shows": self.coordinator.total_shows,
-            "total_episodes": self.coordinator.total_episodes,
+            "total_shows": self.coordinator.data.total_shows,
+            "total_episodes": self.coordinator.data.total_episodes,
             "shows": [
                 {
                     "show_id": show.id,
@@ -624,7 +624,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
                         for episode in show.episodes
                     ],
                 }
-                for show in self.coordinator.data
+                for show in self.coordinator.data.shows
             ],
         }
 
@@ -642,7 +642,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
             dict[str, str]: The show's image URLs, possibly just its poster.
 
         """
-        images = self.coordinator.show_images.get(show.id, {})
+        images = self.coordinator.data.images.get(show.id, {})
         if images:
             return images
         return {"poster": show.poster} if show.poster else {}

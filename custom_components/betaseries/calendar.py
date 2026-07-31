@@ -119,7 +119,7 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
         # Today counts as upcoming: an all-day event spans midnight to
         # midnight, so an episode airing today is running right now.
         today = dt_util.now().date()
-        for episode in self.coordinator.data:
+        for episode in self.coordinator.data.episodes:
             if episode.air_date >= today:
                 return _to_calendar_event(episode)
         return None
@@ -153,4 +153,8 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
             return []
         start = dt_util.as_local(start_date).date()
         end = dt_util.as_local(end_date).date()
-        return [_to_calendar_event(episode) for episode in self.coordinator.data if start <= episode.air_date <= end]
+        return [
+            _to_calendar_event(episode)
+            for episode in self.coordinator.data.episodes
+            if start <= episode.air_date <= end
+        ]

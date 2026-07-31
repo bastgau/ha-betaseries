@@ -162,8 +162,8 @@ async def test_sends_the_configured_limits(hass: HomeAssistant) -> None:
     assert mock_client.fetch_watch_list.await_args.args == (3, 2)
     # No entity exposes the cast, so it is left out of the payload.
     assert mock_client.fetch_watch_list.await_args.kwargs == {"exclude_characters": True}
-    assert coordinator.total_episodes == 726
-    assert coordinator.total_shows == 37
+    assert coordinator.data.total_episodes == 726
+    assert coordinator.data.total_shows == 37
 
 
 async def test_show_images_failure_does_not_fail_the_refresh(hass: HomeAssistant) -> None:
@@ -180,9 +180,9 @@ async def test_show_images_failure_does_not_fail_the_refresh(hass: HomeAssistant
     assert coordinator.last_update_success is True
     # Nothing is cached for the show: a failed call must not be remembered as
     # "this show has no artwork", or it would never be retried.
-    assert coordinator.show_images == {}
-    assert coordinator.total_episodes == 726
-    assert coordinator.total_shows == 37
+    assert coordinator.data.images == {}
+    assert coordinator.data.total_episodes == 726
+    assert coordinator.data.total_shows == 37
 
 
 async def _setup(hass: HomeAssistant, watch_list: tuple[CollectionWatchListShow, int, int], shows: CollectionShow) -> MockConfigEntry:

@@ -98,21 +98,20 @@ async def _planning_diagnostics(coordinator: PlanningCoordinator) -> dict[str, A
     """
     state = _coordinator_state(coordinator)
     cached = await coordinator.planning_store.async_load() or {}
-    cache = {
-        "cached_months": {month: len(episodes) for month, episodes in sorted(cached.items())},
-        "shows_with_images": sum(1 for images in coordinator.show_images.values() if images),
-        "shows_without_images": sum(1 for images in coordinator.show_images.values() if not images),
-    }
+    cache = {"cached_months": {month: len(episodes) for month, episodes in sorted(cached.items())}}
     if not coordinator.last_update_success:
         return {**state, **cache}
 
-    episodes = tuple(coordinator.data)
+    images = coordinator.data.images
+    episodes = tuple(coordinator.data.episodes)
     return {
         **state,
         "episodes": len(episodes),
         "episodes_seen": sum(1 for episode in episodes if episode.seen),
         "episodes_per_month": dict(sorted(Counter(e.air_date.strftime("%Y-%m") for e in episodes).items())),
-        "shows": len(coordinator.data.show_ids),
+        "shows": len(coordinator.data.episodes.show_ids),
+        "shows_with_images": sum(1 for artwork in images.values() if artwork),
+        "shows_without_images": sum(1 for artwork in images.values() if not artwork),
         **cache,
     }
 
@@ -136,10 +135,10 @@ def _watch_list_diagnostics(coordinator: WatchListCoordinator) -> dict[str, Any]
         return state
     return {
         **state,
-        "total_shows": coordinator.total_shows,
-        "total_episodes": coordinator.total_episodes,
-        "shows_listed": len(coordinator.data),
-        "shows_with_images": sum(1 for images in coordinator.show_images.values() if images),
+        "total_shows": coordinator.data.total_shows,
+        "total_episodes": coordinator.data.total_episodes,
+        "shows_listed": len(coordinator.data.shows),
+        "shows_with_images": sum(1 for artwork in coordinator.data.images.values() if artwork),
     }
 
 

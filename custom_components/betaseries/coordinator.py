@@ -413,7 +413,49 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
         await self.async_refresh()
 
 
-class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
+@dataclass(frozen=True)
+class PlanningData:
+    """Everything one planning refresh produces.
+
+    Returned whole rather than split between `data` and attributes set on the
+    coordinator: DataUpdateCoordinator replaces `data` atomically, so anything
+    left outside it can end up describing a different refresh than `data`
+    does, and the coordinator's own type stops saying what entities read.
+
+    Attributes:
+        episodes (CollectionEpisode): The member's episodes, sorted by air date.
+        images (dict[str, dict[str, str]]): Image URLs per show id in the window, shows without artwork included as empty dicts.
+
+    """
+
+    episodes: CollectionEpisode
+    images: dict[str, dict[str, str]]
+
+
+@dataclass(frozen=True)
+class WatchListData:
+    """Everything one watch list refresh produces.
+
+    See PlanningData for why the counters and images travel with the list
+    rather than beside it. Both totals are the endpoint's own and ignore the
+    configured limits, so they describe the whole list while `shows` holds
+    only the part that was asked for.
+
+    Attributes:
+        shows (CollectionWatchListShow): The listed shows with their unseen episodes.
+        total_shows (int): Shows with at least one unseen episode, ignoring the configured limits.
+        total_episodes (int): Unseen episodes across every show, ignoring the configured limits.
+        images (dict[str, dict[str, str]]): Image URLs per listed show id.
+
+    """
+
+    shows: CollectionWatchListShow
+    total_shows: int
+    total_episodes: int
+    images: dict[str, dict[str, str]]
+
+
+class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
     """Fetch the member's planning via Client.fetch_planning() (see CLAUDE.md §4).
 
     Past months are fetched once and cached in a Store (they never change
@@ -426,7 +468,6 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
         client (Client): The BetaSeries API client used to fetch the planning.
         planning_store (Store[dict[str, list[dict[str, Any]]]]): Persisted cache of past months' episodes.
         show_images_store (Store[dict[str, Any]]): Persisted cache of each show's image URLs.
-        show_images (dict[str, dict[str, str]]): Image URLs per show id currently in the window, empty dicts included.
 
     """
 
@@ -458,13 +499,12 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
         self.show_images_store: Store[dict[str, Any]] = _CacheStore[dict[str, Any]](
             hass, PLANNING_SHOW_IMAGES_STORE_VERSION, f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
-        self.show_images: dict[str, dict[str, str]] = {}
 
-    async def _async_update_data(self) -> CollectionEpisode:
+    async def _async_update_data(self) -> PlanningData:
         """Fetch the current/future planning and merge it with the cached past months.
 
         Returns:
-            CollectionEpisode: The member's episodes, sorted by air_date.
+            PlanningData: The member's episodes sorted by air_date, with each show's artwork.
 
         Raises:
             ConfigEntryAuthFailed: If the stored access token was rejected.
@@ -491,10 +531,10 @@ class PlanningCoordinator(DataUpdateCoordinator[CollectionEpisode]):
 
         episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
         planning = CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
-        self.show_images = await _async_get_show_images(
+        images = await _async_get_show_images(
             self.client, self.show_images_store, planning.show_ids, self.config_entry.title
         )
-        return planning
+        return PlanningData(episodes=planning, images=images)
 
     async def async_clean_planning_cache(self) -> None:
         """Force a full refetch of every month, including cached past ones, then refresh now.
@@ -622,7 +662,7 @@ def _episode_from_dict(data: dict[str, Any]) -> Episode:
     )
 
 
-class WatchListCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
+class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
     """Fetch the shows still to watch via Client.fetch_watch_list() (GET /episodes/list).
 
     Kept apart from PlanningCoordinator rather than derived from it: the
@@ -635,9 +675,6 @@ class WatchListCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
         config_entry (BetaSeriesConfigEntry): The config entry this coordinator serves.
         client (Client): The BetaSeries API client used to fetch the watch list.
         show_images_store (Store[dict[str, Any]]): Persisted cache of each listed show's image URLs.
-        show_images (dict[str, dict[str, str]]): Image URLs per listed show id.
-        total_shows (int): Shows with at least one unseen episode, ignoring the configured limits.
-        total_episodes (int): Unseen episodes across every show, ignoring the configured limits.
 
     """
 
@@ -666,15 +703,12 @@ class WatchListCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
         self.show_images_store: Store[dict[str, Any]] = _CacheStore[dict[str, Any]](
             hass, EPISODE_SHOW_IMAGES_STORE_VERSION, f"{EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX}_{config_entry.entry_id}"
         )
-        self.show_images: dict[str, dict[str, str]] = {}
-        self.total_shows = 0
-        self.total_episodes = 0
 
-    async def _async_update_data(self) -> CollectionWatchListShow:
+    async def _async_update_data(self) -> WatchListData:
         """Fetch the shows still to watch, capped by the configured limits.
 
         Returns:
-            CollectionWatchListShow: The listed shows with their unseen episodes, plus the global counters.
+            WatchListData: The listed shows with their unseen episodes, the global counters and each show's artwork.
 
         Raises:
             ConfigEntryAuthFailed: If the stored access token was rejected.
@@ -698,12 +732,10 @@ class WatchListCoordinator(DataUpdateCoordinator["CollectionWatchListShow"]):
             _LOGGER.debug("Fetching watch list for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
-        self.total_shows = total_shows
-        self.total_episodes = total_episodes
-        self.show_images = await _async_get_show_images(
+        images = await _async_get_show_images(
             self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
         )
-        return watch_list
+        return WatchListData(shows=watch_list, total_shows=total_shows, total_episodes=total_episodes, images=images)
 
     async def async_clean_watch_list_cache(self) -> None:
         """Force a full refetch of the watch list, artwork included, then refresh now.

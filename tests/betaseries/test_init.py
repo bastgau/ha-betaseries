@@ -72,7 +72,7 @@ async def test_setup_entry_creates_coordinator(hass: HomeAssistant) -> None:
     assert isinstance(entry.runtime_data.member, MemberCoordinator)
     assert entry.runtime_data.member.data == MEMBER_DATA
     assert isinstance(entry.runtime_data.planning, PlanningCoordinator)
-    assert not tuple(entry.runtime_data.planning.data)
+    assert not tuple(entry.runtime_data.planning.data.episodes)
 
 
 async def test_setup_entry_succeeds_when_only_the_planning_fails(hass: HomeAssistant) -> None:

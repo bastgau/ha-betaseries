@@ -134,7 +134,7 @@ async def test_update_success_aggregates_all_months(hass: HomeAssistant) -> None
 
     assert coordinator.last_update_success is True
     # Default: 2 months behind + current + 2 months ahead = 5 fetches.
-    assert tuple(coordinator.data) == (EPISODE, EPISODE, EPISODE, EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE, EPISODE, EPISODE, EPISODE)
     assert mock_client.fetch_planning.await_count == 5
 
 
@@ -194,7 +194,7 @@ async def test_update_success_sorts_by_air_date(hass: HomeAssistant) -> None:
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
 
-    assert tuple(coordinator.data) == (earlier_episode, later_episode)
+    assert tuple(coordinator.data.episodes) == (earlier_episode, later_episode)
 
 
 async def test_past_months_are_cached_and_not_refetched(
@@ -220,7 +220,7 @@ async def test_past_months_are_cached_and_not_refetched(
 
     # The past month is served from the store: only the current month is re-fetched.
     assert mock_client.fetch_planning.await_count == 1
-    assert tuple(coordinator.data) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
 
 
 async def test_past_months_persist_across_coordinator_instances(
@@ -245,7 +245,7 @@ async def test_past_months_persist_across_coordinator_instances(
     await second_coordinator.async_refresh()
 
     assert mock_client.fetch_planning.await_count == 1  # only the current month
-    assert tuple(second_coordinator.data) == (EPISODE, EPISODE)
+    assert tuple(second_coordinator.data.episodes) == (EPISODE, EPISODE)
 
 
 async def test_clean_planning_cache_refetches_cached_past_months(
@@ -274,7 +274,7 @@ async def test_clean_planning_cache_refetches_cached_past_months(
 
     # Both the past month and the current month are re-fetched, bypassing the cache.
     assert mock_client.fetch_planning.await_count == 2
-    assert tuple(coordinator.data) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
     assert "Clearing cached past months for Test Account" in caplog.text
 
 
@@ -379,7 +379,7 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
     # The incompatible cache is discarded, so both the past and current month
     # are freshly fetched instead of the past month being served (and crashing).
     assert mock_client.fetch_planning.await_count == 2
-    assert tuple(coordinator.data) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
 
 
 def _show_with_poster(show_id: str, poster: str | None) -> Show:
@@ -439,7 +439,7 @@ async def test_show_images_are_fetched_in_a_single_bulk_call(
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
 
-    assert coordinator.show_images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
+    assert coordinator.data.images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
     assert mock_client.fetch_shows.await_count == 1
     assert mock_client.fetch_shows.await_args.args[0] == ["55"]
 
@@ -466,7 +466,7 @@ async def test_show_images_are_cached_and_not_refetched(
     await coordinator.async_refresh()
 
     assert mock_client.fetch_shows.await_count == 1
-    assert coordinator.show_images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
+    assert coordinator.data.images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
 
 
 async def test_shows_without_any_image_are_cached_too(
@@ -492,7 +492,7 @@ async def test_shows_without_any_image_are_cached_too(
     await coordinator.async_refresh()
     await coordinator.async_refresh()
 
-    assert coordinator.show_images == {"55": {}}
+    assert coordinator.data.images == {"55": {}}
     assert mock_client.fetch_shows.await_count == 1
 
 
@@ -520,7 +520,7 @@ async def test_show_images_of_shows_leaving_the_window_are_purged(
     coordinator = PlanningCoordinator(hass, entry, mock_client)
     await coordinator.async_refresh()
 
-    assert coordinator.show_images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
+    assert coordinator.data.images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
     stored = hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
     assert "999" not in stored
 
@@ -548,8 +548,8 @@ async def test_show_images_failure_does_not_fail_the_refresh(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is True
-    assert tuple(coordinator.data) == (EPISODE,)
-    assert coordinator.show_images == {}
+    assert tuple(coordinator.data.episodes) == (EPISODE,)
+    assert coordinator.data.images == {}
 
 
 async def test_cache_newer_than_supported_is_discarded_not_fatal(
@@ -588,4 +588,4 @@ async def test_cache_newer_than_supported_is_discarded_not_fatal(
     assert "Discarding the" in caplog.text
     # Both months are refetched, as if nothing had ever been cached.
     assert mock_client.fetch_planning.await_count == 2
-    assert tuple(coordinator.data) == (EPISODE, EPISODE)
+    assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
