@@ -98,12 +98,18 @@ All entities below are enabled by default and grouped under a single device per 
 | Membership duration | d | Number of days since account creation |
 | Episodes per month | - | Average number of episodes watched per month |
 | Favorite genre | - | Most watched genre |
-| Latest unwatched episode | - | Air date of the most recently aired episode not yet marked as watched (excluding today, see below) |
+| Previous episode airing | - | Air date of the most recently aired episode, watched or not (excluding today, see below) |
 | Next episode airing | - | Air date of the next episode due to air, watched or not (including today) |
 | Shows to catch up on | - | Number of shows with at least one episode left to watch, with the first few listed in its attributes (see below) |
 | Calendar event count | - | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes |
 
-BetaSeries only ever tells which day an episode airs, never at what time, so each sensor pins its timestamp to the end of the day it cannot be wrong about: "next episode airing" uses 23:59:59 and "latest unwatched episode" uses midnight. Home Assistant's relative display ("in 3 days", "2 days ago") then always agrees with what the sensor announces. For the same reason an episode airing today belongs to "next episode airing" until the day is over - claiming it is already watchable would be a guess - so the two sensors never point at the same episode.
+These two sensors are mirror images of each other, and neither looks at whether you have watched anything: they are about **release dates**, so they answer "what came out last" and "what comes out next". What is left to watch is the job of **Shows to catch up on**.
+
+BetaSeries only ever tells which day an episode airs, never at what time, so each sensor pins its timestamp to the end of the day it cannot be wrong about: "next episode airing" uses 23:59:59 and "previous episode airing" uses midnight. Home Assistant's relative display ("in 3 days", "2 days ago") then always agrees with what the sensor announces. For the same reason an episode airing today belongs to "next episode airing" until the day is over - claiming it is already out would be a guess - so the two sensors never point at the same episode.
+
+Several episodes often air on the same day. Both sensors then pick the one whose show is best rated on BetaSeries, and the highest episode id settles a remaining tie, so neither ever depends on the order episodes happened to be downloaded in. A show BetaSeries has no rating for counts as zero and loses that tie-break. The rating only ever settles a tie **between episodes of the same day** - it never outranks the air date itself.
+
+How far back "previous episode airing" can see is the calendar's own window (2 months by default, see the options): an episode older than that is simply not loaded. Past months are also cached and never re-downloaded, so a show you start following today will not show up for a month that was already cached.
 
 Both expose the same attributes, describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms` and `resource_url`. `episode_id` and `show_id` are the identifiers BetaSeries actions will target, so a dashboard card can act on the episode the sensor points at.
 
@@ -140,7 +146,7 @@ The integration caches what BetaSeries never changes - badge details, past plann
 
 ### Calendar
 
-One calendar entity ("Planning") lists episodes of the shows you follow as all-day events, titled `<show> - <SxxEyy>`, including both watched and unwatched episodes. The window of months shown (past and future) is configurable from the integration options (2 months each way by default). The calendar's own "next event" points to the earliest episode not yet marked as watched.
+One calendar entity ("Planning") lists episodes of the shows you follow as all-day events, titled `<show> - <SxxEyy>`, including both watched and unwatched episodes. The window of months shown (past and future) is configurable from the integration options (2 months each way by default). The calendar's own "next event" points to the earliest episode airing today or later, watched or not - like the two episode sensors, it never filters on what you have seen.
 
 ## Troubleshooting
 

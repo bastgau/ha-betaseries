@@ -361,6 +361,24 @@ async def test_previous_episode_airing_treats_an_unrated_show_as_zero(hass: Home
     assert state.attributes["show_id"] == "66"
 
 
+async def test_previous_episode_airing_keeps_the_latest_day_over_a_better_rating(hass: HomeAssistant) -> None:
+    """Never let the rating outrank the air date: it only settles same-day ties."""
+    today = dt_util.now().date()
+    await _setup_with_planning(
+        hass,
+        (
+            _episode("500", today - timedelta(days=5), seen=False, show=Show(id="66", title="Great Show")),
+            _episode("501", today - timedelta(days=1), seen=False, show=Show(id="55", title="Meh Show")),
+        ),
+        shows=_rated_shows({"55": 1.0, "66": 5.0}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    assert state.attributes["episode_id"] == "501"
+    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(today - timedelta(days=1))
+
+
 async def test_previous_episode_airing_breaks_an_equal_rating_tie_on_the_highest_id(hass: HomeAssistant) -> None:
     """Fall back to the highest episode id so the pick is always total.
 
@@ -417,6 +435,63 @@ async def test_next_episode_airing_is_unknown_when_everything_has_aired(hass: Ho
     state = hass.states.get("sensor.betaseries_test_user_next_episode_airing")
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_next_episode_airing_breaks_a_same_day_tie_on_the_show_rating(hass: HomeAssistant) -> None:
+    """Prefer the better-rated show when several episodes air the same day.
+
+    The same rule as "previous episode airing", so neither sensor lets the
+    order the months were fetched in decide which episode it points at.
+    """
+    tomorrow = dt_util.now().date() + timedelta(days=1)
+    await _setup_with_planning(
+        hass,
+        (
+            _episode("500", tomorrow, seen=False, show=Show(id="55", title="Meh Show")),
+            _episode("501", tomorrow, seen=False, show=Show(id="66", title="Great Show")),
+        ),
+        shows=_rated_shows({"55": 2.5, "66": 4.8}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_next_episode_airing")
+    assert state is not None
+    assert state.attributes["show_id"] == "66"
+    assert state.attributes["episode_id"] == "501"
+
+
+async def test_next_episode_airing_keeps_the_earliest_day_over_a_better_rating(hass: HomeAssistant) -> None:
+    """Never let the rating outrank the air date: it only settles same-day ties."""
+    today = dt_util.now().date()
+    await _setup_with_planning(
+        hass,
+        (
+            _episode("500", today + timedelta(days=1), seen=False, show=Show(id="55", title="Meh Show")),
+            _episode("501", today + timedelta(days=5), seen=False, show=Show(id="66", title="Great Show")),
+        ),
+        shows=_rated_shows({"55": 1.0, "66": 5.0}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_next_episode_airing")
+    assert state is not None
+    assert state.attributes["episode_id"] == "500"
+    assert dt_util.parse_datetime(state.state) == _end_of_local_day(today + timedelta(days=1))
+
+
+async def test_next_episode_airing_breaks_an_equal_rating_tie_on_the_highest_id(hass: HomeAssistant) -> None:
+    """Fall back to the highest episode id, compared as a number rather than a string."""
+    tomorrow = dt_util.now().date() + timedelta(days=1)
+    await _setup_with_planning(
+        hass,
+        (
+            _episode("1001", tomorrow, seen=False, show=Show(id="55", title="Show A")),
+            _episode("999", tomorrow, seen=False, show=Show(id="66", title="Show B")),
+        ),
+        shows=_rated_shows({"55": 3.0, "66": 3.0}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_next_episode_airing")
+    assert state is not None
+    assert state.attributes["episode_id"] == "1001"
 
 
 async def test_calendar_event_count_disabled_by_default(hass: HomeAssistant) -> None:

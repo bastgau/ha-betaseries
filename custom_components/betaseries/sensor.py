@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 from .entity import BetaSeriesEntity
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
     from datetime import datetime
     from typing import Any
 
@@ -217,6 +217,30 @@ class BetaSeriesPlanningSensorEntityDescription(SensorEntityDescription):
     at_end_of_day: bool = False
 
 
+def _best_rated(episodes: Iterable[Episode], ratings: dict[str, float]) -> Episode:
+    """Return the episode whose show is rated highest, the greatest id breaking a tie.
+
+    Several episodes routinely share one air date, so both airing sensors need
+    the same rule to turn "the episodes of that day" into a single pick -
+    otherwise the answer would come down to the order the months happened to
+    be fetched in, which is not a decision.
+
+    A show BetaSeries has no rating for reports a mean of 0, so it loses to
+    any rated one: "unrated" and "rated zero" are deliberately not told apart.
+    Ids are compared as numbers, since they are numeric strings and "999"
+    would otherwise beat "1001".
+
+    Args:
+        episodes (Iterable[Episode]): The episodes to choose from, never empty.
+        ratings (dict[str, float]): Member rating per show id, missing shows counting as 0.
+
+    Returns:
+        Episode: The winning episode.
+
+    """
+    return max(episodes, key=lambda episode: (ratings.get(episode.show.id, 0.0), int(episode.id)))
+
+
 def _previous_episode_airing(data: PlanningData) -> Episode | None:
     """Return the most recently aired episode, watched or not.
 
@@ -228,12 +252,6 @@ def _previous_episode_airing(data: PlanningData) -> Episode | None:
     PlanningCoordinator): an episode older than that is simply not loaded, and
     a show followed after a past month was cached will not appear for that
     month, since cached months are never refetched.
-
-    Several episodes routinely share one air date, so the pick is made total
-    rather than left to the order episodes happened to be fetched in: the
-    best-rated show wins, and the highest episode id breaks a remaining tie.
-    A show BetaSeries has no rating for scores 0 and so loses to any rated
-    one - "unrated" and "rated zero" are deliberately not told apart.
 
     Args:
         data (PlanningData): The planning and its per-show ratings.
@@ -249,10 +267,7 @@ def _previous_episode_airing(data: PlanningData) -> Episode | None:
     if not aired:
         return None
     latest = aired[-1].air_date
-    return max(
-        (episode for episode in aired if episode.air_date == latest),
-        key=lambda episode: (data.ratings.get(episode.show.id, 0.0), int(episode.id)),
-    )
+    return _best_rated((episode for episode in aired if episode.air_date == latest), data.ratings)
 
 
 def _next_episode_airing(data: PlanningData) -> Episode | None:
@@ -260,7 +275,8 @@ def _next_episode_airing(data: PlanningData) -> Episode | None:
 
     Like _previous_episode_airing, this ignores `seen` entirely: it answers
     "when does the next episode of my shows come out", not "what should I
-    watch next".
+    watch next", and settles a same-day tie the very same way (see
+    _best_rated).
 
     Today counts as upcoming rather than past, since BetaSeries gives no
     airing time: an episode dated today may well air tonight. It belongs here
@@ -275,7 +291,13 @@ def _next_episode_airing(data: PlanningData) -> Episode | None:
 
     """
     today = dt_util.now().date()
-    return next((episode for episode in data.episodes if episode.air_date >= today), None)
+    # Sorted by air_date, so the upcoming episodes are a suffix and the first
+    # of them carries the earliest air date.
+    upcoming = [episode for episode in data.episodes if episode.air_date >= today]
+    if not upcoming:
+        return None
+    earliest = upcoming[0].air_date
+    return _best_rated((episode for episode in upcoming if episode.air_date == earliest), data.ratings)
 
 
 PREVIOUS_EPISODE_AIRING_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
