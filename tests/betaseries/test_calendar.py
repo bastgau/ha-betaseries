@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -129,8 +129,14 @@ async def test_calendar_event_is_none_when_no_episodes(hass: HomeAssistant) -> N
     assert state.state == "off"
 
 
-async def test_calendar_event_skips_seen_episodes(hass: HomeAssistant) -> None:
-    """Skip already-seen episodes when picking the next event."""
+async def test_calendar_event_includes_seen_episodes(hass: HomeAssistant) -> None:
+    """Pick the next episode to air even when it has already been watched.
+
+    This is a release calendar: it answers "what comes out next", not "what
+    should I watch next". Filtering here would also let the state disagree
+    with async_get_events(), which lists the same episodes unfiltered.
+    """
+    today = dt_util.now().date()
     seen_episode = Episode(
         id="500",
         season=3,
@@ -138,7 +144,7 @@ async def test_calendar_event_skips_seen_episodes(hass: HomeAssistant) -> None:
         code="S03E02",
         title="Already Watched",
         description="",
-        air_date=date(2026, 7, 25),
+        air_date=today,
         seen=True,
         platforms=(),
         resource_url="https://www.betaseries.com/episode/500",
@@ -148,7 +154,8 @@ async def test_calendar_event_skips_seen_episodes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("calendar.betaseries_test_user_release_calendar")
     assert state is not None
-    assert state.attributes["message"] == "Example Show - S03E03"
+    assert state.attributes["message"] == "Example Show - S03E02"
+    assert state.state == "on"
 
 
 async def test_async_get_events_includes_seen_episodes(hass: HomeAssistant) -> None:
@@ -284,3 +291,52 @@ async def test_calendar_event_description_falls_back_to_show_description(hass: H
     assert entity.event.description == "Not Aired Yet\n\nA show about a silo."
 
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_calendar_skips_unwatched_episodes_that_already_aired(hass: HomeAssistant) -> None:
+    """Ignore a stale unseen episode and turn on for the one airing today.
+
+    Regression test: the planning is sorted by air date and reaches months
+    into the past, so picking the first unseen episode returned the oldest one
+    - an event long over. Home Assistant derives the state from that event
+    alone, so the calendar stayed off permanently while advertising a
+    months-old episode as the next one.
+
+    Dates are relative to today on purpose: pinned ones would have made this
+    test pass for a while and then quietly stop covering the bug.
+    """
+    today = dt_util.now().date()
+    backlog = Episode(
+        id="900",
+        season=1,
+        number=5,
+        code="S01E05",
+        title="Aired Months Ago",
+        description="",
+        air_date=today - timedelta(days=270),
+        seen=False,
+        platforms=(),
+        resource_url="https://www.betaseries.com/episode/900",
+        show=Show(id="55", title="Old Show"),
+    )
+    airing_today = Episode(
+        id="901",
+        season=3,
+        number=5,
+        code="S03E05",
+        title="Memory",
+        description="",
+        air_date=today,
+        seen=False,
+        platforms=(),
+        resource_url="https://www.betaseries.com/episode/901",
+        show=Show(id="56", title="Silo"),
+    )
+    await _setup_entry_with_planning(hass, (backlog, airing_today))
+
+    state = hass.states.get("calendar.betaseries_test_user_release_calendar")
+    assert state is not None
+    assert state.attributes["message"] == "Silo - S03E05"
+    # An all-day event spans midnight to midnight, so today's episode is
+    # running right now and the calendar must report itself as on.
+    assert state.state == "on"

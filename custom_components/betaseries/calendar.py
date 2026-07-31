@@ -88,6 +88,20 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event.
 
+        Only the air date is considered, never whether the member has already
+        watched the episode: this calendar is about when episodes come out, so
+        an episode airing today is today's event even once it has been seen.
+        That also keeps this property consistent with async_get_events(), which
+        lists the same episodes over a range - filtering here would let the
+        state contradict the very events the calendar displays.
+
+        Episodes that already aired are skipped, however. Home Assistant
+        derives the entity's state from this event alone and turns the calendar
+        `on` only while the event is running, so returning the first episode of
+        the planning - which is sorted by air date and reaches months into the
+        past - pinned the state to `off` forever and advertised a months-old
+        episode as the next one.
+
         The coordinator's data is None until its first successful refresh
         (DataUpdateCoordinator types it as _DataT but initializes it to None),
         and the planning is fetched without blocking the entry's setup - see
@@ -97,13 +111,16 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
         type checker believes can never be None.
 
         Returns:
-            CalendarEvent | None: The earliest unseen episode, or None if there is none.
+            CalendarEvent | None: The earliest episode airing today or later, or None if there is none.
 
         """
         if not self.coordinator.last_update_success:
             return None
+        # Today counts as upcoming: an all-day event spans midnight to
+        # midnight, so an episode airing today is running right now.
+        today = dt_util.now().date()
         for episode in self.coordinator.data:
-            if not episode.seen:
+            if episode.air_date >= today:
                 return _to_calendar_event(episode)
         return None
 
@@ -112,8 +129,9 @@ class BetaSeriesCalendar(BetaSeriesEntity, CalendarEntity):  # pyright: ignore[r
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range.
 
-        Includes both seen and unseen episodes, unlike the `event` property
-        (which only surfaces the next unseen one).
+        Includes both seen and unseen episodes, like the `event` property:
+        this is a release calendar, so what matters is when an episode comes
+        out, not whether it has been watched.
 
         Both bounds are converted to local time before being reduced to a
         date: HA passes tz-aware datetimes, usually in UTC, so calling
