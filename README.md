@@ -144,6 +144,14 @@ One calendar entity ("Planning") lists episodes of the shows you follow as all-d
 
 ## Troubleshooting
 
+## Diagnostics
+
+The integration entry has a **Download diagnostics** button (Settings → Devices & services → BetaSeries → the three dots on the entry). It is the quickest way to report a problem: attach the file to an issue instead of describing symptoms.
+
+It contains your options, each coordinator's last refresh outcome and error, the account statistics, and counts of what is loaded and cached - including how the planning spreads across months. Your API key, client secret and access token are redacted.
+
+It deliberately holds **no show or episode**, only counts: the file ends up in a public issue, and what you watch is nobody else's business.
+
 ## Debugging
 
 To show info and debug logs for the BetaSeries integration, enable logging in `configuration.yaml`:
