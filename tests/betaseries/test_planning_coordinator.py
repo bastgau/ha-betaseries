@@ -382,12 +382,13 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
     assert tuple(coordinator.data.episodes) == (EPISODE, EPISODE)
 
 
-def _show_with_poster(show_id: str, poster: str | None) -> Show:
+def _show_with_poster(show_id: str, poster: str | None, rating: float = 0.0) -> Show:
     """Build a Show carrying the additional information that holds its poster.
 
     Args:
         show_id (str): BetaSeries show id.
         poster (str | None): Poster URL, or None for a show that has no poster.
+        rating (float): Mean member rating, cached alongside the poster.
 
     Returns:
         Show: The show, with additional_information populated.
@@ -410,7 +411,7 @@ def _show_with_poster(show_id: str, poster: str | None) -> Show:
             original_language=None,
             length=30,
             rating="",
-            notes_mean=0,
+            notes_mean=rating,
             notes_total=0,
             next_trailer=None,
             resource_url="https://www.betaseries.com/serie/example-show",
@@ -509,7 +510,7 @@ async def test_show_images_of_shows_leaving_the_window_are_purged(
     entry.add_to_hass(hass)
     hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"] = {
         "version": PLANNING_SHOW_IMAGES_STORE_VERSION,
-        "data": {"999": "https://pictures.betaseries.com/gone.jpg"},
+        "data": {"999": {"images": {"poster": "https://pictures.betaseries.com/gone.jpg"}, "rating": 4.2}},
     }
     mock_client = client_mock()
     mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
@@ -523,6 +524,76 @@ async def test_show_images_of_shows_leaving_the_window_are_purged(
     assert coordinator.data.images == {"55": {"poster": "https://pictures.betaseries.com/poster.jpg"}}
     stored = hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
     assert "999" not in stored
+
+
+async def test_show_ratings_ride_along_with_the_images(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Expose and cache each show's rating, taken from the poster call's own payload.
+
+    GET /shows/display already carries `notes.mean`, so the rating the
+    previous-episode sensor breaks its ties on costs no extra request - and
+    is served from the same cache on the next refresh.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+    mock_client.fetch_shows.return_value = CollectionShow(
+        {"55": _show_with_poster("55", "https://pictures.betaseries.com/poster.jpg", rating=4.25)}
+    )
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+    await coordinator.async_refresh()
+
+    assert coordinator.data.ratings == {"55": 4.25}
+    # Served from the cache the second time round, like the images.
+    assert mock_client.fetch_shows.await_count == 1
+    stored = hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
+    assert stored["55"]["rating"] == 4.25
+
+
+async def test_show_cache_entries_without_a_rating_are_refetched(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Refetch cached shows written before the cache also held the rating.
+
+    The store version is deliberately not bumped for that shape change, so
+    entries lacking the "images" key are treated as absent and refetched -
+    the cache repairs itself instead of serving a shape nothing writes any
+    more, or crashing on a missing key.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0},
+    )
+    entry.add_to_hass(hass)
+    hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"] = {
+        "version": PLANNING_SHOW_IMAGES_STORE_VERSION,
+        # Old shape: the image mapping sat directly under the show id.
+        "data": {"55": {"poster": "https://pictures.betaseries.com/stale.jpg"}},
+    }
+    mock_client = client_mock()
+    mock_client.fetch_planning.return_value = CollectionEpisode((EPISODE,))
+    mock_client.fetch_shows.return_value = CollectionShow(
+        {"55": _show_with_poster("55", "https://pictures.betaseries.com/fresh.jpg")}
+    )
+
+    coordinator = PlanningCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert mock_client.fetch_shows.await_count == 1
+    assert coordinator.data.images == {"55": {"poster": "https://pictures.betaseries.com/fresh.jpg"}}
+    stored = hass_storage[f"{PLANNING_SHOW_IMAGES_STORE_KEY_PREFIX}_{entry.entry_id}"]["data"]
+    assert stored["55"]["images"] == {"poster": "https://pictures.betaseries.com/fresh.jpg"}
 
 
 async def test_show_images_failure_does_not_fail_the_refresh(

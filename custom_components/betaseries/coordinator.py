@@ -179,6 +179,12 @@ class _CacheStore[DataT: dict[str, Any]](Store[DataT]):
         return cast("DataT", {})
 
 
+# Keys of one cached show entry (see _async_get_show_details). _IMAGES_KEY
+# doubles as the marker that an entry was written by this version of the cache.
+_IMAGES_KEY = "images"
+_RATING_KEY = "rating"
+
+
 def _images_to_dict(images: ShowImages) -> dict[str, str]:
     """Serialize a show's image URLs, dropping the ones it doesn't have.
 
@@ -206,56 +212,73 @@ def _images_to_dict(images: ShowImages) -> dict[str, str]:
     }
 
 
-async def _async_get_show_images(
+async def _async_get_show_details(
     client: Client,
     store: Store[dict[str, Any]],
     show_ids: frozenset[str],
     title: str,
-) -> dict[str, dict[str, str]]:
-    """Return each show's image URLs, fetching only the ones not already cached.
+) -> tuple[dict[str, dict[str, str]], dict[str, float]]:
+    """Return each show's image URLs and member rating, fetching only what isn't cached.
 
     Shared by the coordinators that display shows: a show's images essentially
     never change, so cached ones are never refetched; shows no longer in the
     caller's set are dropped so the cache doesn't grow unbounded. Shows that
-    have no image at all are cached as an empty dict, which stops them being
-    refetched on every refresh.
+    have no image at all are cached with an empty image mapping, which stops
+    them being refetched on every refresh.
 
-    Failures are swallowed on purpose: these images are decoration, and the
-    caller's own data refreshed fine by the time this runs - failing the whole
-    update over a missing image would take its entities down with it.
+    The rating rides along rather than costing a request of its own: it comes
+    from the very same GET /shows/display payload the images do. It is
+    therefore as stale as they are, which the only caller that reads it
+    (see sensor.py's previous episode) accepts by design.
+
+    Failures are swallowed on purpose: this is decoration and a tie-breaker,
+    and the caller's own data refreshed fine by the time this runs - failing
+    the whole update over it would take its entities down with it.
 
     Args:
         client (Client): The BetaSeries API client used to fetch the shows.
-        store (Store[dict[str, Any]]): The caller's own persisted image cache.
+        store (Store[dict[str, Any]]): The caller's own persisted show cache.
         show_ids (frozenset[str]): Show ids the caller currently displays.
         title (str): The config entry's title, for logging.
 
     Returns:
-        dict[str, dict[str, str]]: Image URLs per show id, each without its unset entries.
+        tuple[dict[str, dict[str, str]], dict[str, float]]: Image URLs per show id (without their unset entries), and the member rating per show id.
 
     """
     stored: dict[str, Any] = await store.async_load() or {}
-    cached: dict[str, dict[str, str]] = {show_id: stored[show_id] for show_id in show_ids if show_id in stored}
+    # Entries without an "images" key predate this cache holding the rating.
+    # Treating them as absent refetches them, rather than reading a shape that
+    # is no longer written (the store is a pure cache, so this costs one call).
+    cached: dict[str, Any] = {
+        show_id: stored[show_id] for show_id in show_ids if show_id in stored and _IMAGES_KEY in stored[show_id]
+    }
     missing = show_ids - cached.keys()
 
     if missing:
         try:
-            _LOGGER.debug("Fetching images for %s new show(s) of %s from BetaSeries", len(missing), title)
+            _LOGGER.debug("Fetching details for %s new show(s) of %s from BetaSeries", len(missing), title)
             shows = await client.fetch_shows(sorted(missing))
         except Error as err:
-            _LOGGER.debug("Fetching show images for %s failed (%s)", title, _cause(err))
+            _LOGGER.debug("Fetching show details for %s failed (%s)", title, _cause(err))
         else:
             for show_id in missing:
                 show = shows.for_show(show_id)
                 information = show.additional_information if show is not None else None
-                cached[show_id] = _images_to_dict(information.images) if information is not None else {}
+                cached[show_id] = {
+                    _IMAGES_KEY: _images_to_dict(information.images) if information is not None else {},
+                    _RATING_KEY: information.notes_mean if information is not None else 0.0,
+                }
 
     if cached != stored:
-        # Either new images were fetched, or shows left the caller's set and
+        # Either new shows were fetched, or shows left the caller's set and
         # their entries were dropped by the comprehension above.
         await store.async_save(cached)
 
-    return cached
+    images = {show_id: entry[_IMAGES_KEY] for show_id, entry in cached.items()}
+    # A show BetaSeries has no rating for reports 0, which is also what a show
+    # missing from the cache gets: "unrated" and "unknown" both sort last.
+    ratings = {show_id: float(entry.get(_RATING_KEY) or 0.0) for show_id, entry in cached.items()}
+    return images, ratings
 
 
 def _badge_to_dict(badge: Badge) -> dict[str, Any]:
@@ -425,11 +448,13 @@ class PlanningData:
     Attributes:
         episodes (CollectionEpisode): The member's episodes, sorted by air date.
         images (dict[str, dict[str, str]]): Image URLs per show id in the window, shows without artwork included as empty dicts.
+        ratings (dict[str, float]): BetaSeries member rating per show id, 0.0 for a show that has none.
 
     """
 
     episodes: CollectionEpisode
     images: dict[str, dict[str, str]]
+    ratings: dict[str, float]
 
 
 @dataclass(frozen=True)
@@ -531,10 +556,10 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
 
         episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
         planning = CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
-        images = await _async_get_show_images(
+        images, ratings = await _async_get_show_details(
             self.client, self.show_images_store, planning.show_ids, self.config_entry.title
         )
-        return PlanningData(episodes=planning, images=images)
+        return PlanningData(episodes=planning, images=images, ratings=ratings)
 
     async def async_clean_planning_cache(self) -> None:
         """Force a full refetch of every month, including cached past ones, then refresh now.
@@ -732,7 +757,9 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
             _LOGGER.debug("Fetching watch list for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
-        images = await _async_get_show_images(
+        # The rating is cached alongside the images by the shared helper; no
+        # entity of this coordinator reads it, so it is dropped here.
+        images, _ = await _async_get_show_details(
             self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
         )
         return WatchListData(shows=watch_list, total_shows=total_shows, total_episodes=total_episodes, images=images)

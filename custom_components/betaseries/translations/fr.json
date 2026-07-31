@@ -129,8 +129,8 @@
       "favorite_genre": {
         "name": "Genre préféré"
       },
-      "latest_unwatched_episode": {
-        "name": "Dernier épisode non vu"
+      "previous_episode_airing": {
+        "name": "Épisode précédemment sorti"
       },
       "next_episode_airing": {
         "name": "Prochain épisode à sortir"

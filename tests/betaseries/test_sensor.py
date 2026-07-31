@@ -108,13 +108,14 @@ def _end_of_local_day(day: date) -> datetime:
     return dt_util.start_of_local_day(day) + timedelta(days=1) - timedelta(seconds=1)
 
 
-def _episode(
+def _episode(  # noqa: PLR0913 -- a test builder, every extra argument is an optional knob
     episode_id: str,
     air_date: date,
     *,
     seen: bool,
     code: str = "S03E04",
     number: int = 4,
+    show: Show | None = None,
 ) -> Episode:
     """Build an Episode for the planning sensor tests.
 
@@ -124,6 +125,7 @@ def _episode(
         seen (bool): Whether the member has already watched it.
         code (str): Season/episode code.
         number (int): Episode number within the season.
+        show (Show | None): Show the episode belongs to, or None for the default one.
 
     Returns:
         Episode: The built episode.
@@ -140,16 +142,63 @@ def _episode(
         seen=seen,
         platforms=("Netflix", "Apple TV"),
         resource_url=f"https://www.betaseries.com/episode/{episode_id}",
-        show=Show(id="55", title="Example Show"),
+        show=show or Show(id="55", title="Example Show"),
     )
 
 
-async def _setup_with_planning(hass: HomeAssistant, episodes: tuple[Episode, ...]) -> MockConfigEntry:
+def _rated_shows(ratings: dict[str, float]) -> CollectionShow:
+    """Build the GET /shows/display result carrying each show's member rating.
+
+    Only notes_mean matters here; the rest is filled with the neutral values
+    a show with no details would report.
+
+    Args:
+        ratings (dict[str, float]): Rating to give each show id.
+
+    Returns:
+        CollectionShow: The shows, with their additional information populated.
+
+    """
+    return CollectionShow(
+        {
+            show_id: Show(
+                id=show_id,
+                title=f"Show {show_id}",
+                additional_information=ShowAdditionalInformation(
+                    original_title=f"Show {show_id}",
+                    imdb_id=None,
+                    themoviedb_id=None,
+                    genres=(),
+                    showrunners=(),
+                    aliases=(),
+                    seasons=1,
+                    followers=0,
+                    network="Netflix",
+                    country=None,
+                    original_language=None,
+                    length=30,
+                    rating="",
+                    notes_mean=rating,
+                    notes_total=1,
+                    next_trailer=None,
+                    resource_url=f"https://www.betaseries.com/serie/show-{show_id}",
+                    images=ShowImages(show=None, banner=None, box=None, poster=None, clearlogo=None),
+                ),
+            )
+            for show_id, rating in ratings.items()
+        }
+    )
+
+
+async def _setup_with_planning(
+    hass: HomeAssistant, episodes: tuple[Episode, ...], shows: CollectionShow | None = None
+) -> MockConfigEntry:
     """Set up an entry whose first planning month returns the given episodes.
 
     Args:
         hass (HomeAssistant): The Home Assistant test instance.
         episodes (tuple[Episode, ...]): Episodes returned for the first fetch_planning() call.
+        shows (CollectionShow | None): Shows returned by fetch_shows(), or None for none at all.
 
     Returns:
         MockConfigEntry: The set up config entry.
@@ -171,6 +220,8 @@ async def _setup_with_planning(hass: HomeAssistant, episodes: tuple[Episode, ...
         CollectionEpisode(()),
         CollectionEpisode(()),
     ]
+    if shows is not None:
+        mock_client.fetch_shows.return_value = shows
 
     with patch("custom_components.betaseries.Client", return_value=mock_client):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -179,75 +230,71 @@ async def _setup_with_planning(hass: HomeAssistant, episodes: tuple[Episode, ...
     return entry
 
 
-async def test_latest_unwatched_episode_picks_the_newest_unseen_one(hass: HomeAssistant) -> None:
-    """Pick the most recently aired unseen episode, not the oldest one.
-
-    On a backlog, the oldest unseen episode would be a months-old straggler
-    that never changes; the newest one is what the member is about to watch.
-    """
+async def test_previous_episode_airing_picks_the_most_recently_aired_one(hass: HomeAssistant) -> None:
+    """Pick the episode that aired last, mirroring "next episode airing"."""
     today = dt_util.now().date()
     older = _episode("500", today - timedelta(days=10), seen=False, code="S03E02", number=2)
     newer = _episode("1001", today - timedelta(days=1), seen=False)
     await _setup_with_planning(hass, (older, newer))
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
     assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(today - timedelta(days=1))
     assert state.attributes["episode_id"] == "1001"
 
 
-async def test_latest_unwatched_episode_ignores_episodes_that_have_not_aired(hass: HomeAssistant) -> None:
-    """Skip unseen episodes airing in the future.
-
-    The planning window reaches months ahead, and those episodes are unseen
-    only because they do not exist yet - picking one would point the sensor
-    at something the member cannot possibly have watched.
-    """
+async def test_previous_episode_airing_ignores_episodes_that_have_not_aired(hass: HomeAssistant) -> None:
+    """Skip episodes airing in the future: they have not come out yet."""
     today = dt_util.now().date()
     aired = _episode("500", today - timedelta(days=2), seen=False, code="S03E02", number=2)
     not_yet_aired = _episode("1001", today + timedelta(days=7), seen=False)
     await _setup_with_planning(hass, (aired, not_yet_aired))
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
     assert state.attributes["episode_id"] == "500"
     assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(today - timedelta(days=2))
 
 
-async def test_latest_unwatched_episode_excludes_an_episode_airing_today(hass: HomeAssistant) -> None:
+async def test_previous_episode_airing_excludes_an_episode_airing_today(hass: HomeAssistant) -> None:
     """Leave an episode airing today to the "next episode airing" sensor.
 
     BetaSeries gives no airing time, so an episode dated today may still air
-    tonight - claiming it is already watchable would be a guess, and the two
+    tonight - counting it as already out would be a guess, and the two
     sensors would point at the same episode all day.
     """
     today = dt_util.now().date()
     await _setup_with_planning(hass, (_episode("1001", today, seen=False),))
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
     assert state.state == "unknown"
 
 
-async def test_latest_unwatched_episode_skips_seen_episodes(hass: HomeAssistant) -> None:
-    """Ignore already-seen episodes, even when they aired more recently."""
+async def test_previous_episode_airing_includes_seen_episodes(hass: HomeAssistant) -> None:
+    """Report the last episode out, watched or not.
+
+    This is a release date, not a watch list: filtering on `seen` here would
+    also make the sensor depend on the planning cache, which never refreshes
+    a past month's watch status.
+    """
     today = dt_util.now().date()
     unseen = _episode("1001", today - timedelta(days=10), seen=False, code="S03E02", number=2)
     seen = _episode("500", today - timedelta(days=1), seen=True)
     await _setup_with_planning(hass, (unseen, seen))
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
-    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(today - timedelta(days=10))
-    assert state.attributes["episode_id"] == "1001"
+    assert dt_util.parse_datetime(state.state) == dt_util.start_of_local_day(today - timedelta(days=1))
+    assert state.attributes["episode_id"] == "500"
 
 
-async def test_latest_unwatched_episode_exposes_actionable_attributes(hass: HomeAssistant) -> None:
+async def test_previous_episode_airing_exposes_actionable_attributes(hass: HomeAssistant) -> None:
     """Expose the identifiers the (v3) services target, which CalendarEvent cannot carry."""
     yesterday = dt_util.now().date() - timedelta(days=1)
     await _setup_with_planning(hass, (_episode("1001", yesterday, seen=False),))
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
     assert state.attributes["episode_id"] == "1001"
     assert state.attributes["show_id"] == "55"
@@ -260,14 +307,78 @@ async def test_latest_unwatched_episode_exposes_actionable_attributes(hass: Home
     assert state.attributes["resource_url"] == "https://www.betaseries.com/episode/1001"
 
 
-async def test_latest_unwatched_episode_is_unknown_when_everything_is_seen(hass: HomeAssistant) -> None:
-    """Report an unknown state, with no attributes, when there is no unseen episode."""
-    await _setup_with_planning(hass, (_episode("500", date(2026, 8, 1), seen=True),))
+async def test_previous_episode_airing_is_unknown_before_anything_has_aired(hass: HomeAssistant) -> None:
+    """Report an unknown state, with no attributes, when nothing has aired yet."""
+    await _setup_with_planning(hass, (_episode("500", dt_util.now().date() + timedelta(days=3), seen=False),))
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
     assert state.state == "unknown"
     assert "episode_id" not in state.attributes
+
+
+async def test_previous_episode_airing_breaks_a_same_day_tie_on_the_show_rating(hass: HomeAssistant) -> None:
+    """Prefer the better-rated show when several episodes aired the same day.
+
+    Air date alone leaves the pick to whatever order the months happened to
+    be fetched in, which is not a decision. The rating rides along with the
+    artwork on the same GET /shows/display call, so it costs no request.
+    """
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    await _setup_with_planning(
+        hass,
+        (
+            _episode("500", yesterday, seen=False, show=Show(id="55", title="Meh Show")),
+            _episode("501", yesterday, seen=False, show=Show(id="66", title="Great Show")),
+        ),
+        shows=_rated_shows({"55": 2.5, "66": 4.8}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    assert state.attributes["show_id"] == "66"
+    assert state.attributes["episode_id"] == "501"
+
+
+async def test_previous_episode_airing_treats_an_unrated_show_as_zero(hass: HomeAssistant) -> None:
+    """Let any rated show beat a show BetaSeries has no rating for.
+
+    A show with no rating reports a mean of 0, which is deliberately not told
+    apart from a genuine zero: both simply lose the tie-break.
+    """
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    await _setup_with_planning(
+        hass,
+        (
+            _episode("500", yesterday, seen=False, show=Show(id="55", title="Unrated Show")),
+            _episode("501", yesterday, seen=False, show=Show(id="66", title="Barely Rated Show")),
+        ),
+        shows=_rated_shows({"55": 0.0, "66": 0.4}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    assert state.attributes["show_id"] == "66"
+
+
+async def test_previous_episode_airing_breaks_an_equal_rating_tie_on_the_highest_id(hass: HomeAssistant) -> None:
+    """Fall back to the highest episode id so the pick is always total.
+
+    Ids are compared as numbers, not as strings: "1001" must beat "999".
+    """
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    await _setup_with_planning(
+        hass,
+        (
+            _episode("1001", yesterday, seen=False, show=Show(id="55", title="Show A")),
+            _episode("999", yesterday, seen=False, show=Show(id="66", title="Show B")),
+        ),
+        shows=_rated_shows({"55": 3.0, "66": 3.0}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    assert state.attributes["episode_id"] == "1001"
 
 
 async def test_next_episode_airing_picks_the_first_future_episode(hass: HomeAssistant) -> None:
@@ -560,7 +671,7 @@ async def test_episode_sensors_expose_the_show_poster_as_entity_picture(hass: Ho
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
     assert state.attributes["entity_picture"] == "https://pictures.betaseries.com/poster.jpg"
     # The whole set is exposed too, so a card can pick another artwork than the
@@ -580,7 +691,7 @@ async def test_episode_sensors_have_no_picture_without_a_poster(hass: HomeAssist
     """
     await _setup_with_planning(hass, (_episode("1001", dt_util.now().date() - timedelta(days=1), seen=False),))
 
-    state = hass.states.get("sensor.betaseries_test_user_latest_unwatched_episode")
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
     assert "entity_picture" not in state.attributes
     assert state.attributes["show_images"] == {}
@@ -591,7 +702,7 @@ async def test_episode_sensors_have_no_picture_without_a_poster(hass: HomeAssist
     [
         ("sensor.betaseries_test_user_shows_to_catch_up_on", "shows"),
         ("sensor.betaseries_test_user_badges", "badges"),
-        ("sensor.betaseries_test_user_latest_unwatched_episode", "show_images"),
+        ("sensor.betaseries_test_user_previous_episode_airing", "show_images"),
     ],
 )
 async def test_bulky_attributes_are_kept_out_of_the_recorder(

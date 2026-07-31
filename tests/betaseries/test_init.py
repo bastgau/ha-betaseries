@@ -116,7 +116,7 @@ async def test_setup_entry_succeeds_when_only_the_planning_fails(hass: HomeAssis
     # HA adds them, before any planning data exists).
     for entity_id in (
         "calendar.betaseries_test_user_release_calendar",
-        "sensor.betaseries_test_user_latest_unwatched_episode",
+        "sensor.betaseries_test_user_previous_episode_airing",
     ):
         planning_state = hass.states.get(entity_id)
         assert planning_state is not None, entity_id
@@ -142,12 +142,12 @@ async def test_setup_entry_succeeds_when_only_the_planning_fails(hass: HomeAssis
     assert count_entity.native_value is None
     assert count_entity.extra_state_attributes == {}
 
-    latest_unwatched = hass.data["entity_components"]["sensor"].get_entity(
-        "sensor.betaseries_test_user_latest_unwatched_episode"
+    previous_airing = hass.data["entity_components"]["sensor"].get_entity(
+        "sensor.betaseries_test_user_previous_episode_airing"
     )
-    assert latest_unwatched is not None
-    assert latest_unwatched.native_value is None
-    assert latest_unwatched.extra_state_attributes is None
+    assert previous_airing is not None
+    assert previous_airing.native_value is None
+    assert previous_airing.extra_state_attributes is None
 
 
 async def test_setup_entry_retries_when_the_member_data_fails(hass: HomeAssistant) -> None:
@@ -215,9 +215,7 @@ async def test_setup_entry_passes_configured_locale_to_client(hass: HomeAssistan
     assert mock_client_class.call_args.args[-1] == "en"
 
 
-async def test_remove_entry_deletes_every_cached_store(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
+async def test_remove_entry_deletes_every_cached_store(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Delete each per-entry cache file when the entry is removed.
 
     Home Assistant never cleans .storage up on its own, so without

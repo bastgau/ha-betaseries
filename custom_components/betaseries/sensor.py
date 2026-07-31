@@ -31,6 +31,7 @@ if TYPE_CHECKING:
         BetaSeriesConfigEntry,
         MemberCoordinator,
         PlanningCoordinator,
+        PlanningData,
         WatchListCoordinator,
     )
 
@@ -202,71 +203,86 @@ class BetaSeriesPlanningSensorEntityDescription(SensorEntityDescription):
 
     These sensors only differ by which episode they single out, so they share
     one selection callback: the state (its air date) and the actionable
-    attributes are both derived from that same episode, picked once.
+    attributes are both derived from that same episode, picked once. The
+    callback receives the whole PlanningData rather than just its episodes,
+    since picking may need more than the schedule (see _previous_episode_airing).
 
     Attributes:
-        episode_fn (Callable[[CollectionEpisode], Episode | None]): Picks the episode this sensor describes.
+        episode_fn (Callable[[PlanningData], Episode | None]): Picks the episode this sensor describes.
         at_end_of_day (bool): Whether to timestamp the air date at 23:59:59 rather than at midnight.
 
     """
 
-    episode_fn: Callable[[CollectionEpisode], Episode | None]
+    episode_fn: Callable[[PlanningData], Episode | None]
     at_end_of_day: bool = False
 
 
-def _latest_unwatched_episode(episodes: CollectionEpisode) -> Episode | None:
-    """Return the most recently aired episode the member has not watched yet.
+def _previous_episode_airing(data: PlanningData) -> Episode | None:
+    """Return the most recently aired episode, watched or not.
 
-    Walks the planning backwards (it is sorted by air_date): the newest unseen
-    episode is the one to act on - the one just aired or about to be watched.
-    Deliberately not the oldest unseen one, which on a large backlog would be
-    a months-old straggler that never changes.
+    The mirror image of _next_episode_airing: neither looks at `seen`, because
+    both answer "when did/does an episode of my shows come out". This one
+    therefore reads nothing that the planning cache could hold stale.
 
-    Episodes airing today or later are skipped: the planning window extends
-    months into the future (see PlanningCoordinator), and those episodes are
-    unseen simply because they do not exist yet - they say nothing about what
-    the member has left to watch. Today is excluded too, since BetaSeries
-    gives no airing time: an episode dated today may well air tonight. It
-    belongs to the "next episode airing" sensor until the day is over, so
-    the two sensors never point at the same episode.
+    Its reach is the planning window's own lower bound (see
+    PlanningCoordinator): an episode older than that is simply not loaded, and
+    a show followed after a past month was cached will not appear for that
+    month, since cached months are never refetched.
+
+    Several episodes routinely share one air date, so the pick is made total
+    rather than left to the order episodes happened to be fetched in: the
+    best-rated show wins, and the highest episode id breaks a remaining tie.
+    A show BetaSeries has no rating for scores 0 and so loses to any rated
+    one - "unrated" and "rated zero" are deliberately not told apart.
 
     Args:
-        episodes (CollectionEpisode): The planning, sorted by air_date.
+        data (PlanningData): The planning and its per-show ratings.
 
     Returns:
-        Episode | None: The newest already-aired unseen episode, or None if there is none.
+        Episode | None: The most recently aired episode, or None if none has aired yet.
 
     """
     today = dt_util.now().date()
-    return next(
-        (episode for episode in reversed(tuple(episodes)) if not episode.seen and episode.air_date < today),
-        None,
+    # The planning is sorted by air_date, so the already-aired episodes are a
+    # prefix and the last of them carries the most recent air date.
+    aired = [episode for episode in data.episodes if episode.air_date < today]
+    if not aired:
+        return None
+    latest = aired[-1].air_date
+    return max(
+        (episode for episode in aired if episode.air_date == latest),
+        key=lambda episode: (data.ratings.get(episode.show.id, 0.0), int(episode.id)),
     )
 
 
-def _next_episode_airing(episodes: CollectionEpisode) -> Episode | None:
+def _next_episode_airing(data: PlanningData) -> Episode | None:
     """Return the next episode due to air, whether or not it has been seen.
 
-    Unlike _latest_unwatched_episode, this ignores `seen` entirely: it answers
+    Like _previous_episode_airing, this ignores `seen` entirely: it answers
     "when does the next episode of my shows come out", not "what should I
     watch next".
 
+    Today counts as upcoming rather than past, since BetaSeries gives no
+    airing time: an episode dated today may well air tonight. It belongs here
+    until the day is over, so this sensor and the previous one never point at
+    the same episode.
+
     Args:
-        episodes (CollectionEpisode): The planning, sorted by air_date.
+        data (PlanningData): The planning and its per-show ratings.
 
     Returns:
         Episode | None: The first episode airing today or later, or None if there is none.
 
     """
     today = dt_util.now().date()
-    return next((episode for episode in episodes if episode.air_date >= today), None)
+    return next((episode for episode in data.episodes if episode.air_date >= today), None)
 
 
-LATEST_UNWATCHED_EPISODE_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
-    key="latest_unwatched_episode",
-    translation_key="latest_unwatched_episode",
+PREVIOUS_EPISODE_AIRING_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
+    key="previous_episode_airing",
+    translation_key="previous_episode_airing",
     device_class=SensorDeviceClass.TIMESTAMP,
-    episode_fn=_latest_unwatched_episode,
+    episode_fn=_previous_episode_airing,
 )
 
 NEXT_EPISODE_AIRING_DESCRIPTION = BetaSeriesPlanningSensorEntityDescription(
@@ -329,7 +345,7 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         [
             *(BetaSeriesSensor(member_coordinator, description) for description in SENSOR_DESCRIPTIONS),
             BetaSeriesWatchListSensor(watch_list_coordinator, WATCH_LIST_DESCRIPTION),
-            BetaSeriesPlanningSensor(planning_coordinator, LATEST_UNWATCHED_EPISODE_DESCRIPTION),
+            BetaSeriesPlanningSensor(planning_coordinator, PREVIOUS_EPISODE_AIRING_DESCRIPTION),
             BetaSeriesPlanningSensor(planning_coordinator, NEXT_EPISODE_AIRING_DESCRIPTION),
             BetaSeriesCalendarEventCountSensor(planning_coordinator, CALENDAR_EVENT_COUNT_DESCRIPTION),
         ]
@@ -412,7 +428,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         """
         if not self.coordinator.last_update_success:
             return None
-        return self.entity_description.episode_fn(self.coordinator.data.episodes)
+        return self.entity_description.episode_fn(self.coordinator.data)
 
     @property
     def native_value(self) -> datetime | None:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -425,7 +441,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         with what the sensor claims to be. "Next episode airing" uses
         23:59:59, so an episode airing today stays in the future all day
         instead of reading "6 hours ago" at 06:00 under a sensor announcing
-        an upcoming release; "latest unwatched episode" uses midnight, so an
+        an upcoming release; "previous episode airing" uses midnight, so an
         already-aired episode always reads in the past.
 
         Returns:

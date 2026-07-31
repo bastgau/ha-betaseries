@@ -55,8 +55,8 @@
       "favorite_genre": {
         "default": "mdi:tag-heart-outline"
       },
-      "latest_unwatched_episode": {
-        "default": "mdi:television-play"
+      "previous_episode_airing": {
+        "default": "mdi:calendar-check"
       },
       "next_episode_airing": {
         "default": "mdi:calendar-clock"
