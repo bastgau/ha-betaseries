@@ -36,13 +36,13 @@ class BetaSeriesBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[BetaSeriesBinarySensorEntityDescription, ...] = (
     BetaSeriesBinarySensorEntityDescription(
-        key="new_episode_available",
-        translation_key="new_episode_available",
+        key="episodes_available",
+        translation_key="episodes_available",
         value_fn=lambda data: data.stats.episodes_to_watch > 0,
     ),
     BetaSeriesBinarySensorEntityDescription(
-        key="movies_to_watch_available",
-        translation_key="movies_to_watch_available",
+        key="movies_available",
+        translation_key="movies_available",
         value_fn=lambda data: data.stats.movies_to_watch > 0,
     ),
 )

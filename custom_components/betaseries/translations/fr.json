@@ -140,11 +140,11 @@
       }
     },
     "binary_sensor": {
-      "new_episode_available": {
-        "name": "Nouvel épisode disponible"
+      "episodes_available": {
+        "name": "Épisodes disponibles"
       },
-      "movies_to_watch_available": {
-        "name": "Film à voir disponible"
+      "movies_available": {
+        "name": "Films disponibles"
       }
     },
     "calendar": {

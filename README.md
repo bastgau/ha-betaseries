@@ -122,8 +122,11 @@ It is deliberately a separate entity: its list would otherwise weigh on the plai
 
 | Name | Meaning |
 |---|---|
-| New episode available | On when at least one episode is available to watch |
-| Movies to watch available | On when at least one movie is not yet watched |
+| Episodes available | On when at least one episode is left to watch |
+| Movies available | On when at least one movie is not yet watched |
+
+> [!NOTE]
+> **These report a backlog, not an arrival.** They are on whenever the matching count is above zero, so if you keep a backlog - and most accounts do - "Episodes available" stays on permanently and never transitions. It is therefore not usable as a trigger for "a new episode came out": use the **Next episode airing** sensor, or the **Release calendar**, both of which change when something actually airs.
 
 ### Button
 

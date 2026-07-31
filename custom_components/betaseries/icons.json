@@ -66,13 +66,13 @@
       }
     },
     "binary_sensor": {
-      "new_episode_available": {
+      "episodes_available": {
         "default": "mdi:television-play",
         "state": {
           "off": "mdi:television-off"
         }
       },
-      "movies_to_watch_available": {
+      "movies_available": {
         "default": "mdi:movie-open-outline",
         "state": {
           "off": "mdi:movie-off-outline"

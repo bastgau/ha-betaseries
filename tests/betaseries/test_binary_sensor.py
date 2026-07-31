@@ -83,8 +83,8 @@ async def test_binary_sensors_reflect_member_data(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    new_episode_state = hass.states.get("binary_sensor.betaseries_test_user_new_episode_available")
-    movies_state = hass.states.get("binary_sensor.betaseries_test_user_movies_to_watch_available")
+    new_episode_state = hass.states.get("binary_sensor.betaseries_test_user_episodes_available")
+    movies_state = hass.states.get("binary_sensor.betaseries_test_user_movies_available")
 
     assert new_episode_state is not None
     assert movies_state is not None
