@@ -18,6 +18,7 @@ from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.betaseries.show_additional_information import ShowAdditionalInformation
 from custom_components.betaseries.betaseries.show_images import ShowImages
 from custom_components.betaseries.const import CONF_PLANNING_MONTHS_AHEAD, CONF_PLANNING_MONTHS_BEHIND, DOMAIN
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
@@ -583,3 +584,37 @@ async def test_episode_sensors_have_no_picture_without_a_poster(hass: HomeAssist
     assert state is not None
     assert "entity_picture" not in state.attributes
     assert state.attributes["show_images"] == {}
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "attribute"),
+    [
+        ("sensor.betaseries_test_user_watch_list", "shows"),
+        ("sensor.betaseries_test_user_badges", "badges"),
+        ("sensor.betaseries_test_user_latest_unwatched_episode", "show_images"),
+    ],
+)
+async def test_bulky_attributes_are_kept_out_of_the_recorder(
+    hass: HomeAssistant, entity_id: str, attribute: str
+) -> None:
+    """Keep the bulky attributes readable live, but out of the database.
+
+    The recorder writes an entity's attributes alongside every state it
+    stores, and drops all of them past MAX_STATE_ATTRS_BYTES (16 kB) - which
+    the badge list and the watch list each approach on their own. Declaring
+    them unrecorded costs nothing at runtime: cards, templates and automations
+    still read them from the live state, which is what the first half of this
+    test pins down.
+    """
+    today = dt_util.now().date()
+    await _setup_with_planning(hass, (_episode("1001", today - timedelta(days=1), seen=False),))
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert attribute in state.attributes
+
+    # state_info is what the recorder itself reads off the State to build its
+    # exclude set (see recorder/db_schema.py), so asserting on it checks the
+    # same thing the database will.
+    assert state.state_info is not None
+    assert attribute in state.state_info["unrecorded_attributes"]

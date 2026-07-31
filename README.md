@@ -113,17 +113,10 @@ The **Watch list** sensor is what a `markdown` card can render to show what to w
 
 It is deliberately a separate entity: its list would otherwise weigh on the plain statistics sensors above every time they change.
 
-> [!TIP]
-> **Keeping it out of your history.** Home Assistant records an entity's attributes alongside its state, so this list is written to the database every time it changes. If you only care about the current value, exclude this one entity from the `recorder` - the plain counters above keep their history, since they are separate entities:
+> [!NOTE]
+> **It is not written to your database.** Home Assistant normally records an entity's attributes alongside every state it stores, which for this list would mean several kilobytes per change. The integration declares the `shows` attribute as unrecorded, so nothing needs configuring on your side: the state and the two totals keep their history, the list itself is never written. It stays fully readable from cards, templates and automations, which read the live state rather than the database.
 >
-> ```yaml
-> recorder:
->   exclude:
->     entities:
->       - sensor.betaseries_<your_login>_watch_list
-> ```
->
-> Lowering the "Shows listed in the watch list" and "Episodes listed per show" options has the same effect to a lesser degree, by making the list smaller. Disabling the entity altogether, from its settings in the UI, removes it entirely.
+> The same applies to the `badges` attribute of the **Badges** sensor and to `show_images` on the episode sensors. If you would rather drop an entity from your history entirely, exclude it from the `recorder` as usual, or disable it from its settings in the UI.
 
 ### Binary sensor
 

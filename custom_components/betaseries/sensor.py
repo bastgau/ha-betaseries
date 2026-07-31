@@ -345,6 +345,13 @@ class BetaSeriesSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[repor
 
     """
 
+    # "badges" is the only bulky attribute any of these sensors carries - one
+    # entry per badge ever earned, measured at ~10 kB for 40 badges. Declared
+    # on the shared class since the other statistics have no attribute by that
+    # name, so nothing else is affected. See BetaSeriesWatchListSensor for why
+    # these are kept out of the recorder.
+    _unrecorded_attributes = frozenset({"badges"})
+
     entity_description: BetaSeriesSensorEntityDescription  # pyright: ignore[reportIncompatibleVariableOverride]
     coordinator: MemberCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
@@ -379,6 +386,11 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         coordinator (PlanningCoordinator): The coordinator providing the planning data.
 
     """
+
+    # Artwork URLs are for rendering a card now, never for looking at history:
+    # what mattered about a past state is which episode it pointed at, and the
+    # identifiers below carry that. See BetaSeriesWatchListSensor.
+    _unrecorded_attributes = frozenset({"show_images"})
 
     entity_description: BetaSeriesPlanningSensorEntityDescription  # pyright: ignore[reportIncompatibleVariableOverride]
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -519,13 +531,26 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
 
     Kept apart from the episodes_to_watch / shows_to_watch statistics
     sensors, which it would otherwise saddle with a bulky attribute: those
-    two only ever hold a number, so excluding this entity from the recorder
-    costs nothing but this list, while the plain counters keep their history.
+    two only ever hold a number, so this list weighing on nothing but its own
+    entity leaves the plain counters untouched.
 
     Attributes:
         coordinator (WatchListCoordinator): The coordinator providing the watch list.
 
     """
+
+    # The whole point of this entity is a list rebuilt from scratch on every
+    # refresh, so recording it would write kilobytes per state change to
+    # describe a state that only ever means "here is the list right now".
+    # Measured at ~8.5 kB with the default limits, against ~50 bytes for
+    # everything else this entity carries - and the recorder drops *all* of an
+    # entity's attributes past 16 kB (MAX_STATE_ATTRS_BYTES), which the
+    # shows_limit option alone can reach. The state and the two counters stay
+    # recorded, so history keeps the numbers worth graphing.
+    #
+    # This only governs what is written to the database: cards, templates and
+    # automations still read the full attribute from the live state.
+    _unrecorded_attributes = frozenset({"shows"})
 
     coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
