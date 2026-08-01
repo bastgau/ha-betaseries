@@ -45,8 +45,15 @@ class BetaSeriesEntity(CoordinatorEntity["MemberCoordinator | PlanningCoordinato
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        member_id = coordinator.config_entry.unique_id
-        login = coordinator.config_entry.title
+        entry = coordinator.config_entry
+        member_id = entry.unique_id
+        # Read from the account itself, never from entry.title. The title is
+        # only seeded with the login when the entry is created and is the
+        # user's to rename afterwards - deriving the profile URL from it meant
+        # renaming the entry silently pointed "Visit device" at a page for
+        # whatever was typed. Every entity is built after the member
+        # coordinator's first refresh (see __init__.py), so this is populated.
+        login = entry.runtime_data.member.data.identity.login
         self._attr_unique_id = f"{member_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(member_id))},
