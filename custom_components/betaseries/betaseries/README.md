@@ -7,17 +7,17 @@ Self-contained client for the BetaSeries API (`https://api.betaseries.com`).
 Every entry point lives on `Client` and returns either a plain data object or one of the
 collection types described below. Each maps to a single BetaSeries endpoint.
 
-| Method | Endpoint | Returns | Notes |
-|---|---|---|---|
-| `fetch_member_data()` | `GET /members/infos` | `MemberData` | Identity + viewing stats. |
-| `fetch_planning(month)` | `GET /planning/member` | `CollectionEpisode` | The member's schedule for one `"YYYY-MM"` month. |
-| `fetch_show_episodes(show_id)` | `GET /shows/episodes` | `CollectionEpisode` | All episodes of **one** show. |
-| `fetch_episodes_by_id(episode_ids)` | `GET /episodes/display` | `CollectionEpisode` | Accepts any number of ids in one request (bulk, like `fetch_shows`). |
-| `fetch_episodes_to_watch(*, exclude_characters=)` | `GET /episodes/list` | `CollectionEpisode` | The member's unseen episodes, across shows. |
-| `fetch_episodes_to_watch_by_show(*, exclude_characters=)` | `GET /episodes/list` | `CollectionShow` | The member's unseen episodes, across shows grouped by show. |
-| `fetch_watch_list(shows_limit, episodes_limit, *, exclude_characters=)` | `GET /episodes/list` | `tuple[CollectionWatchListShow, int, int]` | Same endpoint, capped to `shows_limit` shows of `episodes_limit` episodes; keeps each show's `remaining` and returns the endpoint's own global counters, which the caps do not affect. |
-| `fetch_shows(show_ids)` | `GET /shows/display` | `CollectionShow` | Accepts any number of ids in one request; each `Show` comes back with `additional_information` populated. |
-| `fetch_timeline(member_id, *, nbpp=, since_id=, last_id=, types=)` | `GET /timeline/member` | `CollectionTimelineEvent` | The member's recent activity, paginated by event-id cursor (`since_id`/`last_id`), not by date - see [`docs/watch-history-calendar-exploration.md`](../../../docs/watch-history-calendar-exploration.md). Only `EpisodeWatchedEvent`/`SeasonWatchedEvent` are modeled; any other event type is silently dropped. |
+| Method                                                                  | Endpoint                | Returns                                    | Notes                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------- | ----------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fetch_member_data()`                                                   | `GET /members/infos`    | `MemberData`                               | Identity + viewing stats.                                                                                                                                                                                                                                                                                        |
+| `fetch_planning(month)`                                                 | `GET /planning/member`  | `CollectionEpisode`                        | The member's schedule for one `"YYYY-MM"` month.                                                                                                                                                                                                                                                                 |
+| `fetch_show_episodes(show_id)`                                          | `GET /shows/episodes`   | `CollectionEpisode`                        | All episodes of **one** show.                                                                                                                                                                                                                                                                                    |
+| `fetch_episodes_by_id(episode_ids)`                                     | `GET /episodes/display` | `CollectionEpisode`                        | Accepts any number of ids in one request (bulk, like `fetch_shows`).                                                                                                                                                                                                                                             |
+| `fetch_episodes_to_watch(*, exclude_characters=)`                       | `GET /episodes/list`    | `CollectionEpisode`                        | The member's unseen episodes, across shows.                                                                                                                                                                                                                                                                      |
+| `fetch_episodes_to_watch_by_show(*, exclude_characters=)`               | `GET /episodes/list`    | `CollectionShow`                           | The member's unseen episodes, across shows grouped by show.                                                                                                                                                                                                                                                      |
+| `fetch_watch_list(shows_limit, episodes_limit, *, exclude_characters=)` | `GET /episodes/list`    | `tuple[CollectionWatchListShow, int, int]` | Same endpoint, capped to `shows_limit` shows of `episodes_limit` episodes; keeps each show's `remaining` and returns the endpoint's own global counters, which the caps do not affect.                                                                                                                           |
+| `fetch_shows(show_ids)`                                                 | `GET /shows/display`    | `CollectionShow`                           | Accepts any number of ids in one request; each `Show` comes back with `additional_information` populated.                                                                                                                                                                                                        |
+| `fetch_timeline(member_id, *, nbpp=, since_id=, last_id=, types=)`      | `GET /timeline/member`  | `CollectionTimelineEvent`                  | The member's recent activity, paginated by event-id cursor (`since_id`/`last_id`), not by date - see [`docs/watch-history-calendar-exploration.md`](../../../docs/watch-history-calendar-exploration.md). Only `EpisodeWatchedEvent`/`SeasonWatchedEvent` are modeled; any other event type is silently dropped. |
 
 `Auth` (in `auth.py`) is a separate entry point used only during initial authentication
 (OAuth device flow: device code request, polling, and a minimal `fetch_member_identity()` -
@@ -37,22 +37,22 @@ values, only honors `characters` (verified).
 
 Two paired concepts, `Episode`/`Show`, each available standalone or as a collection:
 
-| Class | Wraps | Key attributes |
-|---|---|---|
-| `Episode` | - | `id, season, number, code, title, description, air_date, seen, platforms, resource_url, show: Show` |
-| `Show` | - | `id, title, description, slug, resource_url (property, derived from slug), additional_information: ShowAdditionalInformation \| None, episodes: CollectionEpisode \| None` |
-| `CollectionEpisode` | `tuple[Episode, ...]` | `show_ids` (unique show ids referenced) |
-| `CollectionShow` | `dict[str, Show]` | `for_show(show_id)` |
+| Class               | Wraps                 | Key attributes                                                                                                                                                             |
+| ------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Episode`           | -                     | `id, season, number, code, title, description, air_date, seen, platforms, resource_url, show: Show`                                                                        |
+| `Show`              | -                     | `id, title, description, slug, resource_url (property, derived from slug), additional_information: ShowAdditionalInformation \| None, episodes: CollectionEpisode \| None` |
+| `CollectionEpisode` | `tuple[Episode, ...]` | `show_ids` (unique show ids referenced)                                                                                                                                    |
+| `CollectionShow`    | `dict[str, Show]`     | `for_show(show_id)`                                                                                                                                                        |
 
 A third concept, timeline events (`fetch_timeline`'s result), models only the two event types a
 watch-history calendar would need - not a general-purpose activity feed:
 
-| Class | Extends | Key attributes |
-|---|---|---|
-| `TimelineEvent` | - | `id, date` - common base, never instantiated directly. |
-| `EpisodeWatchedEvent` | `TimelineEvent` | `episode_id, show: Show \| None, episode: Episode \| None` - a single episode marked watched (`TimelineEventType.EPISODE_WATCHED`, raw value `"markas"`). |
-| `SeasonWatchedEvent` | `TimelineEvent` | `show_id, season, show: Show \| None` - a whole season marked watched at once (`TimelineEventType.SEASON_WATCHED`, raw value `"season_watched"`). No episode-level detail is available from this event alone - see the design notes below. |
-| `CollectionTimelineEvent` | `tuple[TimelineEvent, ...]` | `fetch_shows(client)`, `fetch_episodes(client)` (see below). |
+| Class                     | Extends                     | Key attributes                                                                                                                                                                                                                             |
+| ------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TimelineEvent`           | -                           | `id, date` - common base, never instantiated directly.                                                                                                                                                                                     |
+| `EpisodeWatchedEvent`     | `TimelineEvent`             | `episode_id, show: Show \| None, episode: Episode \| None` - a single episode marked watched (`TimelineEventType.EPISODE_WATCHED`, raw value `"markas"`).                                                                                  |
+| `SeasonWatchedEvent`      | `TimelineEvent`             | `show_id, season, show: Show \| None` - a whole season marked watched at once (`TimelineEventType.SEASON_WATCHED`, raw value `"season_watched"`). No episode-level detail is available from this event alone - see the design notes below. |
+| `CollectionTimelineEvent` | `tuple[TimelineEvent, ...]` | `fetch_shows(client)`, `fetch_episodes(client)` (see below).                                                                                                                                                                               |
 
 `TimelineEventType` (a `StrEnum`) lists 7 raw values observed in practice (`markas`,
 `season_watched`, `add_serie`, `del_serie`, `archive`, `unarchive`, `badge`) - BetaSeries doesn't
@@ -60,30 +60,31 @@ document an exhaustive enum for this field, so `Client._parse_timeline_event` si
 event whose type isn't one of `EPISODE_WATCHED`/`SEASON_WATCHED` (known-but-unmodeled or entirely
 unrecognized), rather than failing the whole `fetch_timeline()` call.
 
-Every entry point above returns objects with the *enrichable* fields left at their default
+Every entry point above returns objects with the _enrichable_ fields left at their default
 (`None`) - `Episode.show` is always populated (it comes from the same payload), but
 `Show.additional_information` and `Show.episodes` are not, since fetching them is a separate
 request. Call the matching `fetch_*` method to get them:
 
-| On | Method | Fetches via | Returns |
-|---|---|---|---|
-| `Episode` | `fetch_show(client)` | `client.fetch_shows([self.show.id])` | A new `Episode` with `show` **entirely replaced** by the enriched one. |
-| `Show` | `fetch_episodes(client)` | `client.fetch_show_episodes(self.id)` | A new `Show` with only `episodes` populated (everything else untouched). |
-| `Show` | `fetch_additional_information(client)` | `client.fetch_shows([self.id])` | The freshly-fetched `Show`, entirely replacing this one. |
-| `CollectionEpisode` | `fetch_shows(client)` | `client.fetch_shows(self.show_ids)` (one request for every referenced show) | A new `CollectionEpisode` with every episode's `show` **entirely replaced**. |
-| `CollectionShow` | `fetch_episodes(client)` | `client.fetch_show_episodes(...)` once per show (no bulk endpoint) | A new `CollectionShow` with every show's `episodes` populated (everything else untouched). |
-| `CollectionShow` | `fetch_additional_information(client)` | `client.fetch_shows(...)` (one bulk request) | A new `CollectionShow` with every show **entirely replaced** by its freshly-fetched version. |
-| `CollectionTimelineEvent` | `fetch_shows(client)` | `client.fetch_episodes_by_id(...)` for `EpisodeWatchedEvent`, `client.fetch_shows(...)` for `SeasonWatchedEvent` (one bulk request each) | A new `CollectionTimelineEvent` with `show` (and, for `EpisodeWatchedEvent`, `episode` too) populated on every supported event. |
-| `CollectionTimelineEvent` | `fetch_episodes(client)` | `client.fetch_episodes_by_id(...)` for `EpisodeWatchedEvent` only (one bulk request) | A new `CollectionTimelineEvent` with `episode` populated on every `EpisodeWatchedEvent`. `SeasonWatchedEvent` is left unchanged - it has no single `episode_id` to fetch. |
+| On                        | Method                                 | Fetches via                                                                                                                              | Returns                                                                                                                                                                   |
+| ------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Episode`                 | `fetch_show(client)`                   | `client.fetch_shows([self.show.id])`                                                                                                     | A new `Episode` with `show` **entirely replaced** by the enriched one.                                                                                                    |
+| `Show`                    | `fetch_episodes(client)`               | `client.fetch_show_episodes(self.id)`                                                                                                    | A new `Show` with only `episodes` populated (everything else untouched).                                                                                                  |
+| `Show`                    | `fetch_additional_information(client)` | `client.fetch_shows([self.id])`                                                                                                          | The freshly-fetched `Show`, entirely replacing this one.                                                                                                                  |
+| `CollectionEpisode`       | `fetch_shows(client)`                  | `client.fetch_shows(self.show_ids)` (one request for every referenced show)                                                              | A new `CollectionEpisode` with every episode's `show` **entirely replaced**.                                                                                              |
+| `CollectionShow`          | `fetch_episodes(client)`               | `client.fetch_show_episodes(...)` once per show (no bulk endpoint)                                                                       | A new `CollectionShow` with every show's `episodes` populated (everything else untouched).                                                                                |
+| `CollectionShow`          | `fetch_additional_information(client)` | `client.fetch_shows(...)` (one bulk request)                                                                                             | A new `CollectionShow` with every show **entirely replaced** by its freshly-fetched version.                                                                              |
+| `CollectionTimelineEvent` | `fetch_shows(client)`                  | `client.fetch_episodes_by_id(...)` for `EpisodeWatchedEvent`, `client.fetch_shows(...)` for `SeasonWatchedEvent` (one bulk request each) | A new `CollectionTimelineEvent` with `show` (and, for `EpisodeWatchedEvent`, `episode` too) populated on every supported event.                                           |
+| `CollectionTimelineEvent` | `fetch_episodes(client)`               | `client.fetch_episodes_by_id(...)` for `EpisodeWatchedEvent` only (one bulk request)                                                     | A new `CollectionTimelineEvent` with `episode` populated on every `EpisodeWatchedEvent`. `SeasonWatchedEvent` is left unchanged - it has no single `episode_id` to fetch. |
 
 None of these mutate `self` (`Episode`/`Show` are frozen dataclasses). Two different merge
 strategies, matching what each method actually fetches:
+
 - `fetch_episodes()` (on `Show`/`CollectionShow`) only ever populates `episodes` - `Client.fetch_show_episodes()`
   doesn't return a `Show`, so there's nothing else it could refresh.
 - `fetch_show()`/`fetch_shows()` (on `Episode`/`CollectionEpisode`) and `fetch_additional_information()`
   (on `Show`/`CollectionShow`) all go through `Client.fetch_shows()`, which returns a fully-populated
-  `Show` (description, slug, additional_information - everything `/shows/display` has) - so these
-  swap in the *entire* fetched `Show` rather than merging one field at a time. There's no reason to
+  `Show` (description, slug, additional*information - everything `/shows/display` has) - so these
+  swap in the \_entire* fetched `Show` rather than merging one field at a time. There's no reason to
   keep an older/lighter value (e.g. a `description` from `/planning/member`) once the richer one from
   `/shows/display` is available.
 
@@ -112,6 +113,7 @@ Net effect: calling `fetch_shows()` then `fetch_episodes()` (or the reverse) on 
 `fetch_shows()` call in total, no matter the order.
 
 `SeasonWatchedEvent.show` is populated by fetching its `show_id` directly (`client.fetch_shows()`)
+
 - no episode is involved, so `fetch_episodes()` has nothing to do for this event type.
 
 `ShowAdditionalInformation` (genres, showrunners, aliases, seasons, followers, network,

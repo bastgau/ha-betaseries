@@ -27,7 +27,7 @@ docs {
 
 example {
   name: example
-  
+
   request: {
     url: {{baseUrl}}/members/destroy
     method: POST
@@ -38,7 +38,7 @@ example {
       Authorization: Bearer {{token}}
     }
   }
-  
+
   response: {
     headers: {
       content-type: application/json
@@ -47,12 +47,12 @@ example {
       access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
       access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
     }
-  
+
     status: {
       code: 200
       text: OK
     }
-  
+
     body: {
       type: json
       content: '''

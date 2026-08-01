@@ -44,7 +44,7 @@ docs {
 
 example {
   name: example
-  
+
   request: {
     url: {{baseUrl}}/members/auth?login={{login}}&password={{password}}
     method: POST
@@ -53,13 +53,13 @@ example {
       login: {{login}}
       password: {{password}}
     }
-  
+
     headers: {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
     }
   }
-  
+
   response: {
     headers: {
       content-type: application/json
@@ -68,12 +68,12 @@ example {
       access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
       access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
     }
-  
+
     status: {
       code: 200
       text: OK
     }
-  
+
     body: {
       type: json
       content: '''

@@ -40,7 +40,7 @@ docs {
 
 example {
   name: example [400]
-  
+
   request: {
     url: {{baseUrl}}/oauth/access_token
     method: POST
@@ -49,14 +49,14 @@ example {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
     }
-  
+
     body:form-urlencoded: {
       client_id: {{apiKey}}
       client_secret: {{clientSecret}}
       code: {{deviceCode}}
     }
   }
-  
+
   response: {
     headers: {
       content-type: application/json
@@ -65,12 +65,12 @@ example {
       access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
       access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
     }
-  
+
     status: {
       code: 400
       text: Bad Request
     }
-  
+
     body: {
       type: json
       content: '''
@@ -89,7 +89,7 @@ example {
 
 example {
   name: example [200]
-  
+
   request: {
     url: {{baseUrl}}/oauth/access_token
     method: POST
@@ -98,14 +98,14 @@ example {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
     }
-  
+
     body:form-urlencoded: {
       client_id: {{apiKey}}
       client_secret: {{clientSecret}}
       code: {{deviceCode}}
     }
   }
-  
+
   response: {
     headers: {
       content-type: application/json
@@ -114,12 +114,12 @@ example {
       access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
       access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
     }
-  
+
     status: {
       code: 200
       text: OK
     }
-  
+
     body: {
       type: json
       content: '''

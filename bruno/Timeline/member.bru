@@ -13,9 +13,9 @@ get {
 params:query {
   id: {{userId}}
   nbpp: 100
-  ~since_id: 
-  ~last_id: 
-  ~types: 
+  ~since_id:
+  ~last_id:
+  ~types:
 }
 
 headers {
@@ -35,7 +35,7 @@ docs {
 
 example {
   name: example
-  
+
   request: {
     url: {{baseUrl}}/timeline/member?id={{userId}}&nbpp=100
     method: GET
@@ -43,18 +43,18 @@ example {
     params:query: {
       id: {{userId}}
       nbpp: 100
-      ~since_id: 
-      ~last_id: 
-      ~types: 
+      ~since_id:
+      ~last_id:
+      ~types:
     }
-  
+
     headers: {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
       Authorization: Bearer {{token}}
     }
   }
-  
+
   response: {
     headers: {
       content-type: application/json
@@ -63,12 +63,12 @@ example {
       access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
       access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
     }
-  
+
     status: {
       code: 200
       text: OK
     }
-  
+
     body: {
       type: json
       content: '''

@@ -79,29 +79,29 @@ All entities below are enabled by default and grouped under a single device per 
 
 ### Sensor
 
-| Name | Unit | Meaning |
-|---|---|---|
-| Episodes to watch | - | Number of episodes available to watch |
-| Time to spend | min | Minutes left to watch everything pending |
-| Progress | % | Overall watch progress |
-| Shows not started | - | Number of shows never started, archived ones included |
-| Movies to watch | - | Number of movies not yet watched |
-| Shows in progress | - | Number of shows started and not yet finished |
-| Badges | - | Number of badges earned |
-| Shows total | - | Total number of shows followed, archived ones included |
-| Shows finished | - | Number of shows BetaSeries counts as finished, archived ones included |
-| Episodes watched | - | Total number of episodes watched |
-| Time on TV | min | Total minutes spent watching episodes |
-| Movies total | - | Total number of movies watched |
-| XP | - | Member experience points |
-| Streak days | d | Current daily streak |
-| Membership duration | d | Number of days since account creation |
-| Episodes per month | - | Average number of episodes watched per month |
-| Favorite genre | - | Most watched genre |
-| Previous episode airing | - | Air date of the most recently aired episode, watched or not (excluding today, see below) |
-| Next episode airing | - | Air date of the next episode due to air, watched or not (including today) |
-| Shows to catch up on | - | Number of shows with at least one episode left to watch, with the first few listed in its attributes (see below) |
-| Calendar event count | - | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes |
+| Name                    | Unit | Meaning                                                                                                              |
+| ----------------------- | ---- | -------------------------------------------------------------------------------------------------------------------- |
+| Episodes to watch       | -    | Number of episodes available to watch                                                                                |
+| Time to spend           | min  | Minutes left to watch everything pending                                                                             |
+| Progress                | %    | Overall watch progress                                                                                               |
+| Shows not started       | -    | Number of shows never started, archived ones included                                                                |
+| Movies to watch         | -    | Number of movies not yet watched                                                                                     |
+| Shows in progress       | -    | Number of shows started and not yet finished                                                                         |
+| Badges                  | -    | Number of badges earned                                                                                              |
+| Shows total             | -    | Total number of shows followed, archived ones included                                                               |
+| Shows finished          | -    | Number of shows BetaSeries counts as finished, archived ones included                                                |
+| Episodes watched        | -    | Total number of episodes watched                                                                                     |
+| Time on TV              | min  | Total minutes spent watching episodes                                                                                |
+| Movies total            | -    | Total number of movies watched                                                                                       |
+| XP                      | -    | Member experience points                                                                                             |
+| Streak days             | d    | Current daily streak                                                                                                 |
+| Membership duration     | d    | Number of days since account creation                                                                                |
+| Episodes per month      | -    | Average number of episodes watched per month                                                                         |
+| Favorite genre          | -    | Most watched genre                                                                                                   |
+| Previous episode airing | -    | Air date of the most recently aired episode, watched or not (excluding today, see below)                             |
+| Next episode airing     | -    | Air date of the next episode due to air, watched or not (including today)                                            |
+| Shows to catch up on    | -    | Number of shows with at least one episode left to watch, with the first few listed in its attributes (see below)     |
+| Calendar event count    | -    | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes |
 
 These two sensors are mirror images of each other, and neither looks at whether you have watched anything: they are about **release dates**, so they answer "what came out last" and "what comes out next". What is left to watch is the job of **Shows to catch up on**.
 
@@ -126,10 +126,10 @@ It is deliberately a separate entity. It comes from its own request, on its own 
 
 ### Binary sensor
 
-| Name | Meaning |
-|---|---|
+| Name               | Meaning                                       |
+| ------------------ | --------------------------------------------- |
 | Episodes available | On when at least one episode is left to watch |
-| Movies available | On when at least one movie is not yet watched |
+| Movies available   | On when at least one movie is not yet watched |
 
 > [!NOTE]
 > **These report a backlog, not an arrival.** They are on whenever the matching count is above zero, so if you keep a backlog - and most accounts do - "Episodes available" stays on permanently and never transitions. It is therefore not usable as a trigger for "a new episode came out": use the **Next episode airing** sensor, or the **Release calendar**, both of which change when something actually airs.
@@ -138,11 +138,11 @@ It is deliberately a separate entity. It comes from its own request, on its own 
 
 The integration caches what BetaSeries never changes - badge details, past planning months, show artwork - so it stops asking for them. These three buttons drop that cache and refresh, which is the only way to get such data re-fetched. They are **disabled by default**: everything else refreshes on its own, so these are only useful when something looks stale.
 
-| Name | Drops |
-|---|---|
-| Clean badges cache | The badge details, re-fetched even when the badge count hasn't changed |
-| Clean planning cache | The past months (which never change once over) and the planning's show artwork |
-| Clean shows to catch up cache | The show artwork of the shows to catch up on |
+| Name                          | Drops                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| Clean badges cache            | The badge details, re-fetched even when the badge count hasn't changed         |
+| Clean planning cache          | The past months (which never change once over) and the planning's show artwork |
+| Clean shows to catch up cache | The show artwork of the shows to catch up on                                   |
 
 ### Calendar
 
