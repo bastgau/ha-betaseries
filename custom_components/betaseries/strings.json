@@ -22,6 +22,9 @@
         "description": "Your BetaSeries authentication needs to be renewed. Press Submit to start the authentication process again."
       }
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "progress": {
       "wait_for_device": "To authenticate, open the following URL and log in to BetaSeries:\n{url}\n\nThen enter this code if it is not filled in automatically:\n\n```{code}```"
     },
