@@ -258,6 +258,13 @@ async def _async_get_show_details(
         try:
             _LOGGER.debug("Fetching details for %s new show(s) of %s from BetaSeries", len(missing), title)
             shows = await client.fetch_shows(sorted(missing))
+        except AuthError:
+            # Rejected credentials are not this call's problem to absorb: they
+            # invalidate the whole entry, and the caller answers them with a
+            # reauthentication prompt. AuthError subclasses Error, so without
+            # this clause the one failure that must surface would be the one
+            # silently logged at debug level and forgotten.
+            raise
         except Error as err:
             _LOGGER.debug("Fetching show details for %s failed (%s)", title, _cause(err))
         else:
@@ -542,11 +549,20 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
         months_behind = int(self.config_entry.options.get(CONF_PLANNING_MONTHS_BEHIND, DEFAULT_PLANNING_MONTHS_BEHIND))
         today = dt_util.now().date()
 
+        # The show details call sits inside the try so that the one error it
+        # lets through - a rejected token - reaches the AuthError clause below
+        # and becomes a reauthentication prompt. Everything else it might hit
+        # it absorbs itself, artwork being decoration.
         try:
             past_by_month = await self._async_get_cached_past_months(_past_months(today, months_behind))
             current_and_future = [
                 await self._async_fetch_planning(month) for month in _upcoming_months(today, months_ahead)
             ]
+            episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
+            planning = CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
+            images, ratings = await _async_get_show_details(
+                self.client, self.show_images_store, planning.show_ids, self.config_entry.title
+            )
         except AuthError as err:
             _log_auth_failure(self.config_entry.title, err)
             raise ConfigEntryAuthFailed from err
@@ -554,11 +570,6 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
             _LOGGER.debug("Fetching planning for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
-        episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
-        planning = CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
-        images, ratings = await _async_get_show_details(
-            self.client, self.show_images_store, planning.show_ids, self.config_entry.title
-        )
         return PlanningData(episodes=planning, images=images, ratings=ratings)
 
     async def async_clean_planning_cache(self) -> None:
@@ -755,11 +766,19 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
         shows_limit = int(self.config_entry.options.get(CONF_SHOWS_LIMIT, DEFAULT_SHOWS_LIMIT))
         episodes_limit = int(self.config_entry.options.get(CONF_EPISODES_LIMIT, DEFAULT_EPISODES_LIMIT))
 
+        # Same reason as PlanningCoordinator for keeping the show details call
+        # inside the try: a rejected token must come out as a reauthentication
+        # prompt rather than as a debug line about missing artwork.
         try:
             _LOGGER.debug("Fetching watch list for %s from BetaSeries", self.config_entry.title)
             # No entity exposes the cast, so drop it from the payload.
             watch_list, total_shows, total_episodes = await self.client.fetch_watch_list(
                 shows_limit, episodes_limit, exclude_characters=True
+            )
+            # The rating is cached alongside the images by the shared helper; no
+            # entity of this coordinator reads it, so it is dropped here.
+            images, _ = await _async_get_show_details(
+                self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
             )
         except AuthError as err:
             _log_auth_failure(self.config_entry.title, err)
@@ -768,11 +787,6 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
             _LOGGER.debug("Fetching watch list for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
-        # The rating is cached alongside the images by the shared helper; no
-        # entity of this coordinator reads it, so it is dropped here.
-        images, _ = await _async_get_show_details(
-            self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
-        )
         return WatchListData(shows=watch_list, total_shows=total_shows, total_episodes=total_episodes, images=images)
 
     async def async_clean_watch_list_cache(self) -> None:
