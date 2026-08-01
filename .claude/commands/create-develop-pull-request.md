@@ -8,14 +8,14 @@ Prepare and create a pull request for the current branch.
 2. Run `git log <base>..HEAD --oneline` to list commits
 3. Run `git diff <base>...HEAD --stat` to list changed files
 4. Pick the most appropriate label from this list:
-   - `pr:chore` — maintenance or tooling change
-   - `pr:docs` — documentation
-   - `pr:feat` — new feature
-   - `pr:fix` — bug fix
-   - `pr:refactor` — code refactoring
-   - `pr:release` — release
-   - `pr:style` — code style
-   - `pr:test` — tests
+   - `pr:chore` - maintenance or tooling change
+   - `pr:docs` - documentation
+   - `pr:feat` - new feature
+   - `pr:fix` - bug fix
+   - `pr:refactor` - code refactoring
+   - `pr:release` - release
+   - `pr:style` - code style
+   - `pr:test` - tests
 5. Suggest a PR title following the commitlint rules from `.commitlintrc.mjs`:
    - Format: `type: subject`
    - Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
@@ -29,6 +29,7 @@ Prepare and create a pull request for the current branch.
 
 - <bullet point per meaningful change>
 ```
+
 8. Display a full summary to the user:
    - Title
    - Base branch → head branch
