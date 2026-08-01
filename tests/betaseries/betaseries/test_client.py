@@ -1149,7 +1149,7 @@ async def test_fetch_watch_list_success() -> None:
 
 async def test_fetch_watch_list_can_exclude_the_cast() -> None:
     """Send excludes=characters only when the caller opted in."""
-    payload = {"shows": [], "total": 0, "totalEpisodes": 0}
+    payload: dict[str, Any] = {"shows": [], "total": 0, "totalEpisodes": 0}
     session = FakeSession(get_responses=[FakeResponse(200, payload)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -1160,7 +1160,7 @@ async def test_fetch_watch_list_can_exclude_the_cast() -> None:
 
 async def test_fetch_watch_list_tolerates_a_show_without_episodes() -> None:
     """Fall back to no poster when a listed show carries no unseen episode."""
-    payload = {"shows": [{"id": 38605, "title": "Achtsam Morden", "unseen": []}]}
+    payload: dict[str, Any] = {"shows": [{"id": 38605, "title": "Achtsam Morden", "unseen": []}]}
     session = FakeSession(get_responses=[FakeResponse(200, payload)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 

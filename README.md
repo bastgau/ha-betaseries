@@ -61,7 +61,7 @@ The integration is translated into:
 During setup you will be asked for your BetaSeries `client_id` and `client_secret`, then shown a device code to validate on the BetaSeries website. From the integration options, you can adjust afterwards:
 
 - The member stats / planning polling intervals.
-- How many past and future months of episodes the calendar and sensors load (2 months each way by default).
+- How many past and future months of episodes the calendar and sensors load (2 months each way by default, 3 at most). Raising the past side is cheap - a past month is downloaded once and then cached - while every extra future month is re-downloaded on each refresh.
 - How many shows, and how many episodes per show, the "Shows to catch up on" sensor lists (10 shows x 2 episodes by default).
 - The preferred language for BetaSeries responses (French or English).
 

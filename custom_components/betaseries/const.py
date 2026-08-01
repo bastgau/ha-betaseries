@@ -53,11 +53,19 @@ CONF_PLANNING_MONTHS_BEHIND = "planning_months_behind"
 DEFAULT_PLANNING_MONTHS_AHEAD = 2
 DEFAULT_PLANNING_MONTHS_BEHIND = 2
 
+# Same ceiling both ways, but the two directions do not cost the same thing,
+# which is what makes this ceiling matter on one side only. A past month is
+# fetched once and then served from the Store forever, so months_behind costs
+# that many requests on the first refresh and ~1 per month elapsed afterwards.
+# Future months are refetched on *every* refresh (their schedule still moves),
+# so months_ahead costs months_ahead + 1 requests each time - and BetaSeries
+# has barely any announced schedule to return more than a few months out.
+# Raising months_behind is nearly free; raising months_ahead is not.
 MIN_PLANNING_MONTHS_AHEAD = 0
-MAX_PLANNING_MONTHS_AHEAD = 12
+MAX_PLANNING_MONTHS_AHEAD = 3
 
 MIN_PLANNING_MONTHS_BEHIND = 0
-MAX_PLANNING_MONTHS_BEHIND = 12
+MAX_PLANNING_MONTHS_BEHIND = 3
 
 # Preferred language for BetaSeries' responses (genres, descriptions, error
 # text, ...), sent as the "locale" query param on every Client request (see

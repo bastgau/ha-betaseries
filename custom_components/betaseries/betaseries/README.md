@@ -2,6 +2,19 @@
 
 Self-contained client for the BetaSeries API (`https://api.betaseries.com`).
 
+## Scope: this package is not sized by the integration
+
+It is a standalone library that happens to be vendored here, and it evolves on its own terms -
+it could be extracted to PyPI as-is (see `__init__.py`). Its surface therefore covers the API,
+not the subset the Home Assistant side currently calls.
+
+Several entry points below have no caller in `custom_components/betaseries/` today
+(`fetch_timeline()`, `fetch_episodes_by_id()`, `fetch_show_episodes()`,
+`fetch_episodes_to_watch()`, the `fetch_*` navigation helpers on the models, and the whole
+timeline event hierarchy). **That is deliberate, and is not dead code**: measuring this package
+against what the integration happens to use applies the wrong yardstick. Do not prune it on a
+"nothing references this" basis; the criterion is whether it faithfully models the API.
+
 ## Entry points
 
 Every entry point lives on `Client` and returns either a plain data object or one of the

@@ -298,13 +298,19 @@ async def test_fetch_member_identity_failure(status: int) -> None:
         await auth.fetch_member_identity("token123")
 
 
+# Annotated as a named list rather than inline in the decorator: pytest.mark.parametrize
+# takes its cases untyped, so an inline lambda has no expected type to infer its
+# parameter from and reads as untyped.
+_TRANSPORT_CALLS: list[tuple[str, Callable[[Auth], Coroutine[Any, Any, object]]]] = [
+    ("post_responses", lambda auth: auth.request_device_code()),
+    ("post_responses", lambda auth: auth.poll_for_token("device-code", 1800, 0)),
+    ("get_responses", lambda auth: auth.fetch_member_identity("token123")),
+]
+
+
 @pytest.mark.parametrize(
     ("queue_kwarg", "call"),
-    [
-        ("post_responses", lambda auth: auth.request_device_code()),
-        ("post_responses", lambda auth: auth.poll_for_token("device-code", 1800, 0)),
-        ("get_responses", lambda auth: auth.fetch_member_identity("token123")),
-    ],
+    _TRANSPORT_CALLS,
     ids=["request_device_code", "poll_for_token", "fetch_member_identity"],
 )
 @pytest.mark.parametrize(
@@ -324,7 +330,8 @@ async def test_transport_failure_surfaces_as_auth_error(
     catches AuthError, showed "Unknown error occurred" instead of its
     translated "cannot connect" message.
     """
-    session = FakeSession(**{queue_kwarg: [transport_error]})
+    queued: list[FakeResponse | Exception] = [transport_error]
+    session = FakeSession(**{queue_kwarg: queued})
     auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
     with pytest.raises(AuthError) as raised:

@@ -423,8 +423,10 @@ async def test_next_episode_airing_includes_today(hass: HomeAssistant) -> None:
     # 23:59:59, not midnight: an episode airing today must stay in the future
     # all day, otherwise the frontend renders "6 hours ago" at 06:00 under a
     # sensor announcing an upcoming release.
-    assert dt_util.parse_datetime(state.state) == _end_of_local_day(today)
-    assert dt_util.parse_datetime(state.state) > dt_util.now()
+    parsed = dt_util.parse_datetime(state.state)
+    assert parsed == _end_of_local_day(today)
+    assert parsed is not None
+    assert parsed > dt_util.now()
 
 
 async def test_next_episode_airing_is_unknown_when_everything_has_aired(hass: HomeAssistant) -> None:

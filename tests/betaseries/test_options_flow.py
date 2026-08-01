@@ -164,10 +164,12 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
         (CONF_MEMBER_SCAN_INTERVAL, 121),
         (CONF_PLANNING_SCAN_INTERVAL, 14),
         (CONF_PLANNING_SCAN_INTERVAL, 361),
+        # 4 is the first rejected value on both: the month window is capped at
+        # 3 either way (see const.py).
         (CONF_PLANNING_MONTHS_BEHIND, -1),
-        (CONF_PLANNING_MONTHS_BEHIND, 13),
+        (CONF_PLANNING_MONTHS_BEHIND, 4),
         (CONF_PLANNING_MONTHS_AHEAD, -1),
-        (CONF_PLANNING_MONTHS_AHEAD, 13),
+        (CONF_PLANNING_MONTHS_AHEAD, 4),
         (CONF_LOCALE, "es"),
     ],
 )
