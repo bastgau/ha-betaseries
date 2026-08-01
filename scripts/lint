@@ -100,9 +100,9 @@ run_pylint() {
   fi
 
   if [ $status -eq 0 ]; then
-    echo -e "\n${BLUE}[pylint]${NC} Score: ${score} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+    echo -e "\n${BLUE}[Lint with Pylint]${NC} Score: ${score} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
   else
-    echo -e "\n${BLUE}[pylint]${NC} Score: ${score} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    echo -e "\n${BLUE}[Lint with Pylint]${NC} Score: ${score} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
     exit_code=1
   fi
 }
