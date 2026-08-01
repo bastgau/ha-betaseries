@@ -3,14 +3,12 @@
 # Deliberately not requirements.txt: that file also pins every dependency of
 # Home Assistant's default_config (ffmpeg, bluetooth, numpy, av...) so a local
 # `hass` can actually boot. None of it is reachable from this integration, and
-# installing it costs minutes of CI for nothing. homeassistant itself stays,
-# since pylint and pyright resolve the integration's imports through it.
+# installing it costs minutes of CI for nothing.
 #
-# Pinned to the latest release rather than to the minimum this integration
-# supports (2026.7.0, see hacs.json): what these linters need to catch is a
-# symbol that has moved or gone in current Home Assistant. It is also the
-# version the devcontainer resolves, so CI and a local `scripts/lint` agree.
-homeassistant==2026.7.4
+# homeassistant is missing on purpose too - pylint and pyright do need it to
+# resolve the integration's imports, but the workflow supplies it, pinned to
+# the release currently in production. Freezing a version here would mean
+# type-checking against one Home Assistant while the tests run against another.
 pylint==4.0.4
 pyright==1.1.411
 ruff==0.15.1
