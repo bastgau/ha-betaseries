@@ -136,7 +136,7 @@ testpaths = ["tests"]
 # async, which pytest-asyncio only tolerates in "auto" mode ("strict" raises
 # PytestRemovedIn9Warning: async fixture with no plugin/hook handling it).
 asyncio_mode = "auto"
-addopts = "--cov=custom_components/betaseries --cov-branch --cov-report=term-missing"
+addopts = "--cov=custom_components/betaseries --cov-branch --cov-report=term-missing --cov-fail-under=95"
 
 [tool.coverage.run]
 source = ["custom_components/betaseries"]

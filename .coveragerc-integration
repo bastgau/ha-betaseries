@@ -1,0 +1,21 @@
+# Coverage scope for the `integration` test job (see .github/workflows/test.yml).
+#
+# Exists only to subtract the bundled client from the measurement: pytest-cov's
+# --cov can add paths but never remove one, and `omit` is settable from a
+# config file alone.
+#
+# Without it the job measures custom_components/betaseries as a whole, client
+# included, and reports ~82% - not because anything is untested, but because
+# the client is the `client` job's contract and is covered there, to 100%, by
+# its own 153 tests. Measuring it twice would let one job's coverage paper over
+# the other's, which is exactly what splitting them was meant to prevent.
+[run]
+source = custom_components/betaseries
+branch = True
+omit =
+    custom_components/betaseries/betaseries/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
