@@ -1,6 +1,6 @@
 # BetaSeries for Home Assistant
 
-[![Maintainer: bastgau](https://img.shields.io/badge/maintener-bastgau-orange?logo=github&logoColor=%23959da5&labelColor=%232d333a)](https://github.com/bastgau)
+[![Maintainer: bastgau](https://img.shields.io/badge/maintainer-bastgau-orange?logo=github&logoColor=%23959da5&labelColor=%232d333a)](https://github.com/bastgau)
 [![Made with Python](https://img.shields.io/badge/Made_with-Python-blue?style=flat&logo=python&logoColor=%23959da5&labelColor=%232d333a)](https://www.python.org/)
 [![Made for Home Assistant](https://img.shields.io/badge/Made_for-Homeassistant-blue?style=flat&logo=homeassistant&logoColor=%23959da5&labelColor=%232d333a)](https://www.home-assistant.io/)
 [![GitHub Release](https://img.shields.io/github/v/release/bastgau/ha-betaseries?logo=github&logoColor=%23959da5&labelColor=%232d333a&color=%230e80c0)](https://github.com/bastgau/ha-betaseries/releases)
@@ -13,24 +13,23 @@
 
 ## Description
 
-This integration connects Home Assistant to your [BetaSeries](https://www.betaseries.com/) account. It exposes your viewing stats and to-watch counts as sensors, tells you when new episodes are available, shows your upcoming episodes as a calendar, and will let you mark episodes watched or rate them.
+This integration connects Home Assistant to your [BetaSeries](https://www.betaseries.com/) account. It exposes your viewing statistics and watchlist metrics as sensors, notifies you about upcoming episodes, provides a planning calendar, and allows you to mark episodes as watched or rate them directly from Home Assistant.
 
 ## Requirements
 
 - Home Assistant **2026.7.0** or newer.
-- A personal **BetaSeries API key** (`client_id` + `client_secret`). Each user must create their own key at <https://www.betaseries.com/api/>
+- A personal **BetaSeries API application** (`client_id` and `client_secret`) created at <https://www.betaseries.com/api/>
 
 > [!WARNING]
-> Your BetaSeries API credentials (client_id and client_secret) are personal and must not be shared publicly. Never publish them in GitHub repositories, forums, screenshots, or configuration examples.
+> Your `client_id` and `client_secret` are personal credentials. Never publish or share them in GitHub repositories, forums, screenshots, logs, or configuration examples.
 
 ## Translation
 
-The integration is translated into:
-
-- English
-- French
+The integration user interface is available in English and French.
 
 ## Installation
+
+Before configuring the integration, create your own API application on BetaSeries to obtain a `client_id` and `client_secret`.
 
 ### Installation via HACS
 
@@ -55,7 +54,12 @@ The integration is translated into:
 
 ## Configuration
 
-During setup you will be asked for your BetaSeries `client_id` and `client_secret`, then shown a device code to validate on the BetaSeries website.
+During setup:
+
+1. Enter your BetaSeries `client_id` and `client_secret`.
+2. A device code is displayed.
+3. Visit BetaSeries and validate the code.
+4. Return to Home Assistant to complete authentication.
 
 From the integration options, you can adjust afterwards:
 
@@ -73,34 +77,41 @@ From the integration options, you can adjust afterwards:
 
 ## Entities
 
-All entities below are grouped under a single device per BetaSeries account (named "BetaSeries - " followed by your login). Values are refreshed at the "Member data refresh interval" (15 minutes by default) or the "Planning refresh interval" (60 minutes by default), both configured in the integration options.
+The most commonly used entities are:
+
+- Episodes to watch
+- Shows to catch up on
+- Suggestion of the day
+- Previous episode airing
+- Next episode airing
+- Planning calendar
 
 ### Sensor
 
-| Name                    | Unit | Meaning                                                                                                              | Enabled |
-| ----------------------- | ---- | -------------------------------------------------------------------------------------------------------------------- | ------- |
-| Episodes to watch       | -    | Number of episodes available to watch                                                                                | yes     |
-| Time to spend           | min  | Minutes left to watch everything pending                                                                             | yes     |
-| Progress                | %    | Overall watch progress                                                                                               | yes     |
-| Shows not started       | -    | Number of shows never started, archived ones included                                                                | yes     |
-| Movies to watch         | -    | Number of movies not yet watched                                                                                     | yes     |
-| Shows in progress       | -    | Number of shows started and not yet finished                                                                         | yes     |
-| Badges                  | -    | Number of badges earned                                                                                              | yes     |
-| Shows total             | -    | Total number of shows followed, archived ones included                                                               | yes     |
-| Shows finished          | -    | Number of shows BetaSeries counts as finished, archived ones included                                                | yes     |
-| Episodes watched        | -    | Total number of episodes watched                                                                                     | yes     |
-| Time on TV              | min  | Total minutes spent watching episodes                                                                                | yes     |
-| Movies total            | -    | Total number of movies watched                                                                                       | yes     |
-| XP                      | -    | Member experience points                                                                                             | yes     |
-| Streak days             | d    | Current daily streak                                                                                                 | yes     |
-| Membership duration     | d    | Number of days since account creation                                                                                | yes     |
-| Episodes per month      | -    | Average number of episodes watched per month                                                                         | yes     |
-| Favorite genre          | -    | Most watched genre                                                                                                   | yes     |
-| Previous episode airing | -    | Air date of the most recently aired episode, watched or not (excluding today, see below)                             | yes     |
-| Next episode airing     | -    | Air date of the next episode due to air, watched or not (including today)                                            | yes     |
-| Shows to catch up on    | -    | Number of shows with at least one episode left to watch, with the first few listed in its attributes (see below)     | yes     |
-| Suggestion of the day   | -    | One episode to watch today, picked once a day from the shows you have to catch up on (see below)                     | yes     |
-| Calendar event count    | -    | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes | no      |
+| Name                    | Unit | Meaning                                                                                                                        | Enabled |
+| ----------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| Episodes to watch       | -    | Number of episodes available to watch                                                                                          | yes     |
+| Time to spend           | min  | Minutes left to watch everything pending                                                                                       | yes     |
+| Progress                | %    | Overall watch progress                                                                                                         | yes     |
+| Shows not started       | -    | Number of shows never started, archived ones included                                                                          | yes     |
+| Movies to watch         | -    | Number of movies not yet watched                                                                                               | yes     |
+| Shows in progress       | -    | Number of shows started and not yet finished                                                                                   | yes     |
+| Badges                  | -    | Number of badges earned                                                                                                        | yes     |
+| Shows total             | -    | Total number of shows followed, archived ones included                                                                         | yes     |
+| Shows finished          | -    | Number of shows BetaSeries counts as finished, archived ones included                                                          | yes     |
+| Episodes watched        | -    | Total number of episodes watched                                                                                               | yes     |
+| Time on TV              | min  | Total minutes spent watching episodes                                                                                          | yes     |
+| Movies total            | -    | Total number of movies watched                                                                                                 | yes     |
+| XP                      | -    | Member experience points                                                                                                       | yes     |
+| Streak days             | d    | Current daily streak                                                                                                           | yes     |
+| Membership duration     | d    | Number of days since account creation                                                                                          | yes     |
+| Episodes per month      | -    | Average number of episodes watched per month                                                                                   | yes     |
+| Favorite genre          | -    | Most watched genre                                                                                                             | yes     |
+| Previous episode airing | -    | Air date of the most recently aired episode, watched or not (excluding today, see below)                                       | yes     |
+| Next episode airing     | -    | Air date of the next episode due to air, watched or not (including today)                                                      | yes     |
+| Shows to catch up on    | -    | Number of shows with pending episodes. Detailed show and episode information is available in the entity attributes (see below) | yes     |
+| Suggestion of the day   | -    | One episode to watch today, picked once a day from the shows you have to catch up on (see below)                               | yes     |
+| Calendar event count    | -    | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes           | no      |
 
 **Previous / Next episode airing** are about release dates, never about what you have watched, and an episode airing today always belongs to "next". Both expose the same attributes describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms`, `resource_url` and `show_images` (every artwork the show has). The poster is the entity picture, so both render as-is in a `picture-entity` card. How far back "previous" can see is the calendar's own window (2 months by default).
 
@@ -118,7 +129,7 @@ A show is what gets drawn, and the episode is always the oldest one you have not
 | Movies available   | On when at least one movie is not yet watched | yes     |
 
 > [!NOTE]
-> **These report a backlog, not an arrival.** They are on whenever the matching count is above zero, so if you keep a backlog - and most accounts do - "Episodes available" stays on permanently and never transitions. It is therefore not usable as a trigger for "a new episode came out": use the **Next episode airing** sensor, or the **Release calendar**, both of which change when something actually airs.
+> **These report a backlog, not an arrival.** They are on whenever the matching count is above zero, so if you keep a backlog - and most accounts do - "Episodes available" stays on permanently and never transitions. It is therefore not usable as a trigger for "a new episode came out": use the **Next episode airing** sensor, or the **Planning calendar**, both of which change when something actually airs.
 
 ### Button
 
@@ -133,6 +144,10 @@ The integration caches what BetaSeries never changes - badge details, past plann
 ### Calendar
 
 One calendar entity ("Planning") lists episodes of the shows you follow as all-day events, titled `<show> - <SxxEyy>`, including both watched and unwatched episodes. The window of months shown (past and future) is configurable from the integration options (2 months each way by default). The calendar's own "next event" points to the earliest episode airing today or later, watched or not - like the two episode sensors, it never filters on what you have seen.
+
+### Refresh interval
+
+Entity values are refreshed using either the Member data refresh interval (15 minutes by default) or the Planning refresh interval (60 minutes by default), both configurable from the integration options.
 
 ### Diagnostics
 
@@ -154,7 +169,8 @@ logger:
     custom_components.betaseries: debug
 ```
 
-Logs are not scrubbed of sensitive information, so review what you share before posting it.
+> [!WARNING]
+> Debug logs may contain authentication and account information. Review logs carefully before sharing them publicly.
 
 ## Support & Contributions
 
