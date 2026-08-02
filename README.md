@@ -21,7 +21,7 @@ This integration connects Home Assistant to your [BetaSeries](https://www.betase
 - A personal **BetaSeries API key** (`client_id` + `client_secret`). Each user must create their own key at <https://www.betaseries.com/api/>
 
 > [!WARNING]
-> A shared key cannot be embedded in a public repository. It is strictly personal: don't share it.
+> Your BetaSeries API credentials (client_id and client_secret) are personal and must not be shared publicly. Never publish them in GitHub repositories, forums, screenshots, or configuration examples.
 
 ## Translation
 
@@ -99,11 +99,16 @@ All entities below are grouped under a single device per BetaSeries account (nam
 | Previous episode airing | -    | Air date of the most recently aired episode, watched or not (excluding today, see below)                             | yes     |
 | Next episode airing     | -    | Air date of the next episode due to air, watched or not (including today)                                            | yes     |
 | Shows to catch up on    | -    | Number of shows with at least one episode left to watch, with the first few listed in its attributes (see below)     | yes     |
+| Suggestion of the day   | -    | One episode to watch today, picked once a day from the shows you have to catch up on (see below)                     | yes     |
 | Calendar event count    | -    | Diagnostic sensor: total number of episodes currently loaded by the calendar, broken down by month in its attributes | no      |
 
 **Previous / Next episode airing** are about release dates, never about what you have watched, and an episode airing today always belongs to "next". Both expose the same attributes describing the episode they point at: `episode_id`, `show_id`, `code`, `season`, `number`, `title`, `show_title`, `platforms`, `resource_url` and `show_images` (every artwork the show has). The poster is the entity picture, so both render as-is in a `picture-entity` card. How far back "previous" can see is the calendar's own window (2 months by default).
 
 **Shows to catch up on** holds one entry per show in its `shows` attribute - `show_id`, `show_title`, `show_images`, `episode_remaining`, and an `episodes` list of `id`, `code`, `title`, `air_date`, `platforms`, `resource_url` - alongside `total_shows` and `total_episodes`, the endpoint's own counters, which ignore the two list options above.
+
+**Suggestion of the day** answers "what do I put on tonight". Its state names an episode, worded like the calendar's events (`Black Mirror - S06E01`), and its attributes describe it - the same ones as the airing sensors, plus `episode_remaining`.
+
+A show is what gets drawn, and the episode is always the oldest one you have not seen of it, since that is where a series is resumed. The pick changes once a day, and in between only when you act on it: watch the suggested episode and it moves to the next one of that show, or to another show once you have finished it. Watching something else leaves it alone. The draw covers the shows the **Shows to catch up on** list holds, so `shows_limit` bounds it too - raise that option if you want it to reach your whole library.
 
 ### Binary sensor
 
