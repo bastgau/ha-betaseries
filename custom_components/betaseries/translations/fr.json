@@ -159,13 +159,13 @@
       }
     },
     "button": {
-      "clean_badges_cache": {
+      "clear_badges_cache": {
         "name": "Vider le cache des badges"
       },
-      "clean_planning_cache": {
+      "clear_planning_cache": {
         "name": "Vider le cache du planning"
       },
-      "clean_shows_to_catch_up_cache": {
+      "clear_shows_to_catch_up_cache": {
         "name": "Vider le cache des séries à rattraper"
       }
     }

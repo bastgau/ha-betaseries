@@ -319,7 +319,7 @@ async def test_past_months_persist_across_coordinator_instances(
     assert tuple(second_coordinator.data.episodes) == (CACHED_EPISODE, EPISODE)
 
 
-async def test_clean_planning_cache_refetches_cached_past_months(
+async def test_clear_planning_cache_refetches_cached_past_months(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],  # noqa: ARG001 - activates the real (in-memory) Store mock  # pylint: disable=unused-argument
     caplog: pytest.LogCaptureFixture,
@@ -341,7 +341,7 @@ async def test_clean_planning_cache_refetches_cached_past_months(
 
     mock_client.fetch_planning.reset_mock()
     with caplog.at_level(logging.DEBUG):
-        await coordinator.async_clean_planning_cache()
+        await coordinator.async_clear_planning_cache()
 
     # Both the past month and the current month are re-fetched, bypassing the cache.
     assert mock_client.fetch_planning.await_count == 2

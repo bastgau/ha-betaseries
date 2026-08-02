@@ -88,13 +88,13 @@
       }
     },
     "button": {
-      "clean_badges_cache": {
+      "clear_badges_cache": {
         "default": "mdi:cached"
       },
-      "clean_planning_cache": {
+      "clear_planning_cache": {
         "default": "mdi:cached"
       },
-      "clean_shows_to_catch_up_cache": {
+      "clear_shows_to_catch_up_cache": {
         "default": "mdi:cached"
       }
     }

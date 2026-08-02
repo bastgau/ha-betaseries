@@ -218,7 +218,7 @@ async def test_setup_entry_passes_configured_locale_to_client(hass: HomeAssistan
 async def test_remove_entry_deletes_every_cached_store(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Delete each per-entry cache file when the entry is removed.
 
-    Home Assistant never cleans .storage up on its own, so without
+    Home Assistant never clears .storage up on its own, so without
     async_remove_entry every add/remove cycle would strand one file per cache.
     """
     entry = MockConfigEntry(

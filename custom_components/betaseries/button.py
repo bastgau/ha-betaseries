@@ -22,23 +22,23 @@ if TYPE_CHECKING:
 
     from .coordinator import BetaSeriesConfigEntry, MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 
-CLEAN_BADGES_CACHE_DESCRIPTION = ButtonEntityDescription(
-    key="clean_badges_cache",
-    translation_key="clean_badges_cache",
+CLEAR_BADGES_CACHE_DESCRIPTION = ButtonEntityDescription(
+    key="clear_badges_cache",
+    translation_key="clear_badges_cache",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
 )
 
-CLEAN_PLANNING_CACHE_DESCRIPTION = ButtonEntityDescription(
-    key="clean_planning_cache",
-    translation_key="clean_planning_cache",
+CLEAR_PLANNING_CACHE_DESCRIPTION = ButtonEntityDescription(
+    key="clear_planning_cache",
+    translation_key="clear_planning_cache",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
 )
 
-CLEAN_WATCH_LIST_CACHE_DESCRIPTION = ButtonEntityDescription(
-    key="clean_shows_to_catch_up_cache",
-    translation_key="clean_shows_to_catch_up_cache",
+CLEAR_WATCH_LIST_CACHE_DESCRIPTION = ButtonEntityDescription(
+    key="clear_shows_to_catch_up_cache",
+    translation_key="clear_shows_to_catch_up_cache",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
 )
@@ -62,9 +62,9 @@ async def async_setup_entry(  # pylint: disable=unused-argument
     """
     async_add_entities(
         [
-            BetaSeriesCleanBadgesCacheButton(entry.runtime_data.member, CLEAN_BADGES_CACHE_DESCRIPTION),
-            BetaSeriesCleanPlanningCacheButton(entry.runtime_data.planning, CLEAN_PLANNING_CACHE_DESCRIPTION),
-            BetaSeriesCleanWatchListCacheButton(entry.runtime_data.watch_list, CLEAN_WATCH_LIST_CACHE_DESCRIPTION),
+            BetaSeriesCleanBadgesCacheButton(entry.runtime_data.member, CLEAR_BADGES_CACHE_DESCRIPTION),
+            BetaSeriesCleanPlanningCacheButton(entry.runtime_data.planning, CLEAR_PLANNING_CACHE_DESCRIPTION),
+            BetaSeriesCleanWatchListCacheButton(entry.runtime_data.watch_list, CLEAR_WATCH_LIST_CACHE_DESCRIPTION),
         ]
     )
 
@@ -86,7 +86,7 @@ class BetaSeriesCleanBadgesCacheButton(BetaSeriesEntity, ButtonEntity):  # pyrig
             None: The coordinator's data is updated in place.
 
         """
-        await self.coordinator.async_clean_badges_cache()
+        await self.coordinator.async_clear_badges_cache()
 
 
 class BetaSeriesCleanPlanningCacheButton(BetaSeriesEntity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -106,7 +106,7 @@ class BetaSeriesCleanPlanningCacheButton(BetaSeriesEntity, ButtonEntity):  # pyr
             None: The coordinator's data is updated in place.
 
         """
-        await self.coordinator.async_clean_planning_cache()
+        await self.coordinator.async_clear_planning_cache()
 
 
 class BetaSeriesCleanWatchListCacheButton(BetaSeriesEntity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -126,4 +126,4 @@ class BetaSeriesCleanWatchListCacheButton(BetaSeriesEntity, ButtonEntity):  # py
             None: The coordinator's data is updated in place.
 
         """
-        await self.coordinator.async_clean_watch_list_cache()
+        await self.coordinator.async_clear_watch_list_cache()

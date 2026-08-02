@@ -425,7 +425,7 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
         )
         return badges
 
-    async def async_clean_badges_cache(self) -> None:
+    async def async_clear_badges_cache(self) -> None:
         """Force a full refetch of badge details on the next refresh, then refresh now.
 
         Clears the badges_store cache first: _async_get_badges() only skips
@@ -572,7 +572,7 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
 
         return PlanningData(episodes=planning, images=images, ratings=ratings)
 
-    async def async_clean_planning_cache(self) -> None:
+    async def async_clear_planning_cache(self) -> None:
         """Force a full refetch of every month, including cached past ones, then refresh now.
 
         Clears both stores first: _async_get_cached_past_months() and
@@ -789,7 +789,7 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
 
         return WatchListData(shows=watch_list, total_shows=total_shows, total_episodes=total_episodes, images=images)
 
-    async def async_clean_watch_list_cache(self) -> None:
+    async def async_clear_watch_list_cache(self) -> None:
         """Force a full refetch of the watch list, artwork included, then refresh now.
 
         The list itself is always refetched, so only the cached show images

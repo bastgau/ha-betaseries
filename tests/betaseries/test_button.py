@@ -66,7 +66,7 @@ async def _async_setup(hass: HomeAssistant, mock_client: AsyncMock) -> MockConfi
     return entry
 
 
-async def test_clean_cache_buttons_disabled_by_default(hass: HomeAssistant) -> None:
+async def test_clear_cache_buttons_disabled_by_default(hass: HomeAssistant) -> None:
     """Disable every refresh button by default, as diagnostic entities."""
     mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
@@ -76,9 +76,9 @@ async def test_clean_cache_buttons_disabled_by_default(hass: HomeAssistant) -> N
 
     registry = er.async_get(hass)
     for entity_id in (
-        "button.betaseries_test_user_clean_badges_cache",
-        "button.betaseries_test_user_clean_planning_cache",
-        "button.betaseries_test_user_clean_shows_to_catch_up_cache",
+        "button.betaseries_test_user_clear_badges_cache",
+        "button.betaseries_test_user_clear_planning_cache",
+        "button.betaseries_test_user_clear_shows_to_catch_up_cache",
     ):
         assert hass.states.get(entity_id) is None
         entity_entry = registry.async_get(entity_id)
@@ -87,15 +87,15 @@ async def test_clean_cache_buttons_disabled_by_default(hass: HomeAssistant) -> N
         assert entity_entry.entity_category == "diagnostic"
 
 
-async def test_clean_badges_cache_button_clears_and_refreshes(hass: HomeAssistant) -> None:
-    """Call MemberCoordinator.async_clean_badges_cache() when the button is pressed."""
+async def test_clear_badges_cache_button_clears_and_refreshes(hass: HomeAssistant) -> None:
+    """Call MemberCoordinator.async_clear_badges_cache() when the button is pressed."""
     mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()
     entry = await _async_setup(hass, mock_client)
 
-    entity_id = "button.betaseries_test_user_clean_badges_cache"
+    entity_id = "button.betaseries_test_user_clear_badges_cache"
     er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
@@ -104,23 +104,23 @@ async def test_clean_badges_cache_button_clears_and_refreshes(hass: HomeAssistan
         await hass.async_block_till_done()
 
     with patch(
-        "custom_components.betaseries.coordinator.MemberCoordinator.async_clean_badges_cache",
+        "custom_components.betaseries.coordinator.MemberCoordinator.async_clear_badges_cache",
         new_callable=AsyncMock,
-    ) as mock_clean_cache:
+    ) as mock_clear_cache:
         await hass.services.async_call(BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True)
 
-    mock_clean_cache.assert_awaited_once()
+    mock_clear_cache.assert_awaited_once()
 
 
-async def test_clean_planning_cache_button_clears_and_refreshes(hass: HomeAssistant) -> None:
-    """Call PlanningCoordinator.async_clean_planning_cache() when the button is pressed."""
+async def test_clear_planning_cache_button_clears_and_refreshes(hass: HomeAssistant) -> None:
+    """Call PlanningCoordinator.async_clear_planning_cache() when the button is pressed."""
     mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()
     entry = await _async_setup(hass, mock_client)
 
-    entity_id = "button.betaseries_test_user_clean_planning_cache"
+    entity_id = "button.betaseries_test_user_clear_planning_cache"
     er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
@@ -129,23 +129,23 @@ async def test_clean_planning_cache_button_clears_and_refreshes(hass: HomeAssist
         await hass.async_block_till_done()
 
     with patch(
-        "custom_components.betaseries.coordinator.PlanningCoordinator.async_clean_planning_cache",
+        "custom_components.betaseries.coordinator.PlanningCoordinator.async_clear_planning_cache",
         new_callable=AsyncMock,
-    ) as mock_clean_cache:
+    ) as mock_clear_cache:
         await hass.services.async_call(BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True)
 
-    mock_clean_cache.assert_awaited_once()
+    mock_clear_cache.assert_awaited_once()
 
 
-async def test_clean_watch_list_cache_button_clears_and_refreshes(hass: HomeAssistant) -> None:
-    """Call WatchListCoordinator.async_clean_watch_list_cache() when the button is pressed."""
+async def test_clear_watch_list_cache_button_clears_and_refreshes(hass: HomeAssistant) -> None:
+    """Call WatchListCoordinator.async_clear_watch_list_cache() when the button is pressed."""
     mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
     mock_client.fetch_badges.return_value = MEMBER_DATA.badges
     mock_client.fetch_planning.return_value = ()
     await _async_setup(hass, mock_client)
 
-    entity_id = "button.betaseries_test_user_clean_shows_to_catch_up_cache"
+    entity_id = "button.betaseries_test_user_clear_shows_to_catch_up_cache"
     er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
@@ -154,15 +154,15 @@ async def test_clean_watch_list_cache_button_clears_and_refreshes(hass: HomeAssi
         await hass.async_block_till_done()
 
     with patch(
-        "custom_components.betaseries.coordinator.WatchListCoordinator.async_clean_watch_list_cache",
+        "custom_components.betaseries.coordinator.WatchListCoordinator.async_clear_watch_list_cache",
         new_callable=AsyncMock,
-    ) as mock_clean_cache:
+    ) as mock_clear_cache:
         await hass.services.async_call(BUTTON_DOMAIN, SERVICE_PRESS, {"entity_id": entity_id}, blocking=True)
 
-    mock_clean_cache.assert_awaited_once()
+    mock_clear_cache.assert_awaited_once()
 
 
-async def test_clean_watch_list_cache_clears_the_show_images_cache(hass: HomeAssistant) -> None:
+async def test_clear_watch_list_cache_clears_the_show_images_cache(hass: HomeAssistant) -> None:
     """Drop the cached artwork so it is refetched, unlike on a regular refresh."""
     mock_client = client_mock()
     mock_client.fetch_member_data.return_value = MEMBER_DATA
@@ -172,7 +172,7 @@ async def test_clean_watch_list_cache_clears_the_show_images_cache(hass: HomeAss
 
     coordinator = entry.runtime_data.watch_list
     with patch.object(coordinator.show_images_store, "async_remove", new_callable=AsyncMock) as mock_remove:
-        await coordinator.async_clean_watch_list_cache()
+        await coordinator.async_clear_watch_list_cache()
 
     mock_remove.assert_awaited_once()
     assert coordinator.last_update_success is True

@@ -113,7 +113,7 @@ BADGES_STORE_KEY_PREFIX = "betaseries_badges"
 
 # Every cache Store the coordinators create per config entry, as
 # (version, key prefix) pairs. async_remove_entry (see __init__.py) walks this
-# list to delete them when the entry is removed: Home Assistant never cleans
+# list to delete them when the entry is removed: Home Assistant never clears
 # .storage files up on its own, so a cache added above and left out here would
 # outlive every entry that ever created it.
 CACHE_STORES: tuple[tuple[int, str], ...] = (
