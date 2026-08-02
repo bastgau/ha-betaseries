@@ -13,6 +13,7 @@ from custom_components.betaseries.betaseries.member_identity import MemberIdenti
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.const import CONF_PLANNING_MONTHS_BEHIND, DOMAIN
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
@@ -20,9 +21,32 @@ from homeassistant.util import dt as dt_util
 from tests.conftest import client_mock
 
 if TYPE_CHECKING:
+    from freezegun.api import FrozenDateTimeFactory
+
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret", "access_token": "token123"}
+
+
+@pytest.fixture(autouse=True)
+def frozen_today(freezer: FrozenDateTimeFactory) -> None:
+    """Pin "today" ahead of the fixed episode dates below.
+
+    The calendar's `event` property answers "what airs next", so it depends on
+    the current date - and the episodes here carry hardcoded ones. Left to the
+    real clock, these tests quietly changed meaning as time passed and then
+    started failing outright once 2026-08-01 fell into the past: `event`
+    skipped EARLIER_EPISODE and returned the later one instead.
+
+    Args:
+        freezer (FrozenDateTimeFactory): Time-freezing fixture.
+
+    Returns:
+        None: The clock is pinned for the duration of each test.
+
+    """
+    freezer.move_to("2026-07-30")
+
 
 EARLIER_EPISODE = Episode(
     id="999",
