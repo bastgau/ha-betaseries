@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to BetaSeries",
-        "description": "Enter the API key and client secret from your personal BetaSeries API application (create one at https://www.betaseries.com/api/).",
+        "description": "Enter the API key and client secret from your personal BetaSeries API application (create one at {betaserie_api_url}).",
         "data": {
           "api_key": "API key",
           "client_secret": "Client secret",
@@ -92,6 +92,9 @@
       },
       "shows_to_catch_up_on": {
         "name": "Shows to catch up on"
+      },
+      "suggestion_of_the_day": {
+        "name": "Suggestion of the day"
       },
       "movies_to_watch": {
         "name": "Movies to watch"

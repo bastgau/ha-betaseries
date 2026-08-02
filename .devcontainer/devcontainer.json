@@ -41,7 +41,8 @@
         "tamasfe.even-better-toml",
         "mohsen1.prettify-json",
         "ms-python.pylint",
-        "Anthropic.claude-code"
+        "Anthropic.claude-code",
+        "Tyriar.sort-lines"
       ],
       "settings": {
         "files.insertFinalNewline": true,

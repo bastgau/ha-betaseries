@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connexion à BetaSeries",
-        "description": "Renseignez la clé API et le secret client de votre application API BetaSeries personnelle (à créer sur https://www.betaseries.com/api/).",
+        "description": "Renseignez la clé API et le secret client de votre application API BetaSeries personnelle (à créer sur {betaserie_api_url}).",
         "data": {
           "api_key": "Clé API",
           "client_secret": "Secret client",
@@ -92,6 +92,9 @@
       },
       "shows_to_catch_up_on": {
         "name": "Séries à rattraper"
+      },
+      "suggestion_of_the_day": {
+        "name": "Suggestion du jour"
       },
       "movies_to_watch": {
         "name": "Films à voir"

@@ -42,6 +42,7 @@ from .betaseries import (
     DeviceCodeData,
 )
 from .const import (
+    API_URL,
     CONF_EPISODES_LIMIT,
     CONF_EPISODES_SCAN_INTERVAL,
     CONF_LOCALE,
@@ -204,6 +205,9 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_user_data_schema(default_locale),
             errors=errors,
+            description_placeholders={
+                "betaserie_api_url": API_URL,
+            },
         )
 
     async def async_step_device_code(  # pylint: disable=unused-argument

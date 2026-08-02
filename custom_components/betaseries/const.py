@@ -7,6 +7,7 @@ codes) live in the self-contained betaseries/const.py sub-package instead.
 from __future__ import annotations
 
 DOMAIN = "betaseries"
+API_URL = "https://www.betaseries.com/api/"
 
 # Option keys (see CLAUDE.md §6, arbitrage #4): both scan intervals are
 # user-configurable via OptionsFlow, in minutes.
