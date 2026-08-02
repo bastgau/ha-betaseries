@@ -63,6 +63,9 @@
       },
       "calendar_event_count": {
         "default": "mdi:calendar-search"
+      },
+      "suggestion_of_the_day": {
+        "default": "mdi:lightbulb-on-outline"
       }
     },
     "binary_sensor": {
