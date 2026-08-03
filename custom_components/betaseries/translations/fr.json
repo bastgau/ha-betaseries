@@ -201,7 +201,7 @@
         },
         "episode_id": {
           "name": "Identifiant(s) d'épisode",
-          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
         }
       }
     },
@@ -215,7 +215,7 @@
         },
         "episode_id": {
           "name": "Identifiant(s) d'épisode",
-          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
         }
       }
     },
@@ -229,7 +229,7 @@
         },
         "episode_id": {
           "name": "Identifiant(s) d'épisode",
-          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
         },
         "note": {
           "name": "Note",
@@ -247,7 +247,7 @@
         },
         "episode_id": {
           "name": "Identifiant(s) d'épisode",
-          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
         }
       }
     },

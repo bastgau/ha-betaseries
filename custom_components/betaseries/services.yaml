@@ -9,7 +9,6 @@ mark_episode_watched:
       required: true
       selector:
         text:
-          multiple: true
 mark_episode_unwatched:
   fields:
     config_entry: *config_entry

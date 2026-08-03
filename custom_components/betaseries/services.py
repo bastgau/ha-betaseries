@@ -15,7 +15,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
     TextSelector,  # pyright: ignore[reportUnknownVariableType]
-    TextSelectorConfig,
 )
 
 from .betaseries import AuthError, Error, NotWatchedError
@@ -48,14 +47,14 @@ _NOTE_SELECTOR = NumberSelector(  # pyright: ignore[reportUnknownVariableType]
 _EPISODE_IDS_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_EPISODE_ID): TextSelector(TextSelectorConfig(multiple=True)),
+        vol.Required(ATTR_EPISODE_ID): TextSelector(),
     }
 )
 
 _RATE_EPISODES_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_EPISODE_ID): TextSelector(TextSelectorConfig(multiple=True)),
+        vol.Required(ATTR_EPISODE_ID): TextSelector(),
         vol.Required(ATTR_NOTE): _NOTE_SELECTOR,
     }
 )
@@ -107,6 +106,25 @@ def _get_entry(hass: HomeAssistant, call: ServiceCall) -> BetaSeriesConfigEntry:
     return service.async_get_config_entry(hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY])
 
 
+def _episode_ids(call: ServiceCall) -> list[str]:
+    """Split ATTR_EPISODE_ID's comma-separated string into individual ids.
+
+    A plain (non-multiple) text field, not HA's "multiple" text selector: the
+    latter's frontend loses input focus on every keystroke in the Developer
+    Tools > Actions form, reported unusable by the user. A single field typed
+    as "1001,1002" also matches the wire format the API itself expects
+    (verified via Bruno), so no translation is needed either way.
+
+    Args:
+        call (ServiceCall): The service call, carrying ATTR_EPISODE_ID.
+
+    Returns:
+        list[str]: The individual episode ids, whitespace trimmed.
+
+    """
+    return [episode_id.strip() for episode_id in call.data[ATTR_EPISODE_ID].split(",") if episode_id.strip()]
+
+
 def _raise_for_client_error(err: Exception) -> None:
     """Translate a client Error/AuthError/NotWatchedError into an HA-facing exception.
 
@@ -151,7 +169,7 @@ async def _mark_episode_watched(call: ServiceCall) -> None:
     """
     entry = _get_entry(call.hass, call)
     try:
-        await entry.runtime_data.member.client.mark_episodes_watched(call.data[ATTR_EPISODE_ID])
+        await entry.runtime_data.member.client.mark_episodes_watched(_episode_ids(call))
     except Error as err:
         _raise_for_client_error(err)
     else:
@@ -171,7 +189,7 @@ async def _mark_episode_unwatched(call: ServiceCall) -> None:
     """
     entry = _get_entry(call.hass, call)
     try:
-        await entry.runtime_data.member.client.mark_episodes_unwatched(call.data[ATTR_EPISODE_ID])
+        await entry.runtime_data.member.client.mark_episodes_unwatched(_episode_ids(call))
     except Error as err:
         _raise_for_client_error(err)
     else:
@@ -191,7 +209,7 @@ async def _rate_episode(call: ServiceCall) -> None:
     """
     entry = _get_entry(call.hass, call)
     try:
-        await entry.runtime_data.member.client.rate_episodes(call.data[ATTR_EPISODE_ID], call.data[ATTR_NOTE])
+        await entry.runtime_data.member.client.rate_episodes(_episode_ids(call), call.data[ATTR_NOTE])
     except Error as err:
         _raise_for_client_error(err)
 
@@ -208,7 +226,7 @@ async def _unrate_episode(call: ServiceCall) -> None:
     """
     entry = _get_entry(call.hass, call)
     try:
-        await entry.runtime_data.member.client.unrate_episodes(call.data[ATTR_EPISODE_ID])
+        await entry.runtime_data.member.client.unrate_episodes(_episode_ids(call))
     except Error as err:
         _raise_for_client_error(err)
 

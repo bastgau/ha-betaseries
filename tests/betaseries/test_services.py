@@ -72,13 +72,13 @@ def _client_mock() -> AsyncMock:
     [
         (
             "mark_episode_watched",
-            {"episode_id": ["3905073", "3685365"]},
+            {"episode_id": "3905073,3685365"},
             "mark_episodes_watched",
             (["3905073", "3685365"],),
         ),
-        ("mark_episode_unwatched", {"episode_id": ["3905073"]}, "mark_episodes_unwatched", (["3905073"],)),
-        ("rate_episode", {"episode_id": ["3905073"], "note": 4}, "rate_episodes", (["3905073"], 4)),
-        ("unrate_episode", {"episode_id": ["3905073"]}, "unrate_episodes", (["3905073"],)),
+        ("mark_episode_unwatched", {"episode_id": "3905073"}, "mark_episodes_unwatched", (["3905073"],)),
+        ("rate_episode", {"episode_id": "3905073", "note": 4}, "rate_episodes", (["3905073"], 4)),
+        ("unrate_episode", {"episode_id": "3905073"}, "unrate_episodes", (["3905073"],)),
         ("mark_season_watched", {"show_id": "38605", "season": 2}, "mark_season_watched", ("38605", 2)),
         ("mark_season_unwatched", {"show_id": "38605", "season": 2}, "mark_season_unwatched", ("38605", 2)),
         ("rate_season", {"show_id": "38605", "season": 2, "note": 4}, "rate_season", ("38605", 2, 4)),
@@ -102,8 +102,8 @@ async def test_service_calls_the_matching_client_method(
 @pytest.mark.parametrize(
     ("service", "data"),
     [
-        ("mark_episode_watched", {"episode_id": ["3905073"]}),
-        ("mark_episode_unwatched", {"episode_id": ["3905073"]}),
+        ("mark_episode_watched", {"episode_id": "3905073"}),
+        ("mark_episode_unwatched", {"episode_id": "3905073"}),
         ("mark_season_watched", {"show_id": "38605", "season": 2}),
         ("mark_season_unwatched", {"show_id": "38605", "season": 2}),
     ],
@@ -131,8 +131,8 @@ async def test_watched_services_refresh_member_and_watch_list(
 @pytest.mark.parametrize(
     ("service", "data"),
     [
-        ("rate_episode", {"episode_id": ["3905073"], "note": 4}),
-        ("unrate_episode", {"episode_id": ["3905073"]}),
+        ("rate_episode", {"episode_id": "3905073", "note": 4}),
+        ("unrate_episode", {"episode_id": "3905073"}),
         ("rate_season", {"show_id": "38605", "season": 2, "note": 4}),
         ("unrate_season", {"show_id": "38605", "season": 2}),
         ("rate_show", {"show_id": "38605", "note": 4}),
@@ -157,10 +157,10 @@ async def test_rating_services_do_not_refresh_any_coordinator(
 @pytest.mark.parametrize(
     ("service", "data", "method"),
     [
-        ("mark_episode_watched", {"episode_id": ["3905073"]}, "mark_episodes_watched"),
-        ("mark_episode_unwatched", {"episode_id": ["3905073"]}, "mark_episodes_unwatched"),
-        ("rate_episode", {"episode_id": ["3905073"], "note": 4}, "rate_episodes"),
-        ("unrate_episode", {"episode_id": ["3905073"]}, "unrate_episodes"),
+        ("mark_episode_watched", {"episode_id": "3905073"}, "mark_episodes_watched"),
+        ("mark_episode_unwatched", {"episode_id": "3905073"}, "mark_episodes_unwatched"),
+        ("rate_episode", {"episode_id": "3905073", "note": 4}, "rate_episodes"),
+        ("unrate_episode", {"episode_id": "3905073"}, "unrate_episodes"),
         ("mark_season_watched", {"show_id": "38605", "season": 2}, "mark_season_watched"),
         ("mark_season_unwatched", {"show_id": "38605", "season": 2}, "mark_season_unwatched"),
         ("rate_season", {"show_id": "38605", "season": 2, "note": 4}, "rate_season"),
@@ -181,6 +181,27 @@ async def test_each_service_surfaces_a_client_error(
         await hass.services.async_call(DOMAIN, service, {"config_entry": entry.entry_id, **data}, blocking=True)
 
 
+async def test_episode_id_trims_whitespace_around_commas(hass: HomeAssistant) -> None:
+    """Split ATTR_EPISODE_ID on commas and trim whitespace, not just a bare split.
+
+    A plain text field (not HA's "multiple" text selector, which loses input
+    focus on every keystroke in the Developer Tools > Actions form - see
+    services.py's _episode_ids docstring), so a user may reasonably type
+    "1001, 1002" with a space after the comma.
+    """
+    mock_client = _client_mock()
+    entry = await _async_setup(hass, mock_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "mark_episode_watched",
+        {"config_entry": entry.entry_id, "episode_id": " 3905073 , 3685365 "},
+        blocking=True,
+    )
+
+    mock_client.mark_episodes_watched.assert_awaited_once_with(["3905073", "3685365"])
+
+
 async def test_not_watched_error_raises_service_validation_error(hass: HomeAssistant) -> None:
     """Surface NotWatchedError as a ServiceValidationError, not a generic HomeAssistantError."""
     mock_client = _client_mock()
@@ -191,7 +212,7 @@ async def test_not_watched_error_raises_service_validation_error(hass: HomeAssis
         await hass.services.async_call(
             DOMAIN,
             "rate_episode",
-            {"config_entry": entry.entry_id, "episode_id": ["3905073"], "note": 4},
+            {"config_entry": entry.entry_id, "episode_id": "3905073", "note": 4},
             blocking=True,
         )
 

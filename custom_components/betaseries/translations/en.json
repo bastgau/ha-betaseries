@@ -201,7 +201,7 @@
         },
         "episode_id": {
           "name": "Episode ID(s)",
-          "description": "One or more BetaSeries episode ids."
+          "description": "One or more BetaSeries episode ids, separated by commas (e.g. 1001,1002)."
         }
       }
     },
@@ -215,7 +215,7 @@
         },
         "episode_id": {
           "name": "Episode ID(s)",
-          "description": "One or more BetaSeries episode ids."
+          "description": "One or more BetaSeries episode ids, separated by commas (e.g. 1001,1002)."
         }
       }
     },
@@ -229,7 +229,7 @@
         },
         "episode_id": {
           "name": "Episode ID(s)",
-          "description": "One or more BetaSeries episode ids."
+          "description": "One or more BetaSeries episode ids, separated by commas (e.g. 1001,1002)."
         },
         "note": {
           "name": "Rating",
@@ -247,7 +247,7 @@
         },
         "episode_id": {
           "name": "Episode ID(s)",
-          "description": "One or more BetaSeries episode ids."
+          "description": "One or more BetaSeries episode ids, separated by commas (e.g. 1001,1002)."
         }
       }
     },
