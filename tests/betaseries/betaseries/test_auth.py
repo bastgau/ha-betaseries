@@ -65,12 +65,15 @@ class FakeSession:
         self,
         post_responses: list[FakeResponse | Exception] | None = None,
         get_responses: list[FakeResponse | Exception] | None = None,
+        delete_responses: list[FakeResponse | Exception] | None = None,
     ) -> None:
         """Initialize the fake session with queued responses."""
         self.post_responses = list(post_responses or [])
         self.get_responses = list(get_responses or [])
+        self.delete_responses = list(delete_responses or [])
         self.get_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
         self.post_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
+        self.delete_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 
     def post(self, *args: Any, **kwargs: Any) -> FakeResponse:
         """Return the next queued POST response, recording the call's args/kwargs."""
@@ -81,6 +84,11 @@ class FakeSession:
         """Return the next queued GET response, recording the call's args/kwargs."""
         self.get_calls.append((args, kwargs))
         return _unqueue(self.get_responses)
+
+    def delete(self, *args: Any, **kwargs: Any) -> FakeResponse:
+        """Return the next queued DELETE response, recording the call's args/kwargs."""
+        self.delete_calls.append((args, kwargs))
+        return _unqueue(self.delete_responses)
 
 
 def _unqueue(queued: list[FakeResponse | Exception]) -> FakeResponse:

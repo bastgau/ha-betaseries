@@ -26,18 +26,24 @@ from .const import (
     EPISODES_DISPLAY_ENDPOINT,
     EPISODES_LIST_ENDPOINT,
     EPISODES_LIST_EXCLUDE_CHARACTERS,
+    EPISODES_NOTE_ENDPOINT,
+    EPISODES_WATCHED_ENDPOINT,
+    ERROR_CODE_NOT_WATCHED,
     INVALID_CREDENTIALS_ERROR_CODES,
     MEMBERS_BADGES_ENDPOINT,
     MEMBERS_INFOS_ENDPOINT,
     PLANNING_MEMBER_ENDPOINT,
     REQUEST_TIMEOUT_SECONDS,
+    SEASONS_NOTE_ENDPOINT,
+    SEASONS_WATCHED_ENDPOINT,
     SHOWS_DISPLAY_ENDPOINT,
     SHOWS_EPISODES_ENDPOINT,
+    SHOWS_NOTE_ENDPOINT,
     TIMELINE_MEMBER_ENDPOINT,
 )
 from .episode import Episode
 from .episode_watched_event import EpisodeWatchedEvent
-from .exceptions import AuthError, Error
+from .exceptions import AuthError, Error, NotWatchedError
 from .member_data import MemberData
 from .member_identity import MemberIdentity
 from .member_stats import MemberStats
@@ -128,7 +134,11 @@ class Client:
         malformed, but HTTP 400 with `errors[0]["code"]` in
         INVALID_CREDENTIALS_ERROR_CODES for a rejected api_key or access
         token (expired, revoked, ...) - both must surface as AuthError so
-        callers can trigger reauthentication.
+        callers can trigger reauthentication. HTTP 400 with `errors[0]["code"]`
+        equal to ERROR_CODE_NOT_WATCHED means the write action's target
+        episode/season is not marked as watched - surfaced as NotWatchedError
+        so callers can tell this apart from a generic failure (verified via
+        Bruno on /episodes/note, /seasons/note and DELETE /episodes/watched).
 
         Args:
             response (aiohttp.ClientResponse): The response to check.
@@ -139,6 +149,7 @@ class Client:
 
         Raises:
             AuthError: If the access token was rejected.
+            NotWatchedError: If the target episode/season is not marked as watched.
             Error: If the request failed for any other reason.
 
         """
@@ -154,9 +165,13 @@ class Client:
             with contextlib.suppress(ValueError):
                 payload: dict[str, Any] = json.loads(body)
                 errors: list[dict[str, Any]] = payload.get("errors") or []
-                if errors and errors[0].get("code") in INVALID_CREDENTIALS_ERROR_CODES:
+                error_code = errors[0].get("code") if errors else None
+                if error_code in INVALID_CREDENTIALS_ERROR_CODES:
                     msg = "Access token was rejected"
                     raise AuthError(msg, status=response.status, body=body)
+                if error_code == ERROR_CODE_NOT_WATCHED:
+                    msg = "Target is not marked as watched"
+                    raise NotWatchedError(msg, status=response.status, body=body)
         msg = f"Failed to {action} (HTTP {response.status})"
         raise Error(msg, status=response.status, body=body)
 
@@ -214,6 +229,68 @@ class Client:
                 # straight through the except below, which only sees aiohttp's.
                 await self._raise_for_error(response, action)
                 return await response.json()
+        except _TRANSPORT_ERRORS as err:
+            msg = f"Could not reach BetaSeries to {action}: {err}"
+            raise Error(msg) from err
+
+    async def _post(self, endpoint: str, action: str, data: dict[str, str]) -> None:
+        """Perform an authenticated POST, raising if it failed.
+
+        Mirrors _get's error handling; the response body is discarded since no
+        write action currently needs it back (the caller refreshes the
+        relevant coordinator instead - see services.py).
+
+        Args:
+            endpoint (str): Path to request, appended to BASE_URL.
+            action (str): Present-tense description of the request, used in error messages.
+            data (dict[str, str]): Form-urlencoded body fields for this request.
+
+        Returns:
+            None
+
+        Raises:
+            Error: If the request failed, BetaSeries being unreachable included. _raise_for_error() narrows a rejected api_key/access token to AuthError, and a failed watched-precondition to NotWatchedError.
+
+        """
+        try:
+            async with self._session.post(
+                f"{BASE_URL}{endpoint}",
+                headers=self._headers,
+                params=self._params,
+                data=data,
+                timeout=_TIMEOUT,
+            ) as response:
+                await self._raise_for_error(response, action)
+        except _TRANSPORT_ERRORS as err:
+            msg = f"Could not reach BetaSeries to {action}: {err}"
+            raise Error(msg) from err
+
+    async def _delete(self, endpoint: str, action: str, data: dict[str, str]) -> None:
+        """Perform an authenticated DELETE, raising if it failed.
+
+        Mirrors _post; see its docstring for the shared reasoning.
+
+        Args:
+            endpoint (str): Path to request, appended to BASE_URL.
+            action (str): Present-tense description of the request, used in error messages.
+            data (dict[str, str]): Form-urlencoded body fields for this request.
+
+        Returns:
+            None
+
+        Raises:
+            Error: If the request failed, BetaSeries being unreachable included. _raise_for_error() narrows a rejected api_key/access token to AuthError, and a failed watched-precondition to NotWatchedError.
+
+        """
+        try:
+            async with self._session.delete(
+                f"{BASE_URL}{endpoint}",
+                headers=self._headers,
+                params=self._params,
+                data=data,
+                timeout=_TIMEOUT,
+            ) as response:
+                await self._raise_for_error(response, action)
         except _TRANSPORT_ERRORS as err:
             msg = f"Could not reach BetaSeries to {action}: {err}"
             raise Error(msg) from err
@@ -538,6 +615,158 @@ class Client:
         payload = await self._get(SHOWS_DISPLAY_ENDPOINT, "fetch shows", {"id": ",".join(show_ids)})
 
         return payload["shows"] if "shows" in payload else [payload["show"]]
+
+    async def mark_episodes_watched(self, episode_ids: Iterable[str]) -> None:
+        """Mark one or more episodes as watched (POST /episodes/watched).
+
+        Accepts any number of ids in a single request, same bulk pattern as
+        fetch_episodes_by_id (verified via Bruno, bruno/Episodes/watched.bru).
+
+        Args:
+            episode_ids (Iterable[str]): BetaSeries episode ids to mark as watched.
+
+        Returns:
+            None
+
+        """
+        await self._post(EPISODES_WATCHED_ENDPOINT, "mark episodes watched", {"id": ",".join(episode_ids)})
+
+    async def mark_episodes_unwatched(self, episode_ids: Iterable[str]) -> None:
+        """Remove the watched mark from one or more episodes (DELETE /episodes/watched).
+
+        Raises NotWatchedError (via _delete/_raise_for_error) if an episode
+        targeted was not marked as watched (verified via Bruno,
+        bruno/Episodes/unwatched.bru).
+
+        Args:
+            episode_ids (Iterable[str]): BetaSeries episode ids to mark as unwatched.
+
+        Returns:
+            None
+
+        """
+        await self._delete(EPISODES_WATCHED_ENDPOINT, "mark episodes unwatched", {"id": ",".join(episode_ids)})
+
+    async def rate_episodes(self, episode_ids: Iterable[str], note: int) -> None:
+        """Rate one or more episodes (POST /episodes/note).
+
+        Raises NotWatchedError (via _post/_raise_for_error) if an episode
+        targeted is not marked as watched - rating requires it to be
+        (verified via Bruno, bruno/Episodes/note.bru).
+
+        Args:
+            episode_ids (Iterable[str]): BetaSeries episode ids to rate.
+            note (int): Rating from 1 to 5.
+
+        Returns:
+            None
+
+        """
+        await self._post(EPISODES_NOTE_ENDPOINT, "rate episodes", {"id": ",".join(episode_ids), "note": str(note)})
+
+    async def unrate_episodes(self, episode_ids: Iterable[str]) -> None:
+        """Remove the rating from one or more episodes (DELETE /episodes/note).
+
+        Args:
+            episode_ids (Iterable[str]): BetaSeries episode ids to unrate.
+
+        Returns:
+            None
+
+        """
+        await self._delete(EPISODES_NOTE_ENDPOINT, "unrate episodes", {"id": ",".join(episode_ids)})
+
+    async def mark_season_watched(self, show_id: str, season: int) -> None:
+        """Mark every episode of a season as watched (POST /seasons/watched).
+
+        Only one show/season per call - unlike the episode-level actions,
+        this endpoint does not accept a bulk list (verified via Bruno,
+        bruno/Seasons/watched.bru).
+
+        Args:
+            show_id (str): BetaSeries show id.
+            season (int): Season number.
+
+        Returns:
+            None
+
+        """
+        await self._post(SEASONS_WATCHED_ENDPOINT, "mark season watched", {"id": show_id, "season": str(season)})
+
+    async def mark_season_unwatched(self, show_id: str, season: int) -> None:
+        """Remove the watched mark from every episode of a season (DELETE /seasons/watched).
+
+        Args:
+            show_id (str): BetaSeries show id.
+            season (int): Season number.
+
+        Returns:
+            None
+
+        """
+        await self._delete(SEASONS_WATCHED_ENDPOINT, "mark season unwatched", {"id": show_id, "season": str(season)})
+
+    async def rate_season(self, show_id: str, season: int, note: int) -> None:
+        """Rate a season (POST /seasons/note).
+
+        A separate action from mark_season_watched, not one of its
+        parameters (verified via Bruno, bruno/Seasons/note.bru) - rating
+        requires the season to already be fully watched, raising
+        NotWatchedError (via _post/_raise_for_error) otherwise.
+
+        Args:
+            show_id (str): BetaSeries show id.
+            season (int): Season number.
+            note (int): Rating from 1 to 5.
+
+        Returns:
+            None
+
+        """
+        await self._post(
+            SEASONS_NOTE_ENDPOINT, "rate season", {"id": show_id, "season": str(season), "note": str(note)}
+        )
+
+    async def unrate_season(self, show_id: str, season: int) -> None:
+        """Remove a season's rating (DELETE /seasons/note).
+
+        No note/rate field needed in the body (verified via Bruno,
+        bruno/Seasons/unnote.bru).
+
+        Args:
+            show_id (str): BetaSeries show id.
+            season (int): Season number.
+
+        Returns:
+            None
+
+        """
+        await self._delete(SEASONS_NOTE_ENDPOINT, "unrate season", {"id": show_id, "season": str(season)})
+
+    async def rate_show(self, show_id: str, note: int) -> None:
+        """Rate a show (POST /shows/note).
+
+        Args:
+            show_id (str): BetaSeries show id.
+            note (int): Rating from 1 to 5.
+
+        Returns:
+            None
+
+        """
+        await self._post(SHOWS_NOTE_ENDPOINT, "rate show", {"id": show_id, "note": str(note)})
+
+    async def unrate_show(self, show_id: str) -> None:
+        """Remove a show's rating (DELETE /shows/note).
+
+        Args:
+            show_id (str): BetaSeries show id.
+
+        Returns:
+            None
+
+        """
+        await self._delete(SHOWS_NOTE_ENDPOINT, "unrate show", {"id": show_id})
 
     @staticmethod
     def _parse_badge(badge: dict[str, Any]) -> Badge:

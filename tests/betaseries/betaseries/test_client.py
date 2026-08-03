@@ -13,7 +13,7 @@ import aiohttp
 from custom_components.betaseries.betaseries.client import Client
 from custom_components.betaseries.betaseries.const import REQUEST_TIMEOUT_SECONDS
 from custom_components.betaseries.betaseries.episode_watched_event import EpisodeWatchedEvent
-from custom_components.betaseries.betaseries.exceptions import AuthError, Error
+from custom_components.betaseries.betaseries.exceptions import AuthError, Error, NotWatchedError
 from custom_components.betaseries.betaseries.season_watched_event import SeasonWatchedEvent
 from custom_components.betaseries.betaseries.timeline_event_type import TimelineEventType
 import pytest
@@ -1161,3 +1161,304 @@ async def test_every_request_declares_its_own_timeout() -> None:
 
     _, kwargs = session.get_calls[0]
     assert kwargs["timeout"].total == REQUEST_TIMEOUT_SECONDS
+
+
+NOT_WATCHED_PAYLOAD = {"errors": [{"code": 2005, "text": "L'utilisateur n'a pas marqué cet épisode comme vu."}]}
+
+
+@pytest.mark.parametrize(
+    "transport_error",
+    [aiohttp.ClientConnectionError("cannot connect"), TimeoutError()],
+    ids=["connection", "timeout"],
+)
+async def test_post_transport_failure_surfaces_as_error(transport_error: Exception) -> None:
+    """Wrap a transport failure on a POST write action into Error, same as _get."""
+    session = FakeSession(post_responses=[transport_error])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error) as raised:
+        await client.mark_episodes_watched(["3905073"])
+
+    assert not isinstance(raised.value, AuthError)
+    assert raised.value.__cause__ is transport_error
+
+
+@pytest.mark.parametrize(
+    "transport_error",
+    [aiohttp.ClientConnectionError("cannot connect"), TimeoutError()],
+    ids=["connection", "timeout"],
+)
+async def test_delete_transport_failure_surfaces_as_error(transport_error: Exception) -> None:
+    """Wrap a transport failure on a DELETE write action into Error, same as _get."""
+    session = FakeSession(delete_responses=[transport_error])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error) as raised:
+        await client.mark_episodes_unwatched(["3905073"])
+
+    assert not isinstance(raised.value, AuthError)
+    assert raised.value.__cause__ is transport_error
+
+
+async def test_mark_episodes_watched_sends_comma_joined_ids() -> None:
+    """POST /episodes/watched with ids joined by a comma (verified via Bruno)."""
+    session = FakeSession(post_responses=[FakeResponse(200, {"episodes": [], "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.mark_episodes_watched(["3905073", "3685365"])
+
+    _args, kwargs = session.post_calls[0]
+    assert kwargs["data"] == {"id": "3905073,3685365"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_mark_episodes_watched_failure(status: int) -> None:
+    """Raise Error when marking episodes watched fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.mark_episodes_watched(["3905073"])
+
+
+async def test_mark_episodes_watched_raises_auth_error_on_invalid_credentials() -> None:
+    """Raise AuthError on HTTP 400 with BetaSeries' "invalid credentials" error code."""
+    payload = {"errors": [{"code": 1001, "text": "Mauvaise clé API."}]}
+    session = FakeSession(post_responses=[FakeResponse(400, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(AuthError):
+        await client.mark_episodes_watched(["3905073"])
+
+
+async def test_mark_episodes_unwatched_sends_comma_joined_ids() -> None:
+    """DELETE /episodes/watched with ids joined by a comma."""
+    session = FakeSession(delete_responses=[FakeResponse(200, {"episode": {}, "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.mark_episodes_unwatched(["3905073", "3685365"])
+
+    _args, kwargs = session.delete_calls[0]
+    assert kwargs["data"] == {"id": "3905073,3685365"}
+
+
+async def test_mark_episodes_unwatched_raises_not_watched_error() -> None:
+    """Raise NotWatchedError when the episode is not currently marked as watched.
+
+    Verified via Bruno (bruno/Episodes/unwatched.bru): unwatching an episode
+    not marked watched returns HTTP 400 with error code 2005.
+    """
+    session = FakeSession(delete_responses=[FakeResponse(400, NOT_WATCHED_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(NotWatchedError):
+        await client.mark_episodes_unwatched(["3905073"])
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_mark_episodes_unwatched_failure(status: int) -> None:
+    """Raise Error when marking episodes unwatched fails."""
+    session = FakeSession(delete_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.mark_episodes_unwatched(["3905073"])
+
+
+async def test_rate_episodes_sends_comma_joined_ids_and_note() -> None:
+    """POST /episodes/note with ids joined by a comma and the note field."""
+    session = FakeSession(post_responses=[FakeResponse(200, {"episode": {}, "note": 4, "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.rate_episodes(["3905073", "3685365"], 4)
+
+    _args, kwargs = session.post_calls[0]
+    assert kwargs["data"] == {"id": "3905073,3685365", "note": "4"}
+
+
+async def test_rate_episodes_raises_not_watched_error() -> None:
+    """Raise NotWatchedError when the episode is not marked as watched.
+
+    Verified via Bruno (bruno/Episodes/note.bru): rating an episode that has
+    not been watched returns HTTP 400 with error code 2005.
+    """
+    session = FakeSession(post_responses=[FakeResponse(400, NOT_WATCHED_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(NotWatchedError):
+        await client.rate_episodes(["3905073"], 4)
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_rate_episodes_failure(status: int) -> None:
+    """Raise Error when rating episodes fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.rate_episodes(["3905073"], 4)
+
+
+async def test_unrate_episodes_sends_comma_joined_ids() -> None:
+    """DELETE /episodes/note with ids joined by a comma."""
+    session = FakeSession(delete_responses=[FakeResponse(200, {"episode": {}, "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.unrate_episodes(["3905073", "3685365"])
+
+    _args, kwargs = session.delete_calls[0]
+    assert kwargs["data"] == {"id": "3905073,3685365"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_unrate_episodes_failure(status: int) -> None:
+    """Raise Error when unrating episodes fails."""
+    session = FakeSession(delete_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.unrate_episodes(["3905073"])
+
+
+async def test_mark_season_watched_sends_show_id_and_season() -> None:
+    """POST /seasons/watched with the show id and season number."""
+    session = FakeSession(post_responses=[FakeResponse(200, {"episodes": [], "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.mark_season_watched("38605", 2)
+
+    _args, kwargs = session.post_calls[0]
+    assert kwargs["data"] == {"id": "38605", "season": "2"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_mark_season_watched_failure(status: int) -> None:
+    """Raise Error when marking a season watched fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.mark_season_watched("38605", 2)
+
+
+async def test_mark_season_unwatched_sends_show_id_and_season() -> None:
+    """DELETE /seasons/watched with the show id and season number."""
+    session = FakeSession(delete_responses=[FakeResponse(200, {"episodes": [], "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.mark_season_unwatched("38605", 2)
+
+    _args, kwargs = session.delete_calls[0]
+    assert kwargs["data"] == {"id": "38605", "season": "2"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_mark_season_unwatched_failure(status: int) -> None:
+    """Raise Error when marking a season unwatched fails."""
+    session = FakeSession(delete_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.mark_season_unwatched("38605", 2)
+
+
+async def test_rate_season_sends_show_id_season_and_note() -> None:
+    """POST /seasons/note with the show id, season number and note."""
+    session = FakeSession(post_responses=[FakeResponse(200, {"seasons": [], "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.rate_season("38605", 2, 4)
+
+    _args, kwargs = session.post_calls[0]
+    assert kwargs["data"] == {"id": "38605", "season": "2", "note": "4"}
+
+
+async def test_rate_season_raises_not_watched_error() -> None:
+    """Raise NotWatchedError when the season is not fully watched.
+
+    Verified via Bruno (bruno/Seasons/note.bru): rating a season not yet
+    fully watched returns HTTP 400 with error code 2005, and succeeds once
+    the season has been marked watched.
+    """
+    session = FakeSession(post_responses=[FakeResponse(400, NOT_WATCHED_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(NotWatchedError):
+        await client.rate_season("38605", 2, 4)
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_rate_season_failure(status: int) -> None:
+    """Raise Error when rating a season fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.rate_season("38605", 2, 4)
+
+
+async def test_unrate_season_sends_show_id_and_season_only() -> None:
+    """DELETE /seasons/note with just the show id and season - no note field needed.
+
+    Verified via Bruno (bruno/Seasons/unnote.bru): a `rate` field tried during
+    testing was a mistake, not required by the endpoint.
+    """
+    session = FakeSession(delete_responses=[FakeResponse(200, {"seasons": [], "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.unrate_season("38605", 2)
+
+    _args, kwargs = session.delete_calls[0]
+    assert kwargs["data"] == {"id": "38605", "season": "2"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_unrate_season_failure(status: int) -> None:
+    """Raise Error when unrating a season fails."""
+    session = FakeSession(delete_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.unrate_season("38605", 2)
+
+
+async def test_rate_show_sends_show_id_and_note() -> None:
+    """POST /shows/note with the show id and note."""
+    session = FakeSession(post_responses=[FakeResponse(200, {"show": {}, "note": 4, "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.rate_show("38605", 4)
+
+    _args, kwargs = session.post_calls[0]
+    assert kwargs["data"] == {"id": "38605", "note": "4"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_rate_show_failure(status: int) -> None:
+    """Raise Error when rating a show fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.rate_show("38605", 4)
+
+
+async def test_unrate_show_sends_show_id_only() -> None:
+    """DELETE /shows/note with just the show id - no note field needed."""
+    session = FakeSession(delete_responses=[FakeResponse(200, {"show": {}, "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.unrate_show("38605")
+
+    _args, kwargs = session.delete_calls[0]
+    assert kwargs["data"] == {"id": "38605"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_unrate_show_failure(status: int) -> None:
+    """Raise Error when unrating a show fails."""
+    session = FakeSession(delete_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.unrate_show("38605")

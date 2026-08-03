@@ -11,13 +11,37 @@ from homeassistant.helpers.storage import Store
 from .betaseries import Client
 from .const import CACHE_STORES, CONF_LOCALE, DEFAULT_LOCALE
 from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator, WatchListCoordinator
+from .services import async_setup_services
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
     from .coordinator import BetaSeriesConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
+
+
+async def async_setup(  # pylint: disable=unused-argument
+    hass: HomeAssistant,
+    config: ConfigType,  # noqa: ARG001
+) -> bool:
+    """Register the BetaSeries services, once per Home Assistant run.
+
+    Services are registered at the domain level (see services.py), not per
+    config entry: a single call here covers every BetaSeries account that
+    gets added afterward.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        config (ConfigType): Unused; this integration has no YAML configuration.
+
+    Returns:
+        bool: Always True.
+
+    """
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -> bool:

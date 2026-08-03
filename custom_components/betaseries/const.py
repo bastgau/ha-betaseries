@@ -122,3 +122,25 @@ CACHE_STORES: tuple[tuple[int, str], ...] = (
     (EPISODE_SHOW_IMAGES_STORE_VERSION, EPISODE_SHOW_IMAGES_STORE_KEY_PREFIX),
     (BADGES_STORE_VERSION, BADGES_STORE_KEY_PREFIX),
 )
+
+# v3 services (see CLAUDE.md §8): names match services.yaml/strings.json exactly.
+SERVICE_MARK_EPISODE_WATCHED = "mark_episode_watched"
+SERVICE_MARK_EPISODE_UNWATCHED = "mark_episode_unwatched"
+SERVICE_RATE_EPISODE = "rate_episode"
+SERVICE_UNRATE_EPISODE = "unrate_episode"
+SERVICE_MARK_SEASON_WATCHED = "mark_season_watched"
+SERVICE_MARK_SEASON_UNWATCHED = "mark_season_unwatched"
+SERVICE_RATE_SEASON = "rate_season"
+SERVICE_UNRATE_SEASON = "unrate_season"
+SERVICE_RATE_SHOW = "rate_show"
+SERVICE_UNRATE_SHOW = "unrate_show"
+
+# Service field names. ATTR_CONFIG_ENTRY targets the BetaSeries account
+# (ConfigEntrySelector, see services.py); episode_id/show_id mirror the
+# attribute names sensors already expose (CLAUDE.md §5), so a value copied
+# from a dashboard card matches the service field verbatim.
+ATTR_CONFIG_ENTRY = "config_entry"
+ATTR_EPISODE_ID = "episode_id"
+ATTR_SHOW_ID = "show_id"
+ATTR_SEASON = "season"
+ATTR_NOTE = "note"

@@ -189,5 +189,186 @@
         "en": "English"
       }
     }
+  },
+  "services": {
+    "mark_episode_watched": {
+      "name": "Mark episode(s) as watched",
+      "description": "Marks one or more episodes as watched.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "episode_id": {
+          "name": "Episode ID(s)",
+          "description": "One or more BetaSeries episode ids."
+        }
+      }
+    },
+    "mark_episode_unwatched": {
+      "name": "Mark episode(s) as unwatched",
+      "description": "Removes the watched mark from one or more episodes. Fails if an episode is not currently marked as watched.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "episode_id": {
+          "name": "Episode ID(s)",
+          "description": "One or more BetaSeries episode ids."
+        }
+      }
+    },
+    "rate_episode": {
+      "name": "Rate episode(s)",
+      "description": "Rates one or more episodes. An episode must already be marked as watched to be rated.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "episode_id": {
+          "name": "Episode ID(s)",
+          "description": "One or more BetaSeries episode ids."
+        },
+        "note": {
+          "name": "Rating",
+          "description": "Rating from 1 to 5."
+        }
+      }
+    },
+    "unrate_episode": {
+      "name": "Remove episode rating(s)",
+      "description": "Removes the rating from one or more episodes.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "episode_id": {
+          "name": "Episode ID(s)",
+          "description": "One or more BetaSeries episode ids."
+        }
+      }
+    },
+    "mark_season_watched": {
+      "name": "Mark season as watched",
+      "description": "Marks every episode of a season as watched.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        },
+        "season": {
+          "name": "Season",
+          "description": "The season number."
+        }
+      }
+    },
+    "mark_season_unwatched": {
+      "name": "Mark season as unwatched",
+      "description": "Removes the watched mark from every episode of a season.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        },
+        "season": {
+          "name": "Season",
+          "description": "The season number."
+        }
+      }
+    },
+    "rate_season": {
+      "name": "Rate season",
+      "description": "Rates a season. The season must already be fully watched to be rated.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        },
+        "season": {
+          "name": "Season",
+          "description": "The season number."
+        },
+        "note": {
+          "name": "Rating",
+          "description": "Rating from 1 to 5."
+        }
+      }
+    },
+    "unrate_season": {
+      "name": "Remove season rating",
+      "description": "Removes a season's rating.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        },
+        "season": {
+          "name": "Season",
+          "description": "The season number."
+        }
+      }
+    },
+    "rate_show": {
+      "name": "Rate show",
+      "description": "Rates a show.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        },
+        "note": {
+          "name": "Rating",
+          "description": "Rating from 1 to 5."
+        }
+      }
+    },
+    "unrate_show": {
+      "name": "Remove show rating",
+      "description": "Removes a show's rating.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_watched": {
+      "message": "This episode or season is not marked as watched yet."
+    },
+    "auth_error": {
+      "message": "BetaSeries rejected the stored credentials. Reauthenticate the integration."
+    },
+    "service_call_failed": {
+      "message": "BetaSeries rejected the request: {error}"
+    }
   }
 }

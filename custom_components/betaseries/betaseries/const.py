@@ -13,6 +13,11 @@ SHOWS_DISPLAY_ENDPOINT = "/shows/display"
 SHOWS_EPISODES_ENDPOINT = "/shows/episodes"
 TIMELINE_MEMBER_ENDPOINT = "/timeline/member"
 MEMBERS_BADGES_ENDPOINT = "/members/badges"
+EPISODES_WATCHED_ENDPOINT = "/episodes/watched"
+EPISODES_NOTE_ENDPOINT = "/episodes/note"
+SEASONS_WATCHED_ENDPOINT = "/seasons/watched"
+SEASONS_NOTE_ENDPOINT = "/seasons/note"
+SHOWS_NOTE_ENDPOINT = "/shows/note"
 
 # GET /episodes/list embeds the full cast of every returned episode under
 # "characters". Value of the `excludes` query param that drops it, sent only
@@ -56,3 +61,11 @@ ERROR_CODE_INVALID_API_KEY = 1001
 # Codes observed on authenticated data endpoints that mean "the stored
 # credentials are no longer accepted" - both must trigger reauthentication.
 INVALID_CREDENTIALS_ERROR_CODES = frozenset({ERROR_CODE_INVALID_API_KEY, ERROR_CODE_INVALID_CREDENTIALS})
+
+# BetaSeries returns this code (HTTP 400) on /episodes/note, /seasons/note and
+# DELETE /episodes/watched when the target episode/season is not marked as
+# watched - verified via Bruno on all three (bruno/Episodes/note.bru,
+# bruno/Seasons/note.bru, bruno/Episodes/unwatched.bru). Same number reused
+# across granularities, error text always mentions "episode" even in a season
+# context.
+ERROR_CODE_NOT_WATCHED = 2005

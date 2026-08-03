@@ -16,7 +16,7 @@ from .collection_watch_list_show import CollectionWatchListShow
 from .device_code import DeviceCodeData
 from .episode import Episode
 from .episode_watched_event import EpisodeWatchedEvent
-from .exceptions import AuthError, AuthTimeoutError, Error
+from .exceptions import AuthError, AuthTimeoutError, Error, NotWatchedError
 from .member_data import MemberData
 from .member_identity import MemberIdentity
 from .member_stats import MemberStats
@@ -46,6 +46,7 @@ __all__ = [
     "MemberData",
     "MemberIdentity",
     "MemberStats",
+    "NotWatchedError",
     "SeasonWatchedEvent",
     "Show",
     "ShowAdditionalInformation",

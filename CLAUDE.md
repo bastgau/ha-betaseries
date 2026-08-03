@@ -30,7 +30,7 @@
 
 Custom component HACS pour un compte membre BetaSeries.
 
-**Livré** (v1 → v2bis, tout est en place) :
+**Livré** (v1 → v3, tout est en place pour Show/Episode/Season) :
 
 - `sensor` : stats du compte (`/members/infos`), les deux capteurs de dates de sortie
   (`/planning/member`), la liste à rattraper (`/episodes/list`), un capteur diagnostic. Voir §5.
@@ -39,15 +39,16 @@ Custom component HACS pour un compte membre BetaSeries.
 - `button` : trois boutons de purge de cache, désactivés par défaut.
 - `diagnostics` : agrégats uniquement, jamais un titre de série (voir `diagnostics.py`).
 - Auth par device flow, reauth, OptionsFlow.
+- **v3** : 10 services (marquer/démarquer vu épisode/saison, noter/dénoter épisode/saison/série) -
+  périmètre restreint à Show/Episode/Season (arbitrage #6), routes testées via Bruno avant
+  implémentation. Voir §8.
 
 **À faire** :
 
-- **v3** : `services` (marquer vu épisode/saison, noter épisode/série/film) - périmètre volontairement
-  restreint au « core » (arbitrage #6), nécessite d'avoir testé les routes POST via Bruno au
-  préalable (voir §8). **Rien n'est commencé** : ni `services.py`, ni `services.yaml`, ni méthode
-  POST/DELETE dans le client.
-- Pas de v4 prévue ; on avisera selon les retours d'usage après v3 (`add_show`,
-  `set_movie_status` restent des candidats si le besoin se confirme).
+- **v3 - films** : `rate_movie`/`unrate_movie` laissés de côté faute de besoin identifié - à faire
+  si le besoin se confirme, même démarche (Bruno d'abord). Voir §8.
+- Pas de v4 prévue ; on avisera selon les retours d'usage (`add_show`, `set_movie_status` restent
+  des candidats si le besoin se confirme).
 
 > Le découpage v1/v2/v2bis a servi à cadencer le développement ; il n'a plus de valeur descriptive
 > aujourd'hui et le README ne l'utilise plus. Ne pas s'en servir pour raisonner sur l'existant :
@@ -544,12 +545,12 @@ custom_components/betaseries/
 ├── calendar.py         # CalendarEntity
 ├── button.py           # 3 boutons de purge de cache (diagnostic)
 ├── diagnostics.py      # export agrégé, credentials redacted
-├── strings.json        # textes config flow + entités (EN)
+├── services.py         # 10 services v3 (Show/Episode/Season), voir §8
+├── services.yaml       # champs des 10 services (gabarit habitica)
+├── strings.json        # textes config flow + entités + services (EN)
 ├── translations/       # en.json + fr.json
 └── icons.json          # icônes mdi
 ```
-
-À créer en v3 : `services.py`, `services.yaml`.
 
 Repo root : `hacs.json`, `README.md`, `LICENSE`, `tests/`, `bruno/`, `scripts/`,
 `.coveragerc-integration`, `requirements-{lint,test-client,test-integration}.txt`,
@@ -571,40 +572,74 @@ Repo root : `hacs.json`, `README.md`, `LICENSE`, `tests/`, `bruno/`, `scripts/`,
 }
 ```
 
-## 8. Services - v3 ✅ (périmètre « core », arbitrage #6)
+## 8. Services - v3 ✅ (Show/Episode/Season livrés, Movies différé)
 
-Arbitrage #3 ✅ : aucun service en v1/v2 (pas de `services.py`/`services.yaml`,
-pas de méthodes POST dans le client avant v3). Ajoutés en v3, une fois les routes testées via Bruno.
-Collection disponible dans le repo : `bruno/` (env `local` dans `bruno/environments/local.bru` -
-variables secrètes `apiKey`, `clientSecret`, `token`, `deviceCode`, `userId` à renseigner avant de
-lancer les requêtes).
+Livré le 2026-08-03. Périmètre : Show, Episode et Season uniquement - Movies laissé de côté
+(pas de `rate_movie`, pas de dossier `bruno/Movies/`) faute de valeur d'automatisation identifiée
+pour l'instant ; à reconsidérer si le besoin se confirme.
 
-Paramètres vérifiés via le spec OpenAPI officiel (`https://developers.betaseries.com/openapi.json`,
-récupéré via le lien « Export » de la doc - le lien GitHub qu'il affiche est mort, mais le site sert
-aussi le spec en local sur `/openapi.json`). Statut 🧪 = route/paramètres documentés mais pas encore
-appelés en conditions réelles via Bruno (pas d'exemple de réponse sauvegardé) ; à confirmer avant
-d'écrire les méthodes POST/DELETE du client.
-| Service (v3) | Route | Paramètres | Statut |
-|---|---|---|---|
-| mark_episode_watched | `POST /episodes/watched` | `id`, `bulk` (**défaut `false` côté HA**, arbitrage #7 - l'API défaut à `true` et marque aussi tout ce qui précède) | 🧪 |
-| mark_episode_unwatched | `DELETE /episodes/watched` | `id` | 🧪 |
-| mark_season_watched | `POST /seasons/watched` | `id` (show), `season`, `note` optionnel | 🧪 |
-| rate_episode | `POST /episodes/note` | `id`, `note` (1-5) | 🧪 |
-| rate_show | `POST /shows/note` | `id`, `note` (1-5, requis côté API) | 🧪 |
-| rate_movie | `POST /movies/note` | `id`, `note` (1-5) | 🧪 (pas encore de dossier `Movies/` dans `bruno/`) |
+Les 10 routes ont toutes été testées via Bruno (`.bru` avec un bloc `example` et une vraie réponse
+sauvegardée, gabarit `bruno/Planning/member.bru`) avant d'écrire une seule ligne de client - c'est
+ce qui a permis de corriger deux points que le spec OpenAPI seul avait fait supposer à tort
+(voir juste après la table).
+
+| Service (v3)             | Route                      | Paramètres                                                                   | Réponse (succès)                                              |
+| ------------------------ | -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `mark_episode_watched`   | `POST /episodes/watched`   | `episode_id` (**plusieurs**, `id=1,2` séparés par des virgules)              | `{"episodes": [...objets complets...], "errors": []}`         |
+| `mark_episode_unwatched` | `DELETE /episodes/watched` | `episode_id` (plusieurs acceptés côté requête ; réponse toujours singulière) | `{"episode": {...}, "errors": []}`                            |
+| `rate_episode`           | `POST /episodes/note`      | `episode_id` (plusieurs), `note` (1-5)                                       | `{"episode": {...}, "note": N, "errors": []}`                 |
+| `unrate_episode`         | `DELETE /episodes/note`    | `episode_id` (plusieurs acceptés ; réponse ne renvoie qu'un seul objet)      | `{"episode": {...}, "errors": []}`                            |
+| `mark_season_watched`    | `POST /seasons/watched`    | `show_id`, `season` (un seul show/saison à la fois)                          | `{"episodes": [{"id":...}, ...bruts], "errors": []}`          |
+| `mark_season_unwatched`  | `DELETE /seasons/watched`  | `show_id`, `season`                                                          | `{"episodes": [{"id":...}, ...bruts], "errors": []}`          |
+| `rate_season`            | `POST /seasons/note`       | `show_id`, `season`, `note` (1-5)                                            | `{"seasons": [toutes les saisons de la série], "errors": []}` |
+| `unrate_season`          | `DELETE /seasons/note`     | `show_id`, `season` (pas de champ note)                                      | `{"seasons": [...], "errors": []}`                            |
+| `rate_show`              | `POST /shows/note`         | `show_id`, `note` (1-5)                                                      | `{"show": {...complet...}, "note": N, "errors": []}`          |
+| `unrate_show`            | `DELETE /shows/note`       | `show_id` (pas de champ note)                                                | `{"show": {...complet...}, "errors": []}`                     |
+
+**Deux corrections apportées par les tests Bruno, par rapport à ce que le spec OpenAPI seul avait
+fait supposer** (résynchronisation du 2026-08-03, cf. avertissement en tête de fichier) :
+
+- **Pas de flag `bulk` booléen** : aucune réponse Bruno n'en montre trace, sur aucune route,
+  malgré plusieurs essais. L'ancien arbitrage #7 (un flag distinct pour la rétroactivité) reposait
+  sur une lecture erronée du texte descriptif OpenAPI - "bulk marking" décrivait la capacité à
+  passer plusieurs ids par virgules, pas un paramètre en plus. **Retiré** : `mark_episode_watched`
+  n'a qu'un champ `episode_id` (accepte plusieurs valeurs).
+- **`rate_season` est un service à part entière**, pas un paramètre `note` optionnel de
+  `mark_season_watched` comme l'ancienne table le documentait. Les deux actions restent liées par
+  une règle métier : une saison doit être **entièrement vue** avant de pouvoir être notée.
+
+**Règle métier confirmée par un vrai 400** (code `2005`, même texte "L'utilisateur n'a pas marqué
+cet épisode comme vu." réutilisé à travers plusieurs routes, y compris en contexte saison) : noter
+un épisode/une saison non vu(e), ou démarquer un épisode déjà pas-vu, échoue avec ce code. Détecté
+côté client (`betaseries/const.py`, `ERROR_CODE_NOT_WATCHED = 2005`) et surfacé comme
+`NotWatchedError` (`betaseries/exceptions.py`), narrowée à son tour en `ServiceValidationError`
+côté `services.py` (le seul cas où l'appelant peut corriger son appel - voir/marquer vu d'abord).
+
+Anomalie notée sans lui donner suite : un `DELETE /seasons/watched` répété a une fois renvoyé
+`{"code": 3004, "text": "Le paramètre \"season\" est invalide."}` sur un appel par ailleurs
+identique à un appel réussi juste avant. Tombe dans le cas générique (`HomeAssistantError`).
 
 Arbitrage #8 ✅ : cible uniquement l'`id` BetaSeries (pas de `thetvdb_id` en alternative) - suffisant
 vu que les coordinators exposent déjà cet id pour tout ce qui est actionnable depuis le dashboard
-(cf. v2bis, §5).
+(cf. v2bis, §5). Ciblage du **compte** via un champ `config_entry` (`ConfigEntrySelector`) sur
+chaque service - pattern standard HA pour une intégration à un device par entrée, calqué sur
+`homeassistant/components/habitica/services.py` (référence déjà citée en §10).
+
+Après un succès de `mark_episode_watched`/`mark_episode_unwatched`/`mark_season_watched`/
+`mark_season_unwatched` : refresh de `MemberCoordinator` **et** `WatchListCoordinator`
+(`async_request_refresh()`, non bloquant) - les deux seules données affichées que ces actions
+changent (`episodes_to_watch`, `shows_to_catch_up_on`/suggestion). **Pas** de refresh après les 6
+actions de notation (`rate_*`/`unrate_*`) : aucune entité n'affiche la note d'un membre, seul
+`notes.mean` (moyenne globale) sert au tie-break des deux capteurs de date de sortie, caché avec
+l'artwork sans mécanisme d'invalidation ciblée par série.
 
 Écarté du périmètre v3 (pas de valeur d'automatisation évidente pour un usage HA, cohérent avec
 l'arbitrage #3 de garder le scope serré) : commentaires, tags, collections (premium), sondages,
-amis/blocage, favoris, masquer épisode/saison, marquer téléchargé. `add_show`
-(`POST /shows/show`) et `set_movie_status` (`POST /movies/movie`, `state`: à voir/vu/pas envie)
-restent des candidats v4 si le besoin se confirme à l'usage (cas d'usage fort identifié : ajouter
-une série à la liste via une phrase Assist, ex. _« Ajoute Severance à ma liste BetaSeries »_).
-
-Après appel : déclencher un refresh du coordinator concerné.
+amis/blocage, favoris, masquer épisode/saison, marquer téléchargé, et tout ce qui touche aux films
+(voir plus haut). `add_show` (`POST /shows/show`) et `set_movie_status` (`POST /movies/movie`,
+`state`: à voir/vu/pas envie) restent des candidats v4 si le besoin se confirme à l'usage (cas
+d'usage fort identifié : ajouter une série à la liste via une phrase Assist, ex.
+_« Ajoute Severance à ma liste BetaSeries »_).
 
 ## 9. Arbitrages - tous tranchés ✅
 
@@ -613,12 +648,15 @@ Après appel : déclencher un refresh du coordinator concerné.
 3. **Périmètre services** : aucun service en v1/v2 ; les services prévus sont livrés en v3.
 4. **Intervalles** : 15 min (member) / 60 min (planning) par défaut, réglables via OptionsFlow.
 5. **integration_type** : `service` (retenu).
-6. **Périmètre services v3** : « core » uniquement - `mark_episode_watched`/`mark_episode_unwatched`,
-   `mark_season_watched`, `rate_episode`, `rate_show`, `rate_movie`. `add_show`/`set_movie_status`
-   écartés pour l'instant (candidats v4 selon usage, voir §8).
-7. **Défaut `bulk` de `mark_episode_watched`** : `false` côté service HA (l'API défaut à `true` et
-   marquerait aussi tout ce qui précède) - évite qu'un tap accidentel ou une automatisation mal
-   réglée ne marque toute la rétroactivité comme vue.
+6. **Périmètre services v3** : livré pour Show/Episode/Season - `mark_episode_watched`/
+   `mark_episode_unwatched`, `rate_episode`/`unrate_episode`, `mark_season_watched`/
+   `mark_season_unwatched`, `rate_season`/`unrate_season`, `rate_show`/`unrate_show`. Movies
+   (`rate_movie`) et `add_show`/`set_movie_status` écartés pour l'instant (candidats v4 selon
+   usage, voir §8).
+7. **Pas de flag `bulk` distinct** : abandonné après les tests Bruno (§8) - aucune réponse n'en
+   montre trace ; "bulk" décrit la capacité à passer plusieurs ids par virgules, pas un paramètre
+   séparé. L'ancien texte de cet arbitrage (un flag `false` par défaut contre la rétroactivité)
+   reposait sur une lecture erronée du spec OpenAPI, jamais vérifiée avant le 2026-08-03.
 8. **Identifiant cible des services** : `id` BetaSeries uniquement, pas de `thetvdb_id` en
    alternative - suffisant vu que les coordinators exposent déjà cet id pour tout ce qui est
    actionnable (v2bis, §5).
@@ -640,25 +678,18 @@ Après appel : déclencher un refresh du coordinator concerné.
 
 ## 11. Reste à faire
 
-_(mis à jour le 2026-08-01 ; tout ce qui précédait est livré - auth, les 3 coordinators, les 4
-plateformes, diagnostics, options, CI, 295 tests à 100 % de couverture branches incluses)_
+_(mis à jour le 2026-08-03 ; tout ce qui précédait est livré - auth, les 3 coordinators, les 4
+plateformes, diagnostics, options, CI, et maintenant les 10 services Show/Episode/Season (§8),
+387 tests à 100 % de couverture branches incluses)_
 
 ### La prochaine grosse étape
 
-- **v3 - services** : les 6 routes du périmètre « core » (§8) ont leurs paramètres vérifiés **via le
-  spec OpenAPI seulement** ; reste à les tester en conditions réelles via Bruno (`bruno/Episodes/`,
-  `Seasons/`, `Shows/` - **pas encore de dossier `Movies/`** pour `rate_movie`), puis ajouter les
-  méthodes POST/DELETE au client, `services.py`, `services.yaml`, tests et table des services au
-  README.
+- **v3 - services pour les films** : `rate_movie`/`unrate_movie` (et `add_show`/`set_movie_status`
+  en v4 candidats) restent à faire si le besoin se confirme - voir §8. Même démarche que pour
+  Show/Episode/Season : tester via Bruno (créer `bruno/Movies/`) avant d'écrire une ligne de client.
 
 ### Décisions en attente
 
-- **Capteur « suggestion du jour »** (envisagé, non tranché) : proposer une série au hasard parmi
-  celles à rattraper. Un tirage à chaque refresh **n'est pas un état de capteur** (48 changements
-  d'état/jour sans évènement réel, automatisations déclenchées sur du bruit, valeur non reproductible
-  après restart). La forme retenue si on le fait : un **score déterministe par série**
-  (`sha256(jour + show_id)`, on prend le max) - stable dans la journée, et surtout **insensible aux
-  autres séries qui quittent la liste**, contrairement à `random.choice` qui tire un _index_.
 - **Densité de prose** : 58 % des lignes non vides du paquet livré sont des docstrings/commentaires
   (2 056 + 171 contre 1 617 de code), `docstring-linter` en `select = ["ALL"]` imposant du
   remplissage. À assumer ou à assouplir - mais voir l'avertissement en tête de ce fichier.
@@ -668,7 +699,7 @@ plateformes, diagnostics, options, CI, 295 tests à 100 % de couverture branches
 ### Petit reste
 
 - `## Troubleshooting` est un titre vide dans le README.
-- `MAX_PLANNING_MONTHS_AHEAD = 3` : le plafond se défend par le coût (§6), mais l'argument
+- `MAX_PLANNING_MONTHS_AHEAD = 2` : le plafond se défend par le coût (§6), mais l'argument
   « BetaSeries n'a presque rien à renvoyer si loin » est **déduit, pas mesuré**. Une requête Bruno
   sur un mois lointain trancherait.
 - `order=smart` sur `/episodes/list` : jamais testé, réglerait peut-être le biais alphabétique (§5).

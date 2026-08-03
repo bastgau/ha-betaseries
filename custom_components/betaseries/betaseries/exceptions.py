@@ -37,3 +37,7 @@ class AuthError(Error):
 
 class AuthTimeoutError(Error):
     """The device flow was not completed within its expires_in window."""
+
+
+class NotWatchedError(Error):
+    """The target episode/season is not marked as watched, a precondition for the requested action."""

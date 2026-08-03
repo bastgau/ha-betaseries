@@ -172,6 +172,25 @@ logger:
 > [!WARNING]
 > Debug logs may contain authentication and account information. Review logs carefully before sharing them publicly.
 
+## Actions
+
+These actions let you mark episodes/seasons as watched or rate episodes/seasons/shows directly from Home Assistant (automations, scripts, dashboards) - covering shows and episodes only, not movies. Every action targets a BetaSeries account via a required `config_entry` field.
+
+| Action                   | Fields                                   | Notes                                                            |
+| ------------------------ | ---------------------------------------- | ---------------------------------------------------------------- |
+| `mark_episode_watched`   | `episode_id` (one or more)               | Marks one or more episodes as watched.                           |
+| `mark_episode_unwatched` | `episode_id` (one or more)               | Fails if an episode targeted is not currently marked as watched. |
+| `rate_episode`           | `episode_id` (one or more), `note` (1-5) | An episode must already be marked as watched to be rated.        |
+| `unrate_episode`         | `episode_id` (one or more)               | Removes the rating from one or more episodes.                    |
+| `mark_season_watched`    | `show_id`, `season`                      | One show/season at a time (no bulk, unlike the episode actions). |
+| `mark_season_unwatched`  | `show_id`, `season`                      | One show/season at a time.                                       |
+| `rate_season`            | `show_id`, `season`, `note` (1-5)        | A season must already be fully watched to be rated.              |
+| `unrate_season`          | `show_id`, `season`                      | Removes a season's rating.                                       |
+| `rate_show`              | `show_id`, `note` (1-5)                  | One show at a time.                                              |
+| `unrate_show`            | `show_id`                                | Removes a show's rating.                                         |
+
+`episode_id`/`show_id` match the attributes already exposed by the sensors above (e.g. `episode_id` on **Previous/Next episode airing**), so a value copied from a dashboard card works as-is.
+
 ## Support & Contributions
 
 If you encounter any issues or wish to contribute to improving this integration, feel free to open an issue or a pull request on the GitHub repository.

@@ -189,5 +189,186 @@
         "en": "Anglais"
       }
     }
+  },
+  "services": {
+    "mark_episode_watched": {
+      "name": "Marquer le(s) épisode(s) comme vu(s)",
+      "description": "Marque un ou plusieurs épisodes comme vus.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+        }
+      }
+    },
+    "mark_episode_unwatched": {
+      "name": "Démarquer le(s) épisode(s) comme vu(s)",
+      "description": "Retire la marque « vu » d'un ou plusieurs épisodes. Échoue si un épisode n'est pas actuellement marqué comme vu.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+        }
+      }
+    },
+    "rate_episode": {
+      "name": "Noter le(s) épisode(s)",
+      "description": "Note un ou plusieurs épisodes. Un épisode doit déjà être marqué comme vu pour être noté.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Note de 1 à 5."
+        }
+      }
+    },
+    "unrate_episode": {
+      "name": "Retirer la note du/des épisode(s)",
+      "description": "Retire la note d'un ou plusieurs épisodes.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries."
+        }
+      }
+    },
+    "mark_season_watched": {
+      "name": "Marquer la saison comme vue",
+      "description": "Marque tous les épisodes d'une saison comme vus.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        }
+      }
+    },
+    "mark_season_unwatched": {
+      "name": "Démarquer la saison comme vue",
+      "description": "Retire la marque « vu » de tous les épisodes d'une saison.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        }
+      }
+    },
+    "rate_season": {
+      "name": "Noter la saison",
+      "description": "Note une saison. La saison doit déjà être entièrement vue pour être notée.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Note de 1 à 5."
+        }
+      }
+    },
+    "unrate_season": {
+      "name": "Retirer la note de la saison",
+      "description": "Retire la note d'une saison.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        }
+      }
+    },
+    "rate_show": {
+      "name": "Noter la série",
+      "description": "Note une série.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Note de 1 à 5."
+        }
+      }
+    },
+    "unrate_show": {
+      "name": "Retirer la note de la série",
+      "description": "Retire la note d'une série.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_watched": {
+      "message": "Cet épisode ou cette saison n'est pas encore marqué(e) comme vu(e)."
+    },
+    "auth_error": {
+      "message": "BetaSeries a rejeté les identifiants enregistrés. Réauthentifiez l'intégration."
+    },
+    "service_call_failed": {
+      "message": "BetaSeries a rejeté la requête : {error}"
+    }
   }
 }
