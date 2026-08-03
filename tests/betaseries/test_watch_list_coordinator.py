@@ -89,15 +89,7 @@ WATCH_LIST_RESPONSE = (WATCH_LIST, 37, 726)
 
 
 def _show_with_images(poster: str | None) -> Show:
-    """Build a show carrying the additional information that holds its artwork.
-
-    Args:
-        poster (str | None): Poster URL, or None for a show with no artwork.
-
-    Returns:
-        Show: The show, with additional_information populated.
-
-    """
+    """Build a show carrying the additional information that holds its artwork."""
     return Show(
         id="38605",
         title="Achtsam Morden",
@@ -188,17 +180,7 @@ async def test_show_images_failure_does_not_fail_the_refresh(hass: HomeAssistant
 async def _setup(
     hass: HomeAssistant, watch_list: tuple[CollectionWatchListShow, int, int], shows: CollectionShow
 ) -> MockConfigEntry:
-    """Set up an entry whose watch list and show artwork are mocked.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        watch_list (tuple[CollectionWatchListShow, int, int]): What the client returns.
-        shows (CollectionShow): The shows returned for the artwork call.
-
-    Returns:
-        MockConfigEntry: The set up config entry.
-
-    """
+    """Set up an entry whose watch list and show artwork are mocked."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
     entry.add_to_hass(hass)
 

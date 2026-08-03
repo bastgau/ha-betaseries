@@ -51,15 +51,7 @@ DEVICE_CODE_DATA = DeviceCodeData(
 
 
 async def _start_device_flow(hass: HomeAssistant) -> ConfigFlowResult:
-    """Init the flow, submit the credentials form, and let the progress task settle.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-
-    Returns:
-        ConfigFlowResult: The flow's result once the progress task has resolved.
-
-    """
+    """Init the flow, submit the credentials form, and let the progress task settle."""
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
     result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_STEP_INPUT)
 
@@ -71,14 +63,7 @@ async def _start_device_flow(hass: HomeAssistant) -> ConfigFlowResult:
 
 
 async def test_full_flow_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Complete the device flow end-to-end and create the config entry.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        mock_setup_entry (AsyncMock): Patched async_setup_entry, isolating this
-            test from the real setup (coordinator, platforms).
-
-    """
+    """Complete the device flow end-to-end and create the config entry."""
     mock_auth = AsyncMock()
     mock_auth.request_device_code.return_value = DEVICE_CODE_DATA
     mock_auth.poll_for_token.return_value = "token123"
@@ -260,14 +245,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,  # noqa: ARG001
 ) -> None:
-    """Update the existing entry's token on a successful reauth, preserving its other options.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        mock_setup_entry (AsyncMock): Patched async_setup_entry, isolating this
-            test from the real setup triggered by the reauth reload.
-
-    """
+    """Update the existing entry's token on a successful reauth, preserving its other options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
@@ -308,14 +286,7 @@ async def test_reauth_flow_wrong_account_aborts(  # pylint: disable=unused-argum
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,  # noqa: ARG001
 ) -> None:
-    """Abort without touching the entry if reauth completes with a different member id.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        mock_setup_entry (AsyncMock): Patched async_setup_entry, isolating this
-            test from the real setup triggered by the reauth reload.
-
-    """
+    """Abort without touching the entry if reauth completes with a different member id."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data={**USER_INPUT, "access_token": "old-token"})
     entry.add_to_hass(hass)
 

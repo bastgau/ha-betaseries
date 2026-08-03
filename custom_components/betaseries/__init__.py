@@ -97,7 +97,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) 
         entry (BetaSeriesConfigEntry): The config entry being removed.
 
     Returns:
-        None: The cache files are deleted; nothing is returned.
+        None
 
     """
     for version, key_prefix in CACHE_STORES:

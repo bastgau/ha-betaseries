@@ -47,14 +47,7 @@ async def test_auth_error_marks_refresh_failed(
     coordinator_class: Callable[[HomeAssistant, BetaSeriesConfigEntry, AsyncMock], MemberCoordinator],
     mocked_method: str,
 ) -> None:
-    """Mark the refresh as failed with a ConfigEntryAuthFailed when the token is rejected.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        coordinator_class (Callable): The coordinator class under test.
-        mocked_method (str): Name of the client method this coordinator calls.
-
-    """
+    """Mark the refresh as failed with a ConfigEntryAuthFailed when the token is rejected."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)
     mock_client = client_mock()
@@ -80,13 +73,6 @@ async def test_auth_error_logs_reauth_guidance(
     the response's status/body to the exception, and this asserts the
     coordinator actually surfaces them in its own log line, collapsed to a
     single line even though BetaSeries pretty-prints its error bodies.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        coordinator_class (Callable): The coordinator class under test.
-        mocked_method (str): Name of the client method this coordinator calls.
-        caplog (pytest.LogCaptureFixture): Captures log records emitted during the test.
-
     """
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="Test Account")
     entry.add_to_hass(hass)
@@ -112,14 +98,7 @@ async def test_error_marks_refresh_failed(
     coordinator_class: Callable[[HomeAssistant, BetaSeriesConfigEntry, AsyncMock], MemberCoordinator],
     mocked_method: str,
 ) -> None:
-    """Mark the refresh as failed with an UpdateFailed on any other client error.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        coordinator_class (Callable): The coordinator class under test.
-        mocked_method (str): Name of the client method this coordinator calls.
-
-    """
+    """Mark the refresh as failed with an UpdateFailed on any other client error."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)
     mock_client = client_mock()
@@ -153,24 +132,14 @@ _EPISODE = Episode(
 
 
 def _planning_client() -> AsyncMock:
-    """Build a client whose planning holds one show, so its details get fetched.
-
-    Returns:
-        AsyncMock: The configured client mock.
-
-    """
+    """Build a client whose planning holds one show, so its details get fetched."""
     client = client_mock()
     client.fetch_planning.return_value = CollectionEpisode((_EPISODE,))
     return client
 
 
 def _watch_list_client() -> AsyncMock:
-    """Build a client whose watch list holds one show, so its details get fetched.
-
-    Returns:
-        AsyncMock: The configured client mock.
-
-    """
+    """Build a client whose watch list holds one show, so its details get fetched."""
     client = client_mock()
     client.fetch_watch_list.return_value = (
         CollectionWatchListShow(
@@ -199,12 +168,6 @@ async def test_auth_error_while_fetching_show_details_still_asks_for_reauth(
     every Error used to swallow the one failure that must not be: the entry
     stayed loaded with valid-looking data and never prompted for
     reauthentication, while every subsequent request was rejected too.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        coordinator_class (Callable): The coordinator class under test.
-        make_client (Callable): Builds a client whose main call succeeds.
-
     """
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)

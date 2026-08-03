@@ -51,15 +51,6 @@ def _entry_with_member(hass: HomeAssistant, *, title: str, login: str) -> MockCo
 
     Entities read the account's login through runtime_data, so it has to be
     populated here the way async_setup_entry does before forwarding platforms.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        title (str): The config entry's title, which the user may have renamed.
-        login (str): The login BetaSeries reports for the account.
-
-    Returns:
-        MockConfigEntry: The registered config entry.
-
     """
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title=title)
     entry.add_to_hass(hass)

@@ -37,13 +37,6 @@ def frozen_today(freezer: FrozenDateTimeFactory) -> None:
     real clock, these tests quietly changed meaning as time passed and then
     started failing outright once 2026-08-01 fell into the past: `event`
     skipped EARLIER_EPISODE and returned the later one instead.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
-    Returns:
-        None: The clock is pinned for the duration of each test.
-
     """
     freezer.move_to("2026-07-30")
 
@@ -101,16 +94,7 @@ MEMBER_DATA = MemberData(
 
 
 async def _setup_entry_with_planning(hass: HomeAssistant, episodes: tuple[Episode, ...]) -> MockConfigEntry:
-    """Set up a config entry with a mocked planning response.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        episodes (tuple[Episode, ...]): Episodes returned for the first fetch_planning() call.
-
-    Returns:
-        MockConfigEntry: The set up config entry.
-
-    """
+    """Set up a config entry with a mocked planning response."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",

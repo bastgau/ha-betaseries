@@ -135,7 +135,7 @@ class Client:
             action (str): Present-tense description of the request, used in the error message.
 
         Returns:
-            None: Returns normally when the response is a plain HTTP 200.
+            None
 
         Raises:
             AuthError: If the access token was rejected.

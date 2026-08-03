@@ -69,18 +69,7 @@ MEMBER_DATA = MemberData(
 
 
 def _episode(episode_id: str, *, season: int = 1, number: int = 1, title: str | None = None) -> Episode:
-    """Build one unseen episode.
-
-    Args:
-        episode_id (str): BetaSeries episode id, which the daily score reads.
-        season (int): Season number.
-        number (int): Episode number within the season.
-        title (str | None): Episode title, or None for a generated one.
-
-    Returns:
-        Episode: The built episode.
-
-    """
+    """Build one unseen episode."""
     return Episode(
         id=episode_id,
         season=season,
@@ -97,17 +86,7 @@ def _episode(episode_id: str, *, season: int = 1, number: int = 1, title: str | 
 
 
 def _show(show_id: str, *, episodes: tuple[Episode, ...] = (), remaining: int = 5) -> WatchListShow:
-    """Build one show of the watch list.
-
-    Args:
-        show_id (str): BetaSeries show id, also used to build its title.
-        episodes (tuple[Episode, ...]): Its unseen episodes, oldest first.
-        remaining (int): How many episodes are left for that show in total.
-
-    Returns:
-        WatchListShow: The built show.
-
-    """
+    """Build one show of the watch list."""
     return WatchListShow(
         id=show_id,
         title=f"Show {show_id}",
@@ -118,16 +97,7 @@ def _show(show_id: str, *, episodes: tuple[Episode, ...] = (), remaining: int = 
 
 
 def _data(*shows: WatchListShow, images: dict[str, dict[str, str]] | None = None) -> WatchListData:
-    """Build the watch list a refresh would have produced.
-
-    Args:
-        *shows (WatchListShow): The listed shows.
-        images (dict[str, dict[str, str]] | None): Cached artwork per show id, or None for none.
-
-    Returns:
-        WatchListData: The assembled coordinator data.
-
-    """
+    """Build the watch list a refresh would have produced."""
     return WatchListData(
         shows=CollectionWatchListShow(shows),
         total_shows=len(shows),
@@ -146,10 +116,6 @@ def test_pick_is_stable_within_the_same_day(freezer: FrozenDateTimeFactory) -> N
     from the data it was built on, across refreshes and across restarts. There
     is no stored pick to consult - the answer is recomputed from scratch every
     time and lands on the same show because its two inputs have not moved.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
     """
     freezer.move_to("2026-08-02 09:00:00")
     data = _data(*TEN_SHOWS)
@@ -163,12 +129,7 @@ def test_pick_is_stable_within_the_same_day(freezer: FrozenDateTimeFactory) -> N
 
 
 def test_pick_rotates_from_one_day_to_the_next(freezer: FrozenDateTimeFactory) -> None:
-    """Suggest something else as the days go by, which is the point of the feature.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
-    """
+    """Suggest something else as the days go by, which is the point of the feature."""
     data = _data(*TEN_SHOWS)
     picked: list[str] = []
     for day in range(1, 15):
@@ -191,10 +152,6 @@ def test_pick_survives_another_show_leaving_the_list(freezer: FrozenDateTimeFact
     every index and reshuffles the answer - finishing a show you were not being
     suggested would silently change tonight's suggestion. Scoring each show on
     its own makes removals affect nothing but the removed show.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
     """
     freezer.move_to("2026-08-02")
     pick = _suggestion_of_the_day(_data(*TEN_SHOWS))
@@ -212,12 +169,7 @@ def test_pick_survives_another_show_leaving_the_list(freezer: FrozenDateTimeFact
 
 
 def test_pick_moves_on_when_the_chosen_show_leaves(freezer: FrozenDateTimeFactory) -> None:
-    """Suggest another show once the chosen one has nothing left to watch.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
-    """
+    """Suggest another show once the chosen one has nothing left to watch."""
     freezer.move_to("2026-08-02")
     pick = _suggestion_of_the_day(_data(*TEN_SHOWS))
     assert pick is not None
@@ -245,10 +197,6 @@ def test_watching_the_suggested_episode_hands_the_day_to_another_show(
     number of shows listed. Measured at ~82% over 10 shows and ~95% over 38, so
     a 60% floor here fails loudly if the episode ever stops feeding the score,
     while never flaking on the legitimate case.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
     """
     moved = 0
     days = 60
@@ -281,10 +229,6 @@ def test_pick_resumes_at_the_oldest_unseen_episode(freezer: FrozenDateTimeFactor
     first of the show's unseen episodes - the endpoint returns them oldest
     first. Suggesting any other one would offer S01E03 to someone who stopped
     after S01E01.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
     """
     freezer.move_to("2026-08-02")
     oldest = _episode("7001", number=1)
@@ -298,12 +242,7 @@ def test_pick_resumes_at_the_oldest_unseen_episode(freezer: FrozenDateTimeFactor
 
 
 def test_no_suggestion_when_the_watch_list_is_empty(freezer: FrozenDateTimeFactory) -> None:
-    """Suggest nothing when there is nothing left to watch.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
-    """
+    """Suggest nothing when there is nothing left to watch."""
     freezer.move_to("2026-08-02")
 
     assert _suggestion_of_the_day(_data()) is None
@@ -315,10 +254,6 @@ def test_a_show_with_no_listed_episode_is_not_suggested(freezer: FrozenDateTimeF
     `episodes_limit` caps how many episodes each show carries, and a show can
     come back with none at all. It cannot be resumed, so suggesting it would
     name a show with no episode to go with it.
-
-    Args:
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
     """
     freezer.move_to("2026-08-02")
     empty = WatchListShow(id="99", title="Show 99", remaining=3, poster=None, episodes=CollectionEpisode(()))
@@ -331,16 +266,7 @@ def test_a_show_with_no_listed_episode_is_not_suggested(freezer: FrozenDateTimeF
 
 
 async def _setup_with_watch_list(hass: HomeAssistant, *shows: WatchListShow) -> MockConfigEntry:
-    """Set up an entry whose watch list holds the given shows.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        *shows (WatchListShow): The shows the watch list returns.
-
-    Returns:
-        MockConfigEntry: The set up config entry.
-
-    """
+    """Set up an entry whose watch list holds the given shows."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
     entry.add_to_hass(hass)
 
@@ -360,13 +286,7 @@ async def _setup_with_watch_list(hass: HomeAssistant, *shows: WatchListShow) -> 
 
 
 async def test_sensor_exposes_the_suggestion(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    """Expose the episode as the state, with its identifiers in the attributes.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
-    """
+    """Expose the episode as the state, with its identifiers in the attributes."""
     freezer.move_to("2026-08-02")
     await _setup_with_watch_list(hass, _show("70", episodes=(_episode("7001", season=2, number=3, title="Urlaub"),)))
 
@@ -383,13 +303,7 @@ async def test_sensor_exposes_the_suggestion(hass: HomeAssistant, freezer: Froze
 async def test_sensor_drops_the_separator_without_an_episode_title(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Leave no dangling " : " when BetaSeries has no title for the episode.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
-    """
+    """Leave no dangling " : " when BetaSeries has no title for the episode."""
     freezer.move_to("2026-08-02")
     await _setup_with_watch_list(hass, _show("70", episodes=(_episode("7001", season=2, number=3, title=""),)))
 
@@ -400,13 +314,7 @@ async def test_sensor_drops_the_separator_without_an_episode_title(
 
 
 async def test_sensor_is_unknown_with_nothing_to_watch(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    """Report an unknown state, with no attributes, when the watch list is empty.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        freezer (FrozenDateTimeFactory): Time-freezing fixture.
-
-    """
+    """Report an unknown state, with no attributes, when the watch list is empty."""
     freezer.move_to("2026-08-02")
     await _setup_with_watch_list(hass)
 

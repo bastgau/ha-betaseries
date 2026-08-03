@@ -197,11 +197,6 @@ async def test_incompatible_badges_cache_version_is_discarded_not_crashed(
     test_planning_coordinator.py::test_incompatible_cache_version_is_discarded_not_crashed):
     this cache is only a performance optimization, so it's always safe/cheap
     to start empty and refetch rather than migrate an incompatible shape.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        hass_storage (dict[str, Any]): The in-memory Store backing, pre-seeded with old data.
-
     """
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
     entry.add_to_hass(hass)

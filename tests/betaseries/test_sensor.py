@@ -96,15 +96,7 @@ async def test_sensors_reflect_member_data(hass: HomeAssistant) -> None:
 
 
 def _end_of_local_day(day: date) -> datetime:
-    """Return the last second of a local day, as the airing sensor timestamps it.
-
-    Args:
-        day (date): The day to timestamp.
-
-    Returns:
-        datetime: 23:59:59 local time on that day.
-
-    """
+    """Return the last second of a local day, as the airing sensor timestamps it."""
     return dt_util.start_of_local_day(day) + timedelta(days=1) - timedelta(seconds=1)
 
 
@@ -117,20 +109,7 @@ def _episode(  # noqa: PLR0913 -- a test builder, every extra argument is an opt
     number: int = 4,
     show: Show | None = None,
 ) -> Episode:
-    """Build an Episode for the planning sensor tests.
-
-    Args:
-        episode_id (str): BetaSeries episode id.
-        air_date (date): Date the episode airs.
-        seen (bool): Whether the member has already watched it.
-        code (str): Season/episode code.
-        number (int): Episode number within the season.
-        show (Show | None): Show the episode belongs to, or None for the default one.
-
-    Returns:
-        Episode: The built episode.
-
-    """
+    """Build an Episode for the planning sensor tests."""
     return Episode(
         id=episode_id,
         season=3,
@@ -151,13 +130,6 @@ def _rated_shows(ratings: dict[str, float]) -> CollectionShow:
 
     Only notes_mean matters here; the rest is filled with the neutral values
     a show with no details would report.
-
-    Args:
-        ratings (dict[str, float]): Rating to give each show id.
-
-    Returns:
-        CollectionShow: The shows, with their additional information populated.
-
     """
     return CollectionShow(
         {
@@ -193,17 +165,7 @@ def _rated_shows(ratings: dict[str, float]) -> CollectionShow:
 async def _setup_with_planning(
     hass: HomeAssistant, episodes: tuple[Episode, ...], shows: CollectionShow | None = None
 ) -> MockConfigEntry:
-    """Set up an entry whose first planning month returns the given episodes.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        episodes (tuple[Episode, ...]): Episodes returned for the first fetch_planning() call.
-        shows (CollectionShow | None): Shows returned by fetch_shows(), or None for none at all.
-
-    Returns:
-        MockConfigEntry: The set up config entry.
-
-    """
+    """Set up an entry whose first planning month returns the given episodes."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",

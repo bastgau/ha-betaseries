@@ -57,7 +57,7 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         async_add_entities (AddEntitiesCallback): Callback to register the new entities.
 
     Returns:
-        None: Entities are registered via async_add_entities, nothing is returned.
+        None
 
     """
     async_add_entities(
@@ -83,7 +83,7 @@ class BetaSeriesCleanBadgesCacheButton(BetaSeriesEntity, ButtonEntity):  # pyrig
         """Clear the cached badge details and refresh now.
 
         Returns:
-            None: The coordinator's data is updated in place.
+            None
 
         """
         await self.coordinator.async_clear_badges_cache()
@@ -103,7 +103,7 @@ class BetaSeriesCleanPlanningCacheButton(BetaSeriesEntity, ButtonEntity):  # pyr
         """Clear the cached past months and refresh now.
 
         Returns:
-            None: The coordinator's data is updated in place.
+            None
 
         """
         await self.coordinator.async_clear_planning_cache()
@@ -123,7 +123,7 @@ class BetaSeriesCleanWatchListCacheButton(BetaSeriesEntity, ButtonEntity):  # py
         """Clear the cached show images and refresh now.
 
         Returns:
-            None: The coordinator's data is updated in place.
+            None
 
         """
         await self.coordinator.async_clear_watch_list_cache()

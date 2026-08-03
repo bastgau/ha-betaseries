@@ -46,16 +46,7 @@ MEMBER_DATA = MemberData(
 
 
 async def _async_setup(hass: HomeAssistant, mock_client: AsyncMock) -> MockConfigEntry:
-    """Set up a BetaSeries entry backed by the given mocked client.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        mock_client (AsyncMock): The client mock to inject.
-
-    Returns:
-        MockConfigEntry: The set-up config entry.
-
-    """
+    """Set up a BetaSeries entry backed by the given mocked client."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
     entry.add_to_hass(hass)
 

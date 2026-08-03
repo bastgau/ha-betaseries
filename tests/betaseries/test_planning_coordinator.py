@@ -77,14 +77,7 @@ CACHED_EPISODE = dataclasses.replace(EPISODE, seen=None)
     ],
 )
 def test_upcoming_months(today: date, months_ahead: int, expected: list[str]) -> None:
-    """Build the month list, rolling over the year boundary correctly.
-
-    Args:
-        today (date): Reference date.
-        months_ahead (int): Number of additional months requested.
-        expected (list[str]): Expected "YYYY-MM" list.
-
-    """
+    """Build the month list, rolling over the year boundary correctly."""
     assert _upcoming_months(today, months_ahead) == expected
 
 
@@ -98,14 +91,7 @@ def test_upcoming_months(today: date, months_ahead: int, expected: list[str]) ->
     ],
 )
 def test_past_months(today: date, months_behind: int, expected: list[str]) -> None:
-    """Build the past month list, rolling over the year boundary correctly.
-
-    Args:
-        today (date): Reference date.
-        months_behind (int): Number of past months requested.
-        expected (list[str]): Expected "YYYY-MM" list.
-
-    """
+    """Build the past month list, rolling over the year boundary correctly."""
     assert _past_months(today, months_behind) == expected
 
 
@@ -401,12 +387,6 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
     Without _CacheStore's discard-on-migrate, an existing cache from
     before that rename made _episode_from_dict raise KeyError: 'number',
     permanently failing PlanningCoordinator's setup for any pre-existing user.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        freezer (FrozenDateTimeFactory): Time-freezing fixture, for a stable "today".
-        hass_storage (dict[str, Any]): The in-memory Store backing, pre-seeded with old data.
-
     """
     freezer.move_to("2026-08-15")
     entry = MockConfigEntry(
@@ -454,17 +434,7 @@ async def test_incompatible_cache_version_is_discarded_not_crashed(
 
 
 def _show_with_poster(show_id: str, poster: str | None, rating: float = 0.0) -> Show:
-    """Build a Show carrying the additional information that holds its poster.
-
-    Args:
-        show_id (str): BetaSeries show id.
-        poster (str | None): Poster URL, or None for a show that has no poster.
-        rating (float): Mean member rating, cached alongside the poster.
-
-    Returns:
-        Show: The show, with additional_information populated.
-
-    """
+    """Build a Show carrying the additional information that holds its poster."""
     return Show(
         id=show_id,
         title="Example Show",

@@ -18,45 +18,17 @@ EVENT_DATE = datetime(2026, 7, 26, 5, 20, 30)  # noqa: DTZ001 (API doesn't retur
 
 
 def _make_episode_event(event_id: str, episode_id: str) -> EpisodeWatchedEvent:
-    """Build a minimal EpisodeWatchedEvent for testing.
-
-    Args:
-        event_id (str): The event's id.
-        episode_id (str): The watched episode's id.
-
-    Returns:
-        EpisodeWatchedEvent: A minimal event with the given ids.
-
-    """
+    """Build a minimal EpisodeWatchedEvent for testing."""
     return EpisodeWatchedEvent(id=event_id, date=EVENT_DATE, episode_id=episode_id)
 
 
 def _make_season_event(event_id: str, show_id: str, season: int = 1) -> SeasonWatchedEvent:
-    """Build a minimal SeasonWatchedEvent for testing.
-
-    Args:
-        event_id (str): The event's id.
-        show_id (str): The show's id.
-        season (int): The season number (default 1).
-
-    Returns:
-        SeasonWatchedEvent: A minimal event with the given ids.
-
-    """
+    """Build a minimal SeasonWatchedEvent for testing."""
     return SeasonWatchedEvent(id=event_id, date=EVENT_DATE, show_id=show_id, season=season)
 
 
 def _make_full_episode(episode_id: str, show: Show) -> Episode:
-    """Build a minimal Episode for testing, with a given show attached.
-
-    Args:
-        episode_id (str): The episode's id.
-        show (Show): The show to attach.
-
-    Returns:
-        Episode: A minimal episode with the given id and show.
-
-    """
+    """Build a minimal Episode for testing, with a given show attached."""
     return Episode(
         id=episode_id,
         season=1,

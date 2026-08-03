@@ -24,6 +24,6 @@ def auto_enable_custom_integrations() -> None:
     instance and would otherwise fail to collect without the plugin.
 
     Returns:
-        None: Nothing is set up; the point is that nothing is.
+        None
 
     """

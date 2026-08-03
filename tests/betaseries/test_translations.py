@@ -35,29 +35,12 @@ _ERROR_ASSIGNMENT = re.compile(r"""errors\[["'](?P<field>\w+)["']\]\s*=\s*["'](?
 
 
 def _load(path: Path) -> dict[str, Any]:
-    """Read one translation file.
-
-    Args:
-        path (Path): The file to read.
-
-    Returns:
-        dict[str, Any]: Its decoded contents.
-
-    """
+    """Read one translation file."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _key_paths(node: object, prefix: str = "") -> set[str]:
-    """Flatten a decoded translation file into dotted key paths.
-
-    Args:
-        node (object): The current node, a mapping or a leaf string.
-        prefix (str): Dotted path of the node's parent.
-
-    Returns:
-        set[str]: Every leaf's dotted path.
-
-    """
+    """Flatten a decoded translation file into dotted key paths."""
     if not isinstance(node, dict):
         return {prefix}
     # isinstance() only narrows to dict[Unknown, Unknown]; these files are
@@ -93,10 +76,6 @@ def test_translations_match_the_reference_keys(path: Path) -> None:
     A key present in one language and absent from another surfaces as an
     untranslated string for some users only - the kind of gap that no amount
     of exercising the flow in tests will reveal.
-
-    Args:
-        path (Path): The translation file to compare against strings.json.
-
     """
     reference = _key_paths(_load(TRANSLATION_FILES[0]))
     candidate = _key_paths(_load(path))

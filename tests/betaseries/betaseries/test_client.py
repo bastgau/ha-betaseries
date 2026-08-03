@@ -106,10 +106,6 @@ async def test_fetch_member_data_failure(status: int) -> None:
 
     The client itself never logs this - it attaches the response to the
     exception so the caller (e.g. Home Assistant's coordinator) can.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
     """
     session = FakeSession(get_responses=[FakeResponse(status, {"errors": [{"code": 9999, "text": "boom"}]})])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
@@ -136,11 +132,6 @@ async def test_fetch_member_data_raises_auth_error_on_invalid_credentials(code: 
     1001 for a rejected api_key (X-BetaSeries-Key), 2001 for a rejected
     access token - the latter is the same numeric code as the unrelated
     device-flow "pending" state (see const.ERROR_CODE_PENDING).
-
-    Args:
-        code (int): The BetaSeries error code returned in the response body.
-        text (str): The corresponding localized error text (unused by the client).
-
     """
     payload = {"errors": [{"code": code, "text": text}]}
     session = FakeSession(get_responses=[FakeResponse(400, payload)])
@@ -243,12 +234,7 @@ async def test_fetch_planning_sends_month_param() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_planning_failure(status: int) -> None:
-    """Raise Error when fetching the planning fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching the planning fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -342,12 +328,7 @@ async def test_fetch_show_episodes_sends_id_param() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_show_episodes_failure(status: int) -> None:
-    """Raise Error when fetching show episodes fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching show episodes fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -440,12 +421,7 @@ async def test_fetch_episodes_to_watch_can_exclude_the_cast() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_episodes_to_watch_failure(status: int) -> None:
-    """Raise Error when fetching episodes to watch fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching episodes to watch fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -479,12 +455,7 @@ async def test_fetch_episodes_to_watch_by_show_success() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_episodes_to_watch_by_show_failure(status: int) -> None:
-    """Raise Error when fetching episodes to watch fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching episodes to watch fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -734,12 +705,7 @@ async def test_fetch_shows_sends_comma_joined_ids() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_shows_failure(status: int) -> None:
-    """Raise Error when fetching shows fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching shows fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -820,12 +786,7 @@ async def test_fetch_episodes_by_id_sends_comma_joined_ids() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_episodes_by_id_failure(status: int) -> None:
-    """Raise Error when fetching episodes by id fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching episodes by id fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -918,10 +879,6 @@ async def test_fetch_timeline_drops_season_watched_with_malformed_ref(ref: str) 
     Regression test: a malformed ref used to raise an uncaught ValueError
     (from "ref".split(".") unpacking or int(season)), failing the whole
     fetch over a single bad entry instead of just dropping it.
-
-    Args:
-        ref (str): The malformed "ref" value to test.
-
     """
     payload = {"events": [{"id": 1, "type": "season_watched", "ref": ref, "ref_id": 0, "date": "2026-01-01 00:00:00"}]}
     session = FakeSession(get_responses=[FakeResponse(200, payload)])
@@ -969,12 +926,7 @@ async def test_fetch_timeline_sends_optional_params_when_given() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_timeline_failure(status: int) -> None:
-    """Raise Error when fetching the timeline fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching the timeline fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 
@@ -1069,12 +1021,7 @@ async def test_fetch_badges_sends_member_id() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_badges_failure(status: int) -> None:
-    """Raise Error when fetching badges fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise Error when fetching badges fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
 

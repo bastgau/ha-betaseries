@@ -42,15 +42,7 @@ DEFAULT_USER_INPUT = {
 
 
 def _section_defaults(schema: vol.Schema) -> dict[str, object]:
-    """Collect every field's default, looking inside the form's sections.
-
-    Args:
-        schema (vol.Schema): The options form's schema.
-
-    Returns:
-        dict[str, object]: Each field key mapped to its default value.
-
-    """
+    """Collect every field's default, looking inside the form's sections."""
     defaults: dict[str, object] = {}
     for key, value in schema.schema.items():
         if isinstance(value, section):
@@ -62,15 +54,7 @@ def _section_defaults(schema: vol.Schema) -> dict[str, object]:
 
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create and register a mock config entry.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-
-    Returns:
-        MockConfigEntry: The registered config entry.
-
-    """
+    """Create and register a mock config entry."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data=USER_INPUT)
     entry.add_to_hass(hass)
     return entry
@@ -179,15 +163,7 @@ async def test_options_flow_rejects_out_of_range_values(
     field: str,
     value: int | str,
 ) -> None:
-    """Reject scan interval/months window values outside their allowed range, and an invalid locale.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        config_entry (MockConfigEntry): The registered config entry.
-        field (str): The option key being tested out of range.
-        value (int | str): The invalid value submitted for that key.
-
-    """
+    """Reject scan interval/months window values outside their allowed range, and an invalid locale."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     user_input = {**DEFAULT_USER_INPUT, field: value}

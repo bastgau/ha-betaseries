@@ -102,7 +102,7 @@ def _log_auth_failure(title: str, err: AuthError) -> None:
         err (AuthError): The error raised by the client, carrying the response's status/body.
 
     Returns:
-        None: This only logs; nothing is returned.
+        None
 
     """
     _LOGGER.warning(
@@ -435,7 +435,7 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
         without a new badge being earned).
 
         Returns:
-            None: The coordinator's data is updated in place, like any refresh.
+            None
 
         """
         _LOGGER.debug("Clearing cached badges for %s, forcing a full refetch", self.config_entry.title)
@@ -582,7 +582,7 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
         "Clean planning cache" button.
 
         Returns:
-            None: The coordinator's data is updated in place, like any refresh.
+            None
 
         """
         _LOGGER.debug("Clearing cached past months for %s, forcing a full refetch", self.config_entry.title)
@@ -798,7 +798,7 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
         one until it left and re-entered the list.
 
         Returns:
-            None: The coordinator's data is updated in place, like any refresh.
+            None
 
         """
         _LOGGER.debug("Clearing cached show images for %s, forcing a full refetch", self.config_entry.title)

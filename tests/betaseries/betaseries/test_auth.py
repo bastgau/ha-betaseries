@@ -33,41 +33,20 @@ class FakeResponse:
     """Minimal async context manager standing in for an aiohttp response."""
 
     def __init__(self, status: int, payload: dict[str, Any] | None = None) -> None:
-        """Initialize the fake response.
-
-        Args:
-            status (int): HTTP status code to report.
-            payload (dict[str, Any] | None): JSON body returned by .json().
-
-        """
+        """Initialize the fake response."""
         self.status = status
         self._payload = payload or {}
 
     async def json(self) -> dict[str, Any]:
-        """Return the JSON payload.
-
-        Returns:
-            dict[str, Any]: The configured payload.
-
-        """
+        """Return the JSON payload."""
         return self._payload
 
     async def text(self) -> str:
-        """Return the raw text body (the payload, JSON-encoded).
-
-        Returns:
-            str: The configured payload, JSON-encoded.
-
-        """
+        """Return the raw text body (the payload, JSON-encoded)."""
         return json.dumps(self._payload)
 
     async def __aenter__(self) -> Self:
-        """Enter the async context manager.
-
-        Returns:
-            Self: This same fake response.
-
-        """
+        """Enter the async context manager."""
         return self
 
     async def __aexit__(self, *_args: object) -> None:
@@ -80,12 +59,6 @@ class FakeSession:
     A queued Exception is raised instead of returned, standing in for a
     transport failure: aiohttp raises those from the call itself, before any
     response exists (see _TRANSPORT_ERRORS in auth.py/client.py).
-
-    Attributes:
-        post_responses (list[FakeResponse | Exception]): Responses returned by .post(), in order.
-        get_responses (list[FakeResponse | Exception]): Responses returned by .get(), in order.
-        get_calls (list[tuple[tuple[Any, ...], dict[str, Any]]]): Args/kwargs of each .get() call, in order.
-
     """
 
     def __init__(
@@ -93,66 +66,25 @@ class FakeSession:
         post_responses: list[FakeResponse | Exception] | None = None,
         get_responses: list[FakeResponse | Exception] | None = None,
     ) -> None:
-        """Initialize the fake session with queued responses.
-
-        Args:
-            post_responses (list[FakeResponse | Exception] | None): Responses for .post(), in order.
-            get_responses (list[FakeResponse | Exception] | None): Responses for .get(), in order.
-
-        """
+        """Initialize the fake session with queued responses."""
         self.post_responses = list(post_responses or [])
         self.get_responses = list(get_responses or [])
         self.get_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
         self.post_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 
     def post(self, *args: Any, **kwargs: Any) -> FakeResponse:
-        """Return the next queued POST response, recording the call's args/kwargs.
-
-        Args:
-            *args (Any): Positional arguments the caller passed to .post().
-            **kwargs (Any): Keyword arguments the caller passed to .post().
-
-        Returns:
-            FakeResponse: The next queued response.
-
-        Raises:
-            Exception: The next queued item, when it is an exception rather than a response.
-
-        """
+        """Return the next queued POST response, recording the call's args/kwargs."""
         self.post_calls.append((args, kwargs))
         return _unqueue(self.post_responses)
 
     def get(self, *args: Any, **kwargs: Any) -> FakeResponse:
-        """Return the next queued GET response, recording the call's args/kwargs.
-
-        Args:
-            *args (Any): Positional arguments the caller passed to .get().
-            **kwargs (Any): Keyword arguments the caller passed to .get().
-
-        Returns:
-            FakeResponse: The next queued response.
-
-        Raises:
-            Exception: The next queued item, when it is an exception rather than a response.
-
-        """
+        """Return the next queued GET response, recording the call's args/kwargs."""
         self.get_calls.append((args, kwargs))
         return _unqueue(self.get_responses)
 
 
 def _unqueue(queued: list[FakeResponse | Exception]) -> FakeResponse:
-    """Pop the next queued item, raising it when it stands in for a transport failure.
-
-    Args:
-        queued (list[FakeResponse | Exception]): The queue to pop from.
-
-    Returns:
-        FakeResponse: The popped response.
-
-    Raises:
-        Exception: The popped item, when it is an exception rather than a response.
-
-    """
+    """Pop the next queued item, raising it when it stands in for a transport failure."""
     item = queued.pop(0)
     if isinstance(item, Exception):
         raise item
@@ -188,12 +120,7 @@ async def test_request_device_code_success() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_request_device_code_failure(status: int) -> None:
-    """Raise AuthError when the device code request fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise AuthError when the device code request fails."""
     session = FakeSession(post_responses=[FakeResponse(status)])
     auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
@@ -222,12 +149,7 @@ async def test_poll_for_token_pending_then_success(monkeypatch: pytest.MonkeyPat
 
 @pytest.mark.parametrize("error_code", [4001, 4002, 9999])
 async def test_poll_for_token_definitive_error(error_code: int) -> None:
-    """Raise AuthError without retrying on a non-pending error.
-
-    Args:
-        error_code (int): BetaSeries error code, distinct from ERROR_CODE_PENDING.
-
-    """
+    """Raise AuthError without retrying on a non-pending error."""
     session = FakeSession(
         post_responses=[FakeResponse(400, {"errors": [{"code": error_code, "text": "Invalid client_secret."}]})]
     )
@@ -239,12 +161,7 @@ async def test_poll_for_token_definitive_error(error_code: int) -> None:
 
 @pytest.mark.parametrize("status", [401, 403, 500, 503])
 async def test_poll_for_token_unexpected_status(status: int) -> None:
-    """Raise AuthError on a status that is neither 200 nor 400.
-
-    Args:
-        status (int): HTTP status returned by the fake response.
-
-    """
+    """Raise AuthError on a status that is neither 200 nor 400."""
     session = FakeSession(post_responses=[FakeResponse(status)])
     auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 
@@ -285,12 +202,7 @@ async def test_fetch_member_identity_success() -> None:
 
 @pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
 async def test_fetch_member_identity_failure(status: int) -> None:
-    """Raise AuthError when fetching the member identity fails.
-
-    Args:
-        status (int): Non-200 HTTP status returned by the fake response.
-
-    """
+    """Raise AuthError when fetching the member identity fails."""
     session = FakeSession(get_responses=[FakeResponse(status)])
     auth = Auth(session, API_KEY, CLIENT_SECRET)  # type: ignore[arg-type]
 

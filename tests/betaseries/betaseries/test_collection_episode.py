@@ -12,16 +12,7 @@ from custom_components.betaseries.betaseries.show import Show
 
 
 def _make_episode(episode_id: str, show_id: str) -> Episode:
-    """Build a minimal Episode for testing.
-
-    Args:
-        episode_id (str): The episode's id.
-        show_id (str): The episode's show id.
-
-    Returns:
-        Episode: A minimal episode with the given ids.
-
-    """
+    """Build a minimal Episode for testing."""
     return Episode(
         id=episode_id,
         season=1,

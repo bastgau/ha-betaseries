@@ -415,7 +415,7 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         async_add_entities (AddEntitiesCallback): Callback to register the new entities.
 
     Returns:
-        None: Entities are registered via async_add_entities, nothing is returned.
+        None
 
     """
     member_coordinator = entry.runtime_data.member

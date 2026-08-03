@@ -155,3 +155,25 @@ select = ["ALL"]
 ignore_placeholder_docstrings = false
 workers = 1
 summary_max_length = 120
+
+[[tool.docstring-linter.overrides]]
+ignore = ["imperative_mood"]
+paths = ["tests/**"]
+args_section = "forbidden"
+returns_section = "forbidden"
+yields_section = "forbidden"
+raises_section = "forbidden"
+attributes_section = "forbidden"
+description_section = "optional"
+examples_section = "forbidden"
+notes_section = "forbidden"
+todo_section = "forbidden"
+blank_lines_before_closing_quotes = 0
+
+[[tool.docstring-linter.overrides]]
+paths = ["custom_components/betaseries/*.py"]
+summary_max_length = 120
+
+[[tool.docstring-linter.overrides]]
+paths = ["custom_components/betaseries/betaseries/*.py", "tests/**/conftest.py"]
+summary_max_length = 120

@@ -21,6 +21,7 @@ USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-sec
 
 
 def _member_data(*, episodes_to_watch: int, movies_to_watch: int) -> MemberData:
+    """Create test MemberData with specified watch counts."""
     return MemberData(
         identity=MemberIdentity(id="42", login="test_user"),
         stats=MemberStats(
@@ -61,16 +62,7 @@ async def test_binary_sensors_reflect_member_data(
     expected_new_episode: str,
     expected_movies_to_watch: str,
 ) -> None:
-    """Turn on/off depending on the corresponding counters.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        episodes_to_watch (int): stats.episodes_to_watch fed to the coordinator.
-        movies_to_watch (int): stats.movies_to_watch fed to the coordinator.
-        expected_new_episode (str): Expected state of "New episode available".
-        expected_movies_to_watch (str): Expected state of "Movies to watch available".
-
-    """
+    """Turn on/off depending on the corresponding counters."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
     entry.add_to_hass(hass)
 

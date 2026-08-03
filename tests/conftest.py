@@ -23,7 +23,7 @@ def auto_enable_custom_integrations(  # pylint: disable=unused-argument
         enable_custom_integrations (None): Upstream fixture doing the actual work.
 
     Returns:
-        None: Nothing; the upstream fixture performs the setup.
+        None
 
     """
 

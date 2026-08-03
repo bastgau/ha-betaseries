@@ -57,16 +57,7 @@ WATCH_LIST = CollectionWatchListShow(
 
 
 async def _setup(hass: HomeAssistant, *, planning_fails: bool = False) -> MockConfigEntry:
-    """Set up an entry whose coordinators are backed by a mocked client.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant test instance.
-        planning_fails (bool): Whether the planning fetch should raise.
-
-    Returns:
-        MockConfigEntry: The set up config entry.
-
-    """
+    """Set up an entry whose coordinators are backed by a mocked client."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
