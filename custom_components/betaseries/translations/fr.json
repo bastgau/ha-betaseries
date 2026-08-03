@@ -79,7 +79,8 @@
   "entity": {
     "sensor": {
       "episodes_to_watch": {
-        "name": "Épisodes à voir"
+        "name": "Épisodes à voir",
+        "unit_of_measurement": "épisodes"
       },
       "time_to_spend": {
         "name": "Temps à consacrer"
@@ -88,40 +89,50 @@
         "name": "Progression"
       },
       "shows_not_started": {
-        "name": "Séries jamais commencées"
+        "name": "Séries jamais commencées",
+        "unit_of_measurement": "séries"
       },
       "shows_to_catch_up_on": {
-        "name": "Séries à rattraper"
+        "name": "Séries à rattraper",
+        "unit_of_measurement": "séries"
       },
       "suggestion_of_the_day": {
         "name": "Suggestion du jour"
       },
       "movies_to_watch": {
-        "name": "Films à voir"
+        "name": "Films à voir",
+        "unit_of_measurement": "films"
       },
       "shows_in_progress": {
-        "name": "Séries en cours de visionnage"
+        "name": "Séries en cours de visionnage",
+        "unit_of_measurement": "séries"
       },
       "badges": {
-        "name": "Badges"
+        "name": "Badges",
+        "unit_of_measurement": "badges"
       },
       "shows": {
-        "name": "Séries au total"
+        "name": "Séries au total",
+        "unit_of_measurement": "séries"
       },
       "shows_finished": {
-        "name": "Séries terminées"
+        "name": "Séries terminées",
+        "unit_of_measurement": "séries"
       },
       "episodes": {
-        "name": "Épisodes vus"
+        "name": "Épisodes vus",
+        "unit_of_measurement": "épisodes"
       },
       "time_on_tv": {
         "name": "Temps passé"
       },
       "movies": {
-        "name": "Films au total"
+        "name": "Films au total",
+        "unit_of_measurement": "films"
       },
       "xp": {
-        "name": "XP"
+        "name": "XP",
+        "unit_of_measurement": "xp"
       },
       "streak_days": {
         "name": "Jours consécutifs"
@@ -130,7 +141,8 @@
         "name": "Ancienneté du compte"
       },
       "episodes_per_month": {
-        "name": "Épisodes par mois"
+        "name": "Épisodes par mois",
+        "unit_of_measurement": "épisodes/mois"
       },
       "favorite_genre": {
         "name": "Genre préféré"
@@ -177,14 +189,5 @@
         "en": "Anglais"
       }
     }
-  },
-  "unit": {
-    "episodes": "épisodes",
-    "shows": "séries",
-    "movies": "films",
-    "badges": "badges",
-    "events": "événements",
-    "episodes_per_month": "épisodes/mois",
-    "xp": "xp"
   }
 }
