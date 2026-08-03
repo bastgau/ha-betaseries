@@ -1,10 +1,10 @@
 meta {
-  name: watched
+  name: unwatched
   type: http
-  seq: 1
+  seq: 2
 }
 
-post {
+delete {
   url: {{baseUrl}}/seasons/watched
   body: formUrlEncoded
   auth: none
@@ -22,15 +22,15 @@ body:form-urlencoded {
 }
 
 docs {
-  Mark all episodes of a season as watched. Skips already watched episodes.
+  Remove all episodes of a season from watched. Skips episodes not yet watched.
 }
 
 example {
-  name: example
+  name: example - 200
 
   request: {
     url: {{baseUrl}}/seasons/watched
-    method: POST
+    method: DELETE
     mode: formUrlEncoded
     headers: {
       X-BetaSeries-Key: {{apiKey}}
@@ -89,6 +89,55 @@ example {
             }
           ],
           "errors": []
+        }
+      '''
+    }
+  }
+}
+
+example {
+  name: example - 400
+
+  request: {
+    url: {{baseUrl}}/seasons/watched
+    method: DELETE
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 38605
+      season: 2
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 400
+      text: Bad Request
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "errors": [
+            {
+              "code": 3004,
+              "text": "Le paramètre \"season\" est invalide."
+            }
+          ]
         }
       '''
     }

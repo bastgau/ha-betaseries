@@ -1,18 +1,13 @@
 meta {
-  name: display
+  name: unnote
   type: http
-  seq: 1
+  seq: 6
 }
 
-get {
-  url: {{baseUrl}}/shows/display?id=38605&locale=en
-  body: none
+delete {
+  url: {{baseUrl}}/shows/note
+  body: formUrlEncoded
   auth: none
-}
-
-params:query {
-  id: 38605
-  locale: en
 }
 
 headers {
@@ -21,26 +16,29 @@ headers {
   Authorization: Bearer {{token}}
 }
 
+body:form-urlencoded {
+  id: 38605
+}
+
 docs {
-  Display information about a series.
+  Delete a series rating.
 }
 
 example {
   name: example
 
   request: {
-    url: {{baseUrl}}/shows/display?id=38605&locale=en
-    method: GET
-    mode: none
-    params:query: {
-      id: 38605
-      locale: en
-    }
-
+    url: {{baseUrl}}/shows/note
+    method: DELETE
+    mode: formUrlEncoded
     headers: {
       X-BetaSeries-Key: {{apiKey}}
       X-BetaSeries-Version: 3.0
       Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 38605
     }
   }
 
@@ -83,8 +81,8 @@ example {
               }
             ],
             "episodes": "16",
-            "followers": "5998",
-            "comments": 11,
+            "followers": "6065",
+            "comments": 12,
             "similars": "0",
             "characters": "0",
             "creation": "2024",
@@ -115,8 +113,8 @@ example {
             "language": "de",
             "originalLanguage": "allemand",
             "notes": {
-              "total": 166,
-              "mean": 3.891570000000000195683469428331591188907623291015625,
+              "total": 172,
+              "mean": 3.8894999999999999573674358543939888477325439453125,
               "user": 0
             },
             "in_account": true,

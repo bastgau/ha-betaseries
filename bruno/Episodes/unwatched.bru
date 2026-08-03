@@ -1,10 +1,10 @@
 meta {
-  name: watched
+  name: unwatched
   type: http
-  seq: 5
+  seq: 6
 }
 
-post {
+delete {
   url: {{baseUrl}}/episodes/watched
   body: formUrlEncoded
   auth: none
@@ -21,15 +21,63 @@ body:form-urlencoded {
 }
 
 docs {
-  Mark one or more episodes as watched, with options to specify multiple episodes, bulk marking, and deletion of future episode marks.
+  Remove the watched mark from one or more episodes, allowing for multiple episodes to be specified.
 }
 
 example {
-  name: example
+  name: example - 400
 
   request: {
     url: {{baseUrl}}/episodes/watched
-    method: POST
+    method: DELETE
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 3905073
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 400
+      text: Bad Request
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "errors": [
+            {
+              "code": 2005,
+              "text": "L'utilisateur n'a pas marqué cet épisode comme vu."
+            }
+          ]
+        }
+      '''
+    }
+  }
+}
+
+example {
+  name: example - 200
+
+  request: {
+    url: {{baseUrl}}/episodes/watched
+    method: DELETE
     mode: formUrlEncoded
     headers: {
       X-BetaSeries-Key: {{apiKey}}
@@ -89,8 +137,8 @@ example {
                 "user": 0
               },
               "user": {
-                "seen": true,
-                "seen_date": "2026-08-03 22:22:09",
+                "seen": false,
+                "seen_date": null,
                 "downloaded": false,
                 "friends_watched": null,
                 "rewatch": {
@@ -155,8 +203,8 @@ example {
                 "user": 0
               },
               "user": {
-                "seen": true,
-                "seen_date": "2026-08-03 22:22:09",
+                "seen": false,
+                "seen_date": null,
                 "downloaded": false,
                 "friends_watched": null,
                 "rewatch": {

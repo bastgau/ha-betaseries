@@ -1,10 +1,10 @@
 meta {
-  name: note
+  name: unnote
   type: http
-  seq: 3
+  seq: 4
 }
 
-post {
+delete {
   url: {{baseUrl}}/episodes/note
   body: formUrlEncoded
   auth: none
@@ -18,19 +18,18 @@ headers {
 
 body:form-urlencoded {
   id: 3905073,3685365
-  note: 4
 }
 
 docs {
-  Rate an episode with a score from 1 to 5.
+  Delete an episode's rating.
 }
 
 example {
-  name: example - 200
+  name: example
 
   request: {
     url: {{baseUrl}}/episodes/note
-    method: POST
+    method: DELETE
     mode: formUrlEncoded
     headers: {
       X-BetaSeries-Key: {{apiKey}}
@@ -39,8 +38,7 @@ example {
     }
 
     body:form-urlencoded: {
-      id: 3905073
-      note: 4
+      id: 3905073,3685365
     }
   }
 
@@ -86,14 +84,13 @@ example {
             "date": "2026-05-29",
             "length": 37,
             "note": {
-              "total": 47,
-              "mean": 3.80851063829787239711777147022075951099395751953125,
-              "date": "1785696209",
-              "user": 4
+              "total": 0,
+              "mean": 0,
+              "user": 0
             },
             "user": {
-              "seen": true,
-              "seen_date": "2026-08-03 21:43:56",
+              "seen": false,
+              "seen_date": null,
               "hidden": false,
               "downloaded": false,
               "friends_watched": [],
@@ -131,57 +128,7 @@ example {
               "directors": []
             }
           },
-          "note": 4,
           "errors": []
-        }
-      '''
-    }
-  }
-}
-
-example {
-  name: example - 400
-
-  request: {
-    url: {{baseUrl}}/episodes/note
-    method: POST
-    mode: formUrlEncoded
-    headers: {
-      X-BetaSeries-Key: {{apiKey}}
-      X-BetaSeries-Version: 3.0
-      Authorization: Bearer {{token}}
-    }
-
-    body:form-urlencoded: {
-      id: 3905073,3685365
-      note: 4
-    }
-  }
-
-  response: {
-    headers: {
-      content-type: application/json
-      cache-control: no-cache, private
-      access-control-allow-origin: *
-      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
-      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
-    }
-
-    status: {
-      code: 400
-      text: Bad Request
-    }
-
-    body: {
-      type: json
-      content: '''
-        {
-          "errors": [
-            {
-              "code": 2005,
-              "text": "L'utilisateur n'a pas marqué cet épisode comme vu."
-            }
-          ]
         }
       '''
     }
