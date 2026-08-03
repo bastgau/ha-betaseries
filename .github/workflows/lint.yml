@@ -27,7 +27,7 @@ jobs:
       matrix:
         include:
           - name: "client"
-            paths: "custom_components/betaseries/betaseries"
+            paths: "custom_components/betaseries/betaseries/*.py"
             extra_requirements: ""
           # The glob draws the line between the two custom_components scopes:
           # it matches the integration's own flat modules and never descends
