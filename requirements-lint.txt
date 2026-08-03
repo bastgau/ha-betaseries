@@ -15,4 +15,4 @@ ruff==0.15.1
 
 # Not on PyPI: installed straight from its GitHub release, exactly as the
 # poetry dev group does (see pyproject.toml).
-docstring-linter @ https://github.com/bastgau/docstring-linter/releases/download/v0.5.0/docstring_linter-0.5.0-py3-none-any.whl
+docstring-linter @ https://github.com/bastgau/docstring-linter/releases/download/v0.9.0/docstring_linter-0.9.0-py3-none-any.whl

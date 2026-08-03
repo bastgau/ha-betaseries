@@ -39,6 +39,27 @@ if TYPE_CHECKING:
 
 type StateType = int | float | str | None
 
+UNIT_TRANSLATIONS = {
+    "en": {
+        "episodes": "episodes",
+        "shows": "shows",
+        "movies": "movies",
+        "badges": "badges",
+        "events": "events",
+        "episodes_per_month": "episodes/month",
+        "xp": "xp",
+    },
+    "fr": {
+        "episodes": "épisodes",
+        "shows": "séries",
+        "movies": "films",
+        "badges": "badges",
+        "events": "événements",
+        "episodes_per_month": "épisodes/mois",
+        "xp": "xp",
+    },
+}
+
 
 def _badges_attributes(data: MemberData) -> dict[str, list[dict[str, str | int | None]]]:
     """Return every earned badge's raw fields, for the "badges" sensor's attributes.
@@ -74,17 +95,20 @@ class BetaSeriesSensorEntityDescription(SensorEntityDescription):
     Attributes:
         value_fn (Callable[[MemberData], StateType]): Extracts this sensor's value.
         attrs_fn (Callable[[MemberData], dict[str, Any]] | None): Extracts this sensor's extra_state_attributes, if any (None for sensors with no attributes).
+        unit_translation_key (str | None): Translation key for the unit of measurement.
 
     """
 
     value_fn: Callable[[MemberData], StateType]
     attrs_fn: Callable[[MemberData], dict[str, Any]] | None = None
+    unit_translation_key: str | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
     BetaSeriesSensorEntityDescription(
         key="episodes_to_watch",
         translation_key="episodes_to_watch",
+        unit_translation_key="episodes",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.episodes_to_watch,
     ),
@@ -108,24 +132,28 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
     BetaSeriesSensorEntityDescription(
         key="shows_not_started",
         translation_key="shows_not_started",
+        unit_translation_key="shows",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.shows_to_watch,
     ),
     BetaSeriesSensorEntityDescription(
         key="movies_to_watch",
         translation_key="movies_to_watch",
+        unit_translation_key="movies",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.movies_to_watch,
     ),
     BetaSeriesSensorEntityDescription(
         key="shows_in_progress",
         translation_key="shows_in_progress",
+        unit_translation_key="shows",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.shows_current,
     ),
     BetaSeriesSensorEntityDescription(
         key="badges",
         translation_key="badges",
+        unit_translation_key="badges",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.badges,
         attrs_fn=_badges_attributes,
@@ -133,18 +161,21 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
     BetaSeriesSensorEntityDescription(
         key="shows",
         translation_key="shows",
+        unit_translation_key="shows",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.shows,
     ),
     BetaSeriesSensorEntityDescription(
         key="shows_finished",
         translation_key="shows_finished",
+        unit_translation_key="shows",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.shows_finished,
     ),
     BetaSeriesSensorEntityDescription(
         key="episodes",
         translation_key="episodes",
+        unit_translation_key="episodes",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.stats.episodes,
     ),
@@ -160,12 +191,14 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
     BetaSeriesSensorEntityDescription(
         key="movies",
         translation_key="movies",
+        unit_translation_key="movies",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.movies,
     ),
     BetaSeriesSensorEntityDescription(
         key="xp",
         translation_key="xp",
+        unit_translation_key="xp",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.xp,
     ),
@@ -188,6 +221,7 @@ SENSOR_DESCRIPTIONS: tuple[BetaSeriesSensorEntityDescription, ...] = (
     BetaSeriesSensorEntityDescription(
         key="episodes_per_month",
         translation_key="episodes_per_month",
+        unit_translation_key="episodes_per_month",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.stats.episodes_per_month,
     ),
@@ -454,6 +488,21 @@ class BetaSeriesSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[repor
     coordinator: MemberCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @property
+    def native_unit_of_measurement(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the localized unit of measurement.
+
+        Returns:
+            str | None: The translated unit if available, otherwise the unit from the description.
+
+        """
+        if self.entity_description.unit_translation_key:
+            locale = self.hass.config.language or "en"
+            language = locale.split("-")[0]
+            translations = UNIT_TRANSLATIONS.get(language, UNIT_TRANSLATIONS["en"])
+            return translations.get(self.entity_description.unit_translation_key)
+        return self.entity_description.native_unit_of_measurement
+
+    @property
     def native_value(self) -> StateType:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value of this sensor.
 
@@ -601,6 +650,19 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     @property
+    def native_unit_of_measurement(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the localized unit of measurement.
+
+        Returns:
+            str | None: The translated "events" unit.
+
+        """
+        locale = self.hass.config.language or "en"
+        language = locale.split("-")[0]
+        translations = UNIT_TRANSLATIONS.get(language, UNIT_TRANSLATIONS["en"])
+        return translations.get("events")
+
+    @property
     def native_value(self) -> int | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the total number of episodes currently loaded in the planning.
 
@@ -669,6 +731,19 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
     _unrecorded_attributes = frozenset({"shows"})
 
     coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the localized unit of measurement.
+
+        Returns:
+            str | None: The translated "shows" unit.
+
+        """
+        locale = self.hass.config.language or "en"
+        language = locale.split("-")[0]
+        translations = UNIT_TRANSLATIONS.get(language, UNIT_TRANSLATIONS["en"])
+        return translations.get("shows")
 
     @property
     def native_value(self) -> int:  # pyright: ignore[reportIncompatibleVariableOverride]

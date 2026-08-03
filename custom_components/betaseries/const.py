@@ -63,10 +63,10 @@ DEFAULT_PLANNING_MONTHS_BEHIND = 2
 # has barely any announced schedule to return more than a few months out.
 # Raising months_behind is nearly free; raising months_ahead is not.
 MIN_PLANNING_MONTHS_AHEAD = 0
-MAX_PLANNING_MONTHS_AHEAD = 3
+MAX_PLANNING_MONTHS_AHEAD = 2
 
 MIN_PLANNING_MONTHS_BEHIND = 0
-MAX_PLANNING_MONTHS_BEHIND = 3
+MAX_PLANNING_MONTHS_BEHIND = 24
 
 # Preferred language for BetaSeries' responses (genres, descriptions, error
 # text, ...), sent as the "locale" query param on every Client request (see

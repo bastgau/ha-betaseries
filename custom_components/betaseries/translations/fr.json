@@ -51,25 +51,25 @@
             "name": "Données membre",
             "description": "Les statistiques de votre compte : épisodes à voir, progression, badges...",
             "data": {
-              "member_scan_interval": "Intervalle de rafraîchissement des données membre (minutes)"
+              "member_scan_interval": "Intervalle de rafraîchissement des données membre en minutes (5–120)"
             }
           },
           "planning": {
             "name": "Planning",
             "description": "Le calendrier des sorties et les capteurs d'épisodes qui en découlent.",
             "data": {
-              "planning_scan_interval": "Intervalle de rafraîchissement du planning (minutes)",
-              "planning_months_behind": "Mois passés à afficher dans le calendrier",
-              "planning_months_ahead": "Mois futurs à afficher dans le calendrier"
+              "planning_scan_interval": "Intervalle de rafraîchissement du planning en minutes (15–360)",
+              "planning_months_behind": "Mois passés à afficher dans le calendrier (0–24)",
+              "planning_months_ahead": "Mois futurs à afficher dans le calendrier (0–2)"
             }
           },
           "episodes": {
             "name": "Liste à voir",
             "description": "La liste des séries dont il vous reste des épisodes à voir.",
             "data": {
-              "episodes_scan_interval": "Intervalle de rafraîchissement de la liste à voir (minutes)",
-              "shows_limit": "Séries listées dans la liste à voir",
-              "episodes_limit": "Épisodes listés par série"
+              "episodes_scan_interval": "Intervalle de rafraîchissement de la liste à voir en minutes (5–120)",
+              "shows_limit": "Séries listées dans la liste à voir (1–50)",
+              "episodes_limit": "Épisodes listés par série (1–10)"
             }
           }
         }
@@ -177,5 +177,14 @@
         "en": "Anglais"
       }
     }
+  },
+  "unit": {
+    "episodes": "épisodes",
+    "shows": "séries",
+    "movies": "films",
+    "badges": "badges",
+    "events": "événements",
+    "episodes_per_month": "épisodes/mois",
+    "xp": "xp"
   }
 }

@@ -51,25 +51,25 @@
             "name": "Member data",
             "description": "Your account statistics: episodes to watch, progress, badges...",
             "data": {
-              "member_scan_interval": "Member data refresh interval (minutes)"
+              "member_scan_interval": "Member data refresh interval in minutes (5–120)"
             }
           },
           "planning": {
             "name": "Planning",
             "description": "The release calendar and the episode sensors derived from it.",
             "data": {
-              "planning_scan_interval": "Planning refresh interval (minutes)",
-              "planning_months_behind": "Past months to show in the calendar",
-              "planning_months_ahead": "Future months to show in the calendar"
+              "planning_scan_interval": "Planning refresh interval in minutes (15–360)",
+              "planning_months_behind": "Past months to show in the calendar (0–24)",
+              "planning_months_ahead": "Future months to show in the calendar (0–2)"
             }
           },
           "episodes": {
             "name": "Watch list",
             "description": "The list of shows you still have episodes to watch for.",
             "data": {
-              "episodes_scan_interval": "Watch list refresh interval (minutes)",
-              "shows_limit": "Shows listed in the watch list",
-              "episodes_limit": "Episodes listed per show"
+              "episodes_scan_interval": "Watch list refresh interval in minutes (5–120)",
+              "shows_limit": "Shows listed in the watch list (1–50)",
+              "episodes_limit": "Episodes listed per show (1–10)"
             }
           }
         }
@@ -177,5 +177,14 @@
         "en": "English"
       }
     }
+  },
+  "unit": {
+    "episodes": "episodes",
+    "shows": "shows",
+    "movies": "movies",
+    "badges": "badges",
+    "events": "events",
+    "episodes_per_month": "episodes/month",
+    "xp": "xp"
   }
 }
