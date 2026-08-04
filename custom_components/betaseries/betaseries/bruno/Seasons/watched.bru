@@ -1,0 +1,96 @@
+meta {
+  name: watched
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/seasons/watched
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: 38605
+  season: 2
+}
+
+docs {
+  Mark all episodes of a season as watched. Skips already watched episodes.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/seasons/watched
+    method: POST
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 38605
+      season: 2
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "episodes": [
+            {
+              "id": 3905073
+            },
+            {
+              "id": 3990372
+            },
+            {
+              "id": 3990373
+            },
+            {
+              "id": 3990374
+            },
+            {
+              "id": 3990375
+            },
+            {
+              "id": 3990376
+            },
+            {
+              "id": 3990377
+            },
+            {
+              "id": 3990378
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}

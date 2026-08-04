@@ -1,0 +1,1346 @@
+meta {
+  name: list
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/episodes/list?showsLimit=2&limit=1&excludes=characters
+  body: none
+  auth: none
+}
+
+params:query {
+  showsLimit: 2
+  limit: 1
+  excludes: characters
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Fetch the list of episodes to watch, with various filters and pagination options.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/episodes/list?showsLimit=10&limit=2&excludes=characters
+    method: GET
+    mode: none
+    params:query: {
+      showsLimit: 10
+      limit: 2
+      excludes: characters
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "shows": [
+            {
+              "id": 38605,
+              "thetvdb_id": 417272,
+              "imdb_id": "tt30217222",
+              "title": "Achtsam Morden",
+              "remaining": 8,
+              "unseen": [
+                {
+                  "id": 3905073,
+                  "thetvdb_id": 11603666,
+                  "youtube_id": null,
+                  "title": "Urlaub",
+                  "season": 2,
+                  "episode": 1,
+                  "show": {
+                    "id": 38605,
+                    "thetvdb_id": 417272,
+                    "title": "Achtsam Morden",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/95dec54939de769f220aa9686fc03887.jpg",
+                    "in_account": true,
+                    "remaining": 8,
+                    "minutes_remaining": 272,
+                    "progress": 50,
+                    "status": "Continuing"
+                  },
+                  "code": "S02E01",
+                  "global": 9,
+                  "special": 0,
+                  "description": "Nicole s'embrouille les pinceaux avec ses preuves. Lors de vacances en famille en Autriche, Björn essaie de se détendre, mais un sérieux faux pas révèle qu'il y a encore du boulot.",
+                  "date": "2026-05-29",
+                  "note": {
+                    "total": 45,
+                    "mean": 3.77780000000000004689582056016661226749420166015625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "2",
+                  "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2026-05-28",
+                      "date": "1779919200",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/62762471"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 3990372,
+                  "thetvdb_id": 11806146,
+                  "youtube_id": null,
+                  "title": "Realität",
+                  "season": 2,
+                  "episode": 2,
+                  "show": {
+                    "id": 38605,
+                    "thetvdb_id": 417272,
+                    "title": "Achtsam Morden",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/95dec54939de769f220aa9686fc03887.jpg",
+                    "in_account": true,
+                    "remaining": 8,
+                    "minutes_remaining": 272,
+                    "progress": 50,
+                    "status": "Continuing"
+                  },
+                  "code": "S02E02",
+                  "global": 10,
+                  "special": 0,
+                  "description": "Björn orchestre un faux cambriolage à la garderie pour régler un énième problème, mais un message glaçant et la visite surprise d'un groupe de parents compliquent les choses.",
+                  "date": "2026-05-29",
+                  "note": {
+                    "total": 38,
+                    "mean": 3.868399999999999838706798982457257807254791259765625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 1860,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2026-05-28",
+                      "date": "1779926400",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/62773822"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 26491,
+              "thetvdb_id": 376472,
+              "imdb_id": "tt10795658",
+              "title": "Alice in Borderland (2020)",
+              "remaining": 6,
+              "unseen": [
+                {
+                  "id": 3685365,
+                  "thetvdb_id": 11156503,
+                  "youtube_id": null,
+                  "title": "Episode 1",
+                  "season": 3,
+                  "episode": 1,
+                  "show": {
+                    "id": 26491,
+                    "thetvdb_id": 376472,
+                    "title": "Alice in Borderland (2020)",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/f78eb78b64924c45426d78f4e96ccf90.jpg",
+                    "in_account": true,
+                    "remaining": 6,
+                    "minutes_remaining": 294,
+                    "progress": 72,
+                    "status": "Ended"
+                  },
+                  "code": "S03E01",
+                  "global": 17,
+                  "special": 0,
+                  "description": "De retour dans le monde réel sans aucun souvenir de Borderland, Arisu et Usagi rencontrent Ryuji, un professeur obsédé par les expériences de mort imminente.",
+                  "date": "2025-09-25",
+                  "note": {
+                    "total": 342,
+                    "mean": 3.654999999999999804600747665972448885440826416015625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "18",
+                  "resource_url": "https://www.betaseries.com/episode/alice-in-borderland-2020/s03e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 15942,
+                  "platform_links": [],
+                  "characters": []
+                },
+                {
+                  "id": 3689035,
+                  "thetvdb_id": 11167777,
+                  "youtube_id": null,
+                  "title": "Episode 2",
+                  "season": 3,
+                  "episode": 2,
+                  "show": {
+                    "id": 26491,
+                    "thetvdb_id": 376472,
+                    "title": "Alice in Borderland (2020)",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/f78eb78b64924c45426d78f4e96ccf90.jpg",
+                    "in_account": true,
+                    "remaining": 6,
+                    "minutes_remaining": 294,
+                    "progress": 72,
+                    "status": "Ended"
+                  },
+                  "code": "S03E02",
+                  "global": 18,
+                  "special": 0,
+                  "description": "Le premier jeu se déroule dans un sanctuaire. Arisu et les autres joueurs doivent résoudre des problèmes mathématiques de tête avant que tout s'embrase.",
+                  "date": "2025-09-25",
+                  "note": {
+                    "total": 335,
+                    "mean": 3.764200000000000212452277992269955575466156005859375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "8",
+                  "resource_url": "https://www.betaseries.com/episode/alice-in-borderland-2020/s03e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 15575,
+                  "platform_links": [],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 6947,
+              "thetvdb_id": 270205,
+              "imdb_id": "tt2342499",
+              "title": "Below Deck",
+              "remaining": 188,
+              "unseen": [
+                {
+                  "id": 303877,
+                  "thetvdb_id": 4605188,
+                  "youtube_id": null,
+                  "title": "Cool Your Jets",
+                  "season": 1,
+                  "episode": 1,
+                  "show": {
+                    "id": 6947,
+                    "thetvdb_id": 270205,
+                    "title": "Below Deck",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/74a07c532a8ec34d1939aae829aad0f8.jpg",
+                    "in_account": true,
+                    "remaining": 188,
+                    "minutes_remaining": 8460,
+                    "progress": 0,
+                    "status": "Continuing"
+                  },
+                  "code": "S01E01",
+                  "global": 1,
+                  "special": 0,
+                  "description": "The Honor crew welcomes their first group of charter guests: a gaggle of flamboyant fashion photographers who prove to be a boatload of trouble. Kat makes a shocking discovery that forces her into an agonizing decision; should she rat out the guests and ruin the charter, or risk serious consequences by turning a blind-eye? Adrienne chews out Sam for failing to respect her authority, but Sam refuses to back down and the two stews butt heads.",
+                  "date": "2013-07-02",
+                  "note": {
+                    "total": 5,
+                    "mean": 3.600000000000000088817841970012523233890533447265625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck/s01e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2024-06-04",
+                      "date": "1717459200",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/61014563"
+                    },
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/60235099"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 303878,
+                  "thetvdb_id": 4605189,
+                  "youtube_id": null,
+                  "title": "It's Not Easy Being Green",
+                  "season": 1,
+                  "episode": 2,
+                  "show": {
+                    "id": 6947,
+                    "thetvdb_id": 270205,
+                    "title": "Below Deck",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/74a07c532a8ec34d1939aae829aad0f8.jpg",
+                    "in_account": true,
+                    "remaining": 188,
+                    "minutes_remaining": 8460,
+                    "progress": 0,
+                    "status": "Continuing"
+                  },
+                  "code": "S01E02",
+                  "global": 2,
+                  "special": 0,
+                  "description": "The crew enjoys a night out, but Kat enjoys a few too many cocktails. Meanwhile, the new charter guests, a wealthy hypnotist and his friends, come aboard and their special dietary demands tax the crew to the breaking point. After driving Kat and Sam especially hard, the uptight Adrienne agrees to a hypnotherapy session that will hopefully chill her out.",
+                  "date": "2013-07-09",
+                  "note": {
+                    "total": 6,
+                    "mean": 3.166700000000000070343730840249918401241302490234375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck/s01e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2024-06-04",
+                      "date": "1717459200",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/61014564"
+                    },
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/60249539"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 31898,
+              "thetvdb_id": 402811,
+              "imdb_id": "tt14721554",
+              "title": "Below Deck Down Under",
+              "remaining": 18,
+              "unseen": [
+                {
+                  "id": 3840968,
+                  "thetvdb_id": 11455904,
+                  "youtube_id": null,
+                  "title": "The Real Housewives of Down Under",
+                  "season": 4,
+                  "episode": 1,
+                  "show": {
+                    "id": 31898,
+                    "thetvdb_id": 402811,
+                    "title": "Below Deck Down Under",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/8881ac0a253a63c95b802a12ca4a163b.jpg",
+                    "in_account": true,
+                    "remaining": 18,
+                    "minutes_remaining": 774,
+                    "progress": 74,
+                    "status": "Continuing"
+                  },
+                  "code": "S04E01",
+                  "global": 53,
+                  "special": 0,
+                  "description": "As Capt. Jason reunites with his all-star heads of department ChefBen, Daisy and Joao for a high-pressure opening charter with The Real Housewives of Salt Lake City, a sudden crew emergency rattles the boat before guests even board.",
+                  "date": "2026-02-03",
+                  "note": {
+                    "total": 2,
+                    "mean": 4.5,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck-down-under/s04e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [],
+                  "characters": []
+                },
+                {
+                  "id": 3888595,
+                  "thetvdb_id": 11569137,
+                  "youtube_id": null,
+                  "title": "Night of The Living Dread",
+                  "season": 4,
+                  "episode": 2,
+                  "show": {
+                    "id": 31898,
+                    "thetvdb_id": 402811,
+                    "title": "Below Deck Down Under",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/8881ac0a253a63c95b802a12ca4a163b.jpg",
+                    "in_account": true,
+                    "remaining": 18,
+                    "minutes_remaining": 774,
+                    "progress": 74,
+                    "status": "Continuing"
+                  },
+                  "code": "S04E02",
+                  "global": 54,
+                  "special": 0,
+                  "description": "As housewives drama continues to boil over, Capt. Jason keeps his distance while mounting pressure in the galley puts Chef Ben and Alesia at odds; When mechanical failures, a last-minute service change and an over-the-top guest request push the crew to their limits, Alesia is left questioning whether she has what it takes to stay in the kitchen.",
+                  "date": "2026-02-10",
+                  "note": {
+                    "total": 2,
+                    "mean": 4.5,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck-down-under/s04e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 13381,
+              "thetvdb_id": 305621,
+              "imdb_id": "tt5665418",
+              "title": "Below Deck Mediterranean",
+              "remaining": 26,
+              "unseen": [
+                {
+                  "id": 3755700,
+                  "thetvdb_id": 11306879,
+                  "youtube_id": null,
+                  "title": "Raising The Bar-Celona",
+                  "season": 10,
+                  "episode": 1,
+                  "show": {
+                    "id": 13381,
+                    "thetvdb_id": 305621,
+                    "title": "Below Deck Mediterranean",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/09e940cf752ee9fee91a94c2f2f2d630.jpg",
+                    "in_account": true,
+                    "remaining": 26,
+                    "minutes_remaining": 1144,
+                    "progress": 85,
+                    "status": "Continuing"
+                  },
+                  "code": "S10E01",
+                  "global": 157,
+                  "special": 0,
+                  "description": "Captain Sandy and three crew members return for another wild charter season, but when crew members are sidelined due to illness, the crew struggles to get the boat ready for charter; Aesha worries one of her green stews is giving her déjà vu.",
+                  "date": "2025-09-30",
+                  "note": {
+                    "total": 3,
+                    "mean": 3.666700000000000070343730840249918401241302490234375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck-mediterranean/s10e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2026-04-19",
+                      "date": "1776556800",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/62739787"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 3777217,
+                  "thetvdb_id": 11335593,
+                  "youtube_id": null,
+                  "title": "Stingled Out",
+                  "season": 10,
+                  "episode": 2,
+                  "show": {
+                    "id": 13381,
+                    "thetvdb_id": 305621,
+                    "title": "Below Deck Mediterranean",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/09e940cf752ee9fee91a94c2f2f2d630.jpg",
+                    "in_account": true,
+                    "remaining": 26,
+                    "minutes_remaining": 1144,
+                    "progress": 85,
+                    "status": "Continuing"
+                  },
+                  "code": "S10E02",
+                  "global": 158,
+                  "special": 0,
+                  "description": "The deck team struggles to find their footing, and big mistakes are made; a stew begins to flirt with all male crewmembers on board; the chef struggles to get a handle on eccentric guest requests; tension between two deckhands escalates.",
+                  "date": "2025-10-07",
+                  "note": {
+                    "total": 3,
+                    "mean": 3.666700000000000070343730840249918401241302490234375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck-mediterranean/s10e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2026-04-19",
+                      "date": "1776556800",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/62739788"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 27896,
+              "thetvdb_id": 374012,
+              "imdb_id": "tt10087444",
+              "title": "Below Deck Sailing Yacht",
+              "remaining": 52,
+              "unseen": [
+                {
+                  "id": 2312152,
+                  "thetvdb_id": 8155337,
+                  "youtube_id": null,
+                  "title": "Running on Fumes",
+                  "season": 2,
+                  "episode": 1,
+                  "show": {
+                    "id": 27896,
+                    "thetvdb_id": 374012,
+                    "title": "Below Deck Sailing Yacht",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/b573b9f4f865f56c3bd2dafdc9d76de9.jpg",
+                    "in_account": true,
+                    "remaining": 52,
+                    "minutes_remaining": 2236,
+                    "progress": 41,
+                    "status": "Ended"
+                  },
+                  "code": "S02E01",
+                  "global": 19,
+                  "special": 0,
+                  "description": "The first charter gets rocky when the guests get in a drunken personal fight; the next morning, the guests' excitement to sail puts Daisy and Natasha at odds over serving breakfast on heel; Jean-Luc realizes he may have lost two guests at sea.",
+                  "date": "2021-03-02",
+                  "note": {
+                    "total": 2,
+                    "mean": 3.5,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck-sailing-yacht/s02e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2024-09-21",
+                      "date": "1726876800",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/61254706"
+                    },
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2024-07-03",
+                      "date": "1719964800",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/61116618"
+                    },
+                    {
+                      "platform_id": "413",
+                      "platform": "Universal+",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/413.jpg",
+                      "link": "https://www.betaseries.com/link/60210427"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 2312153,
+                  "thetvdb_id": 8230677,
+                  "youtube_id": null,
+                  "title": "Nookie Mistake",
+                  "season": 2,
+                  "episode": 2,
+                  "show": {
+                    "id": 27896,
+                    "thetvdb_id": 374012,
+                    "title": "Below Deck Sailing Yacht",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/b573b9f4f865f56c3bd2dafdc9d76de9.jpg",
+                    "in_account": true,
+                    "remaining": 52,
+                    "minutes_remaining": 2236,
+                    "progress": 41,
+                    "status": "Ended"
+                  },
+                  "code": "S02E02",
+                  "global": 20,
+                  "special": 0,
+                  "description": "Deckhand Jean-Luc tries to rebound after an accident, but his inability to sleep interferes with his attitude; the crew gives the guests a lot to mullet over as they plan an 80s party; the crew goes wild during their first night off.",
+                  "date": "2021-03-09",
+                  "note": {
+                    "total": 2,
+                    "mean": 4,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/below-deck-sailing-yacht/s02e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "17",
+                      "platform": "M6+",
+                      "color": "#111111",
+                      "type": "avod",
+                      "day": "2024-09-21",
+                      "date": "1726876800",
+                      "force_display": true,
+                      "logo": "https://pictures.betaseries.com/platforms/17.jpg",
+                      "link": "https://www.betaseries.com/link/61254707"
+                    },
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2024-07-03",
+                      "date": "1719964800",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/61116619"
+                    },
+                    {
+                      "platform_id": "413",
+                      "platform": "Universal+",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/413.jpg",
+                      "link": "https://www.betaseries.com/link/60210428"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 29945,
+              "thetvdb_id": 407544,
+              "imdb_id": "tt21195490",
+              "title": "Big Mouth (2022)",
+              "remaining": 16,
+              "unseen": [
+                {
+                  "id": 2717095,
+                  "thetvdb_id": 8582604,
+                  "youtube_id": null,
+                  "title": "Because I'll show you what real despair is like",
+                  "season": 1,
+                  "episode": 1,
+                  "show": {
+                    "id": 29945,
+                    "thetvdb_id": 407544,
+                    "title": "Big Mouth (2022)",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/a57b98d47c18415f3db326438c19afbf.jpg",
+                    "in_account": true,
+                    "remaining": 16,
+                    "minutes_remaining": 1008,
+                    "progress": 0,
+                    "status": "Ended"
+                  },
+                  "code": "S01E01",
+                  "global": 1,
+                  "special": 0,
+                  "description": "Chang-ho, qui n'a pas d'argent et va perdre sa femme, reçoit un appel du maire de Gucheon.",
+                  "date": "2022-07-30",
+                  "note": {
+                    "total": 43,
+                    "mean": 4.30229999999999979110043568653054535388946533203125,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "3",
+                  "resource_url": "https://www.betaseries.com/episode/big-mouth-kr/s01e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 1026,
+                  "platform_links": [
+                    {
+                      "platform_id": "246",
+                      "platform": "Disney+",
+                      "color": "#080D37",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/246.jpg",
+                      "link": "https://www.betaseries.com/link/60163598"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 2730604,
+                  "thetvdb_id": 9228807,
+                  "youtube_id": null,
+                  "title": "Are you Big Mouse?",
+                  "season": 1,
+                  "episode": 2,
+                  "show": {
+                    "id": 29945,
+                    "thetvdb_id": 407544,
+                    "title": "Big Mouth (2022)",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/a57b98d47c18415f3db326438c19afbf.jpg",
+                    "in_account": true,
+                    "remaining": 16,
+                    "minutes_remaining": 1008,
+                    "progress": 0,
+                    "status": "Ended"
+                  },
+                  "code": "S01E02",
+                  "global": 2,
+                  "special": 0,
+                  "description": "Chang-ho est accusé de toxicomanie et incarcéré à la prison de Gucheon.",
+                  "date": "2022-07-31",
+                  "note": {
+                    "total": 41,
+                    "mean": 4.41460000000000007958078640513122081756591796875,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/big-mouth-kr/s01e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "246",
+                      "platform": "Disney+",
+                      "color": "#080D37",
+                      "type": "svod",
+                      "day": null,
+                      "date": null,
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/246.jpg",
+                      "link": "https://www.betaseries.com/link/60163599"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 4189,
+              "thetvdb_id": 253463,
+              "imdb_id": "tt2085059",
+              "title": "Black Mirror",
+              "remaining": 11,
+              "unseen": [
+                {
+                  "id": 2898259,
+                  "thetvdb_id": 9757136,
+                  "youtube_id": null,
+                  "title": "Joan Is Awful",
+                  "season": 6,
+                  "episode": 1,
+                  "show": {
+                    "id": 4189,
+                    "thetvdb_id": 253463,
+                    "title": "Black Mirror",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/df97ad29f700e76bc77554719aa0ebfc.jpg",
+                    "in_account": true,
+                    "remaining": 11,
+                    "minutes_remaining": 550,
+                    "progress": 65,
+                    "status": "Continuing"
+                  },
+                  "code": "S06E01",
+                  "global": 24,
+                  "special": 0,
+                  "description": "Une femme ordinaire découvre qu'un service de streaming mondial a adapté son quotidien, ainsi que ses secrets, en un drame télévisé interprété par la star Salma Hayek.",
+                  "date": "2023-06-15",
+                  "note": {
+                    "total": 1427,
+                    "mean": 3.832520000000000148787648868164978921413421630859375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "60",
+                  "resource_url": "https://www.betaseries.com/episode/black-mirror/s06e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2023-06-15",
+                      "date": "1686780000",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/61028184"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 2904475,
+                  "thetvdb_id": 9785517,
+                  "youtube_id": null,
+                  "title": "Loch Henry",
+                  "season": 6,
+                  "episode": 2,
+                  "show": {
+                    "id": 4189,
+                    "thetvdb_id": 253463,
+                    "title": "Black Mirror",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/df97ad29f700e76bc77554719aa0ebfc.jpg",
+                    "in_account": true,
+                    "remaining": 11,
+                    "minutes_remaining": 550,
+                    "progress": 65,
+                    "status": "Continuing"
+                  },
+                  "code": "S06E02",
+                  "global": 25,
+                  "special": 0,
+                  "description": "Alors qu'il tourne un documentaire nature dans une petite ville paisible d'Écosse, un jeune couple entend parler d'une rumeur locale liée à de terribles événements passés.",
+                  "date": "2023-06-15",
+                  "note": {
+                    "total": 1344,
+                    "mean": 3.65922999999999998266275724745355546474456787109375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "54",
+                  "resource_url": "https://www.betaseries.com/episode/black-mirror/s06e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": null,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2023-06-15",
+                      "date": "1686780000",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/61019291"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 27779,
+              "thetvdb_id": 397440,
+              "imdb_id": "tt13024974",
+              "title": "D.P.",
+              "remaining": 6,
+              "unseen": [
+                {
+                  "id": 2925706,
+                  "thetvdb_id": 9857585,
+                  "youtube_id": null,
+                  "title": "The Rains",
+                  "season": 2,
+                  "episode": 1,
+                  "show": {
+                    "id": 27779,
+                    "thetvdb_id": 397440,
+                    "title": "D.P.",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/ac71c4ac805f7140a0547f2833c8847f.jpg",
+                    "in_account": true,
+                    "remaining": 6,
+                    "minutes_remaining": 312,
+                    "progress": 50,
+                    "status": "Ended"
+                  },
+                  "code": "S02E01",
+                  "global": 7,
+                  "special": 0,
+                  "description": "Jun-ho tente de se remettre de la tragédie. Park Beom-gu se sent contraint de dissimuler des événements récents. Une attaque soudaine prend l'armée au dépourvu.",
+                  "date": "2023-07-28",
+                  "note": {
+                    "total": 31,
+                    "mean": 4.4839000000000002188471626141108572483062744140625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/dp/s02e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 1033,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2023-07-28",
+                      "date": "1690495200",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/60299595"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 2925707,
+                  "thetvdb_id": 9857796,
+                  "youtube_id": null,
+                  "title": "Dirty Play",
+                  "season": 2,
+                  "episode": 2,
+                  "show": {
+                    "id": 27779,
+                    "thetvdb_id": 397440,
+                    "title": "D.P.",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/ac71c4ac805f7140a0547f2833c8847f.jpg",
+                    "in_account": true,
+                    "remaining": 6,
+                    "minutes_remaining": 312,
+                    "progress": 50,
+                    "status": "Ended"
+                  },
+                  "code": "S02E02",
+                  "global": 8,
+                  "special": 0,
+                  "description": "Alors que Kim Ru-ri dévoile publiquement ses intentions, Seo Eun lui tend un piège. Jun-ho et Ho-yeol tentent alors de calmer le jeu.",
+                  "date": "2023-07-28",
+                  "note": {
+                    "total": 30,
+                    "mean": 4.4000000000000003552713678800500929355621337890625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "0",
+                  "resource_url": "https://www.betaseries.com/episode/dp/s02e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 1002,
+                  "platform_links": [
+                    {
+                      "platform_id": "1",
+                      "platform": "Netflix",
+                      "color": "#000000",
+                      "type": "svod",
+                      "day": "2023-07-28",
+                      "date": "1690495200",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                      "link": "https://www.betaseries.com/link/60299596"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            },
+            {
+              "id": 33104,
+              "thetvdb_id": 422712,
+              "imdb_id": "tt18923754",
+              "title": "Daredevil: Born Again",
+              "remaining": 17,
+              "unseen": [
+                {
+                  "id": 3438275,
+                  "thetvdb_id": 9275652,
+                  "youtube_id": null,
+                  "title": "Heaven's Half Hour",
+                  "season": 1,
+                  "episode": 1,
+                  "show": {
+                    "id": 33104,
+                    "thetvdb_id": 422712,
+                    "title": "Daredevil: Born Again",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/1b03b1f37e10c1eb8d675f869bc4adcd.jpg",
+                    "in_account": true,
+                    "remaining": 17,
+                    "minutes_remaining": 867,
+                    "progress": 0,
+                    "status": "Continuing"
+                  },
+                  "code": "S01E01",
+                  "global": 1,
+                  "special": 0,
+                  "description": "Matt Murdock abandonne le masque. Wilson Fisk vise de nouveaux sommets.",
+                  "date": "2025-03-04",
+                  "note": {
+                    "total": 593,
+                    "mean": 4.1382799999999999585043042316101491451263427734375,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "27",
+                  "resource_url": "https://www.betaseries.com/episode/daredevil-born-again/s01e01",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 14580,
+                  "platform_links": [
+                    {
+                      "platform_id": "246",
+                      "platform": "Disney+",
+                      "color": "#080D37",
+                      "type": "svod",
+                      "day": "2025-03-05",
+                      "date": "1741129200",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/246.jpg",
+                      "link": "https://www.betaseries.com/link/61342920"
+                    }
+                  ],
+                  "characters": []
+                },
+                {
+                  "id": 3529525,
+                  "thetvdb_id": 10751467,
+                  "youtube_id": null,
+                  "title": "Optics",
+                  "season": 1,
+                  "episode": 2,
+                  "show": {
+                    "id": 33104,
+                    "thetvdb_id": 422712,
+                    "title": "Daredevil: Born Again",
+                    "poster": "https://pictures.betaseries.com/fonds/poster/1b03b1f37e10c1eb8d675f869bc4adcd.jpg",
+                    "in_account": true,
+                    "remaining": 17,
+                    "minutes_remaining": 867,
+                    "progress": 0,
+                    "status": "Continuing"
+                  },
+                  "code": "S01E02",
+                  "global": 2,
+                  "special": 0,
+                  "description": "Matt Murdock obtient un nouveau client qui est bien plus que ce qu'il prétend être. Fisk découvre le pouvoir de l'optique.",
+                  "date": "2025-03-04",
+                  "note": {
+                    "total": 543,
+                    "mean": 4.20441999999999982406961862579919397830963134765625,
+                    "user": 0
+                  },
+                  "user": {
+                    "seen": false,
+                    "downloaded": false,
+                    "seen_date": null,
+                    "rewatch": {
+                      "total": 0,
+                      "dates": []
+                    }
+                  },
+                  "comments": "13",
+                  "resource_url": "https://www.betaseries.com/episode/daredevil-born-again/s01e02",
+                  "subtitles": [],
+                  "watched_by": [],
+                  "is_new": false,
+                  "seen_total": 14092,
+                  "platform_links": [
+                    {
+                      "platform_id": "246",
+                      "platform": "Disney+",
+                      "color": "#080D37",
+                      "type": "svod",
+                      "day": "2024-03-01",
+                      "date": "1709251200",
+                      "force_display": false,
+                      "logo": "https://pictures.betaseries.com/platforms/246.jpg",
+                      "link": "https://www.betaseries.com/link/61636431"
+                    }
+                  ],
+                  "characters": []
+                }
+              ]
+            }
+          ],
+          "total": 38,
+          "totalEpisodes": 729,
+          "totalMissingShows": 0,
+          "totalMissingEpisodes": 0,
+          "errors": []
+        }
+      '''
+    }
+  }
+}

@@ -1,0 +1,113 @@
+---
+name: "Test"
+
+on:
+  push:
+  pull_request:
+
+permissions: {}
+
+env:
+  PYTHON_VERSION: "3.14"
+
+jobs:
+  # Same split as the lint workflow, for the same reason: the bundled client is
+  # a library that stands on its own (see its README), the rest is the Home
+  # Assistant integration, and a failure should say which of the two broke.
+  #
+  # The split is also a real contract rather than a tidy-up: each half covers
+  # 100% of what it owns *on its own*, with no help from the other. If a client
+  # branch ever needs a Home Assistant test to be reached, that shows up here
+  # as a coverage drop instead of hiding in a combined run.
+  client:
+    name: "client"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v7"
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
+          cache: "pip"
+          cache-dependency-path: "requirements-test-client.txt"
+
+      # Resolved at run time, not pinned in the requirements file: the question
+      # this workflow answers is "does this commit hold up against the Home
+      # Assistant people are running today". PyPI's info.version is the latest
+      # *stable*, so the 2026.8.0b* betas are excluded by construction - which
+      # matters, since pip honours an exact pin to a pre-release.
+      - name: "Resolve the Home Assistant release in production"
+        id: "ha"
+        run: |
+          version=$(curl -sSf https://pypi.org/pypi/homeassistant/json |
+            python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "::notice::Checking against Home Assistant $version"
+
+      - name: "Install the client test environment"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-test-client.txt "homeassistant==${{ steps.ha.outputs.version }}"
+
+      # -o addopts="" drops the project-wide --cov (which targets the whole
+      # integration) so the report is scoped to what this job actually owns.
+      - name: "Run the client tests"
+        run: |
+          pytest tests/betaseries/betaseries \
+            -o addopts="" \
+            --cov=custom_components/betaseries/betaseries \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-fail-under=95
+
+  integration:
+    name: "integration"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v7"
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
+          cache: "pip"
+          cache-dependency-path: "requirements-test-integration.txt"
+
+      # Resolved at run time, not pinned in the requirements file: the question
+      # this workflow answers is "does this commit hold up against the Home
+      # Assistant people are running today". PyPI's info.version is the latest
+      # *stable*, so the 2026.8.0b* betas are excluded by construction - which
+      # matters, since pip honours an exact pin to a pre-release.
+      - name: "Resolve the Home Assistant release in production"
+        id: "ha"
+        run: |
+          version=$(curl -sSf https://pypi.org/pypi/homeassistant/json |
+            python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "::notice::Checking against Home Assistant $version"
+
+      # pip backtracks through pytest-homeassistant-custom-component's releases
+      # until it finds the one built for this Home Assistant; that package pins
+      # the whole pytest stack itself, so nothing else needs stating.
+      - name: "Install the integration test environment"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-test-integration.txt "homeassistant==${{ steps.ha.outputs.version }}"
+
+      # --cov-config subtracts the bundled client from the measurement, since
+      # it is the `client` job's contract (see .coveragerc-integration). It
+      # also supplies the source, hence the bare --cov.
+      - name: "Run the integration tests"
+        run: |
+          pytest tests/betaseries \
+            --ignore=tests/betaseries/betaseries \
+            -o addopts="" \
+            --cov \
+            --cov-config=.coveragerc-integration \
+            --cov-report=term-missing \
+            --cov-fail-under=95

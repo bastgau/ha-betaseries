@@ -1,0 +1,102 @@
+{
+  "entity": {
+    "sensor": {
+      "episodes_to_watch": {
+        "default": "mdi:television-play"
+      },
+      "time_to_spend": {
+        "default": "mdi:clock-outline"
+      },
+      "progress": {
+        "default": "mdi:progress-check"
+      },
+      "shows_not_started": {
+        "default": "mdi:television-classic"
+      },
+      "shows_to_catch_up_on": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "movies_to_watch": {
+        "default": "mdi:movie-open-outline"
+      },
+      "shows_in_progress": {
+        "default": "mdi:television"
+      },
+      "badges": {
+        "default": "mdi:medal-outline"
+      },
+      "shows": {
+        "default": "mdi:television-classic"
+      },
+      "shows_finished": {
+        "default": "mdi:television-classic"
+      },
+      "episodes": {
+        "default": "mdi:check-circle-outline"
+      },
+      "time_on_tv": {
+        "default": "mdi:clock-check-outline"
+      },
+      "movies": {
+        "default": "mdi:movie-outline"
+      },
+      "xp": {
+        "default": "mdi:star-outline"
+      },
+      "streak_days": {
+        "default": "mdi:fire"
+      },
+      "membership_duration": {
+        "default": "mdi:calendar-account-outline"
+      },
+      "episodes_per_month": {
+        "default": "mdi:calendar-month-outline"
+      },
+      "favorite_genre": {
+        "default": "mdi:tag-heart-outline"
+      },
+      "previous_episode_airing": {
+        "default": "mdi:calendar-check"
+      },
+      "next_episode_airing": {
+        "default": "mdi:calendar-clock"
+      },
+      "calendar_event_count": {
+        "default": "mdi:calendar-search"
+      },
+      "suggestion_of_the_day": {
+        "default": "mdi:lightbulb-on-outline"
+      }
+    },
+    "binary_sensor": {
+      "episodes_available": {
+        "default": "mdi:television-play",
+        "state": {
+          "off": "mdi:television-off"
+        }
+      },
+      "movies_available": {
+        "default": "mdi:movie-open-outline",
+        "state": {
+          "off": "mdi:movie-off-outline"
+        }
+      }
+    },
+    "calendar": {
+      "release_calendar": {
+        "default": "mdi:calendar-month"
+      }
+    },
+    "button": {
+      "clear_badges_cache": {
+        "default": "mdi:cached"
+      },
+      "clear_planning_cache": {
+        "default": "mdi:cached"
+      },
+      "clear_shows_to_catch_up_cache": {
+        "default": "mdi:cached"
+      }
+    }
+  }
+}

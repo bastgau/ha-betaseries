@@ -1,0 +1,65 @@
+meta {
+  name: token-is-active
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/members/is_active
+  body: none
+  auth: inherit
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Checks if the token is active.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/members/is_active
+    method: GET
+    mode: none
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "errors": []
+        }
+      '''
+    }
+  }
+}

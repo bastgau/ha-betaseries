@@ -1,0 +1,27 @@
+# What the bundled client's own tests need (see .github/workflows/test.yml).
+#
+# Notably absent: pytest-homeassistant-custom-component. The client tests never
+# start a Home Assistant instance - they drive `Client`/`Auth` against a hand
+# written fake session - so the plugin and the ~27 packages it pulls are dead
+# weight here. tests/betaseries/betaseries/conftest.py neutralizes the one
+# fixture the root conftest borrows from it.
+#
+# Also absent: homeassistant. Not because it is unnecessary - it is, and that
+# is the sore point - but because the workflow supplies it, pinned to the
+# release currently in production, like every other job.
+#
+# The client's only real dependency is aiohttp. Home Assistant creeps in
+# because importing `custom_components.betaseries.betaseries.<x>` first runs
+# `custom_components/betaseries/__init__.py`, the integration's entry point,
+# which imports it. Putting `custom_components/betaseries` on sys.path to
+# dodge that is worse: the integration's flat `calendar.py` then shadows the
+# standard library's `calendar`, which aiohttp itself imports.
+#
+# So the library is standalone in its source, not in its import path. Making it
+# genuinely importable alone means moving it out of custom_components/ (the
+# PyPI extraction contemplated in CLAUDE.md §2). Until then this file records
+# the coupling rather than hiding it.
+aiohttp==3.14.3
+pytest==9.0.3
+pytest-asyncio==1.4.0
+pytest-cov==7.1.0

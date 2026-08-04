@@ -1,0 +1,100 @@
+---
+name: "Lint"
+
+on:
+  push:
+  pull_request:
+
+permissions: {}
+
+env:
+  PYTHON_VERSION: "3.14"
+
+jobs:
+  lint:
+    name: "${{ matrix.name }}"
+    runs-on: "ubuntu-latest"
+
+    # One job per scope rather than one job over everything: the three have
+    # different reasons to exist, so a failure names its own culprit instead of
+    # being buried in a single log. `client` is the vendored library, which is
+    # meant to stand on its own (see its README) and is therefore checked
+    # without the integration around it; `integration` is the Home Assistant
+    # side; `tests` covers both and was, until this workflow, never checked at
+    # all - scripts/lint only ever walked custom_components/.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "client"
+            paths: "custom_components/betaseries/betaseries/*.py"
+            extra_requirements: ""
+          # The glob draws the line between the two custom_components scopes:
+          # it matches the integration's own flat modules and never descends
+          # into betaseries/, which the `client` scope owns.
+          - name: "integration"
+            paths: "custom_components/betaseries/*.py"
+            extra_requirements: ""
+          # This scope needs the test stack on top of the linters: pylint
+          # resolves imports for real, and every test module imports pytest -
+          # the Home Assistant ones pytest_homeassistant_custom_component too.
+          # Without it the job fails on E0401 rather than on anything the code
+          # did wrong.
+          - name: "tests"
+            paths: "tests"
+            extra_requirements: "-r requirements-test-integration.txt"
+
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v7"
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements-lint.txt
+            requirements-test-integration.txt
+
+      # Resolved at run time, not pinned in the requirements file: the question
+      # this workflow answers is "does this commit hold up against the Home
+      # Assistant people are running today". PyPI's info.version is the latest
+      # *stable*, so the 2026.8.0b* betas are excluded by construction - which
+      # matters, since pip honours an exact pin to a pre-release.
+      - name: "Resolve the Home Assistant release in production"
+        id: "ha"
+        run: |
+          version=$(curl -sSf https://pypi.org/pypi/homeassistant/json |
+            python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "::notice::Checking against Home Assistant $version"
+
+      - name: "Install the lint toolchain"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-lint.txt ${{ matrix.extra_requirements }} \
+            "homeassistant==${{ steps.ha.outputs.version }}"
+
+      # Every check runs even if an earlier one failed: one push should report
+      # every problem at once, rather than making the author fix them one round
+      # trip at a time. The job still fails if any of them did.
+      - name: "Lint with Ruff"
+        if: "!cancelled()"
+        run: ruff check --output-format=github ${{ matrix.paths }}
+
+      - name: "Format with Ruff"
+        if: "!cancelled()"
+        run: ruff format --check --diff ${{ matrix.paths }}
+
+      - name: "Lint with Pylint"
+        if: "!cancelled()"
+        run: pylint ${{ matrix.paths }}
+
+      - name: "Lint with Pyright"
+        if: "!cancelled()"
+        run: pyright ${{ matrix.paths }}
+
+      - name: "Lint with docstring-linter"
+        if: "!cancelled()"
+        run: docstring-linter ${{ matrix.paths }}

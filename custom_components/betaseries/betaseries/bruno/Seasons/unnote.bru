@@ -1,0 +1,104 @@
+meta {
+  name: unnote
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/seasons/note
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: 38605
+  season: 2
+}
+
+docs {
+  Remove a rating from a season.
+}
+
+example {
+  name: example - 200
+
+  request: {
+    url: {{baseUrl}}/seasons/note
+    method: DELETE
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 38605
+      season: 2
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "seasons": [
+            {
+              "number": 1,
+              "episodes": 8,
+              "seen": true,
+              "hidden": false,
+              "image": "https://pictures.betaseries.com/fonds/seasons/38605/67ec64f638ee0.jpg",
+              "has_subtitles": false,
+              "notes": {
+                "total": 5,
+                "mean": 3.399999999999999911182158029987476766109466552734375,
+                "user": 0
+              },
+              "rewatch": {
+                "total": 0
+              }
+            },
+            {
+              "number": 2,
+              "episodes": 8,
+              "seen": false,
+              "hidden": false,
+              "image": null,
+              "has_subtitles": true,
+              "notes": {
+                "total": 4,
+                "mean": 2.75,
+                "user": 0
+              },
+              "rewatch": {
+                "total": 0
+              }
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}

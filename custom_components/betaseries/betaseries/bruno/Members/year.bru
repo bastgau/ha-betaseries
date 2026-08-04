@@ -1,0 +1,90 @@
+meta {
+  name: year
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/members/year?year=2026&locale=fr
+  body: none
+  auth: none
+}
+
+params:query {
+  year: 2026
+  locale: fr
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Basic    {{base64_credential}}
+  ~Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Returns the year's statistics of a member, defaulting to the identified member.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/members/year?year=2026
+    method: GET
+    mode: none
+    params:query: {
+      year: 2026
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "stats": {
+            "watchedEps": 369,
+            "rewatchedEps": 0,
+            "addedShows": 13,
+            "archivedShows": 6,
+            "fiveStars": 23,
+            "xp": 480,
+            "badges": 3,
+            "comments": 0,
+            "watchedMovies": 0,
+            "rewatchedMovies": 0,
+            "favoriteShowsGenre": "Drame",
+            "favoriteMoviesGenre": null
+          },
+          "locale": "fr",
+          "errors": []
+        }
+      '''
+    }
+  }
+}

@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# Runs the same five checks as .github/workflows/lint.yml, over the same three
+# scopes, so that a green run here predicts a green run there.
+#
+# Usage: scripts/lint [scope ...]
+#
+#   client        the vendored BetaSeries API client
+#   integration   the Home Assistant side (never descends into the client)
+#   tests         the whole test suite
+#   src           shorthand for: client integration
+#   all           every scope (the default)
+#
+# Why the scopes exist at all: the client is a standalone library and the rest
+# is a Home Assistant integration (see the client's README), so a failure
+# should name which of the two broke rather than being buried in one log.
+#
+# `tests` used to be checked by nothing: this script only ever walked
+# custom_components/, and pylint/pyright were fed a list with the test files
+# filtered out. Four test files had silently drifted out of ruff-format, and
+# pyright had never once run over tests/.
+
+# Colors
+BLUE='\033[34m'
+GREEN='\033[32m'
+PURPLE='\033[1;35m'
+RED='\033[31m'
+YELLOW='\033[33m'
+NC='\033[0m' # No Color
+
+cd "$(dirname "$0")/.." || exit 1
+
+# Resolved from the script's own location rather than $PROJECT_NAME: the repo
+# no longer has to sit at /workspaces/<project> for this to work.
+scope_paths() {
+  case "$1" in
+    client)      echo "custom_components/betaseries/betaseries" ;;
+    # The glob is what separates this from the client scope: it matches the
+    # integration's own flat modules and never descends into betaseries/.
+    integration) echo custom_components/betaseries/*.py ;;
+    tests)       echo "tests" ;;
+    *)           return 1 ;;
+  esac
+}
+
+# Expand the requested scopes, defaulting to all three.
+requested=("$@")
+[ ${#requested[@]} -eq 0 ] && requested=(all)
+
+scopes=()
+for arg in "${requested[@]}"; do
+  case "$arg" in
+    all) scopes+=(client integration tests) ;;
+    src) scopes+=(client integration) ;;
+    client | integration | tests) scopes+=("$arg") ;;
+    *)
+      echo -e "${RED}Unknown scope '$arg'.${NC} Expected: client, integration, tests, src, all." >&2
+      exit 2
+      ;;
+  esac
+done
+
+exit_code=0
+
+# Runs one tool over one scope, printing the project's usual banner and
+# recording the failure without stopping: one invocation should report every
+# problem at once, like the workflow does.
+run_check() {
+  local label="$1" scope_name="$2"
+  shift 2
+
+  echo -e "\n${YELLOW}> ${label} :${NC}\n"
+  "$@"
+  local status=$?
+
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[${label}]${NC} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+  else
+    echo -e "\n${BLUE}[${label}]${NC} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    exit_code=1
+  fi
+}
+
+# pylint's score is worth surfacing, so it gets its own wrapper rather than
+# going through run_check.
+run_pylint() {
+  local scope_name="$1"
+  shift
+
+  echo -e "\n${YELLOW}> Lint with Pylint :${NC}"
+
+  local output status score rating
+  output=$(pylint "$@" 2>&1)
+  status=$?
+  echo "$output" | grep -v "^-\{10,\}$"
+  rating=$(echo "$output" | grep "Your code has been rated")
+  score=""
+  if [ -n "$rating" ]; then
+    score=$(echo "$rating" | grep -oP '\d+\.\d+/\d+' | head -1)
+  fi
+
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[Lint with Pylint]${NC} Score: ${score} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+  else
+    echo -e "\n${BLUE}[Lint with Pylint]${NC} Score: ${score} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    exit_code=1
+  fi
+}
+
+for scope in "${scopes[@]}"; do
+  # Word splitting is wanted here: a scope resolves to one or more paths.
+  # shellcheck disable=SC2046,SC2086
+  paths=$(scope_paths "$scope")
+
+  echo -e "\n${YELLOW}==================== scope: ${scope} ====================${NC}"
+  # shellcheck disable=SC2086
+  printf "%s\n" $paths
+
+  # shellcheck disable=SC2086
+  run_check "Lint with Ruff" "$scope" ruff check $paths
+  # shellcheck disable=SC2086
+  run_check "Format with Ruff" "$scope" ruff format --check $paths
+  # shellcheck disable=SC2086
+  run_pylint "$scope" $paths
+  # shellcheck disable=SC2086
+  run_check "Lint with Pyright" "$scope" pyright $paths
+  # shellcheck disable=SC2086
+  run_check "Lint with docstring-linter" "$scope" docstring-linter $paths
+done
+
+echo
+if [ $exit_code -eq 0 ]; then
+  echo -e "${GREEN}✓ All checks passed${NC} (${scopes[*]})"
+else
+  echo -e "${RED}✗ Some checks failed${NC} (${scopes[*]})"
+fi
+
+exit $exit_code

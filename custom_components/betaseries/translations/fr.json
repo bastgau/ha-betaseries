@@ -1,0 +1,374 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion à BetaSeries",
+        "description": "Renseignez la clé API et le secret client de votre application API BetaSeries personnelle (à créer sur {betaserie_api_url}).",
+        "data": {
+          "api_key": "Clé API",
+          "client_secret": "Secret client",
+          "locale": "Langue préférée"
+        },
+        "data_description": {
+          "locale": "Langue dans laquelle BetaSeries renvoie ses réponses (genres, descriptions, messages d'erreur). Modifiable plus tard dans les options de l'intégration. Remarque : BetaSeries ignore actuellement ce réglage et répond dans la langue de votre compte BetaSeries ; le modifier peut n'avoir aucun effet visible."
+        }
+      },
+      "timeout": {
+        "title": "Authentification expirée",
+        "description": "Le code n'a pas été validé sur le site BetaSeries avant son expiration. Cliquez sur Envoyer pour réessayer."
+      },
+      "reauth_confirm": {
+        "title": "Réauthentification BetaSeries",
+        "description": "Votre authentification BetaSeries doit être renouvelée. Cliquez sur Envoyer pour relancer le processus d'authentification."
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de la connexion"
+    },
+    "progress": {
+      "wait_for_device": "Pour vous authentifier, ouvrez l'URL suivante et connectez-vous à BetaSeries :\n{url}\n\nSaisissez ensuite ce code s'il n'est pas déjà pré-rempli :\n\n```{code}```"
+    },
+    "abort": {
+      "already_configured": "Ce compte est déjà configuré",
+      "reauth_successful": "Réauthentification réussie",
+      "cannot_connect": "Échec de la connexion",
+      "unique_id_mismatch": "Ce compte BetaSeries est différent de celui déjà configuré pour cette intégration. Pour changer de compte, supprimez et recréez l'intégration."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options BetaSeries",
+        "description": "Configurez la fréquence de rafraîchissement des données BetaSeries, la fenêtre du calendrier, et la langue des réponses.",
+        "data": {
+          "locale": "Langue préférée"
+        },
+        "data_description": {
+          "locale": "BetaSeries ignore actuellement ce réglage et répond dans la langue de votre compte BetaSeries ; le modifier peut n'avoir aucun effet visible."
+        },
+        "sections": {
+          "member": {
+            "name": "Données membre",
+            "description": "Les statistiques de votre compte : épisodes à voir, progression, badges...",
+            "data": {
+              "member_scan_interval": "Intervalle de rafraîchissement des données membre en minutes (5–120)"
+            }
+          },
+          "planning": {
+            "name": "Planning",
+            "description": "Le calendrier des sorties et les capteurs d'épisodes qui en découlent.",
+            "data": {
+              "planning_scan_interval": "Intervalle de rafraîchissement du planning en minutes (15–360)",
+              "planning_months_behind": "Mois passés à afficher dans le calendrier (0–24)",
+              "planning_months_ahead": "Mois futurs à afficher dans le calendrier (0–2)"
+            }
+          },
+          "episodes": {
+            "name": "Liste à voir",
+            "description": "La liste des séries dont il vous reste des épisodes à voir.",
+            "data": {
+              "episodes_scan_interval": "Intervalle de rafraîchissement de la liste à voir en minutes (5–120)",
+              "shows_limit": "Séries listées dans la liste à voir (1–50)",
+              "episodes_limit": "Épisodes listés par série (1–10)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "episodes_to_watch": {
+        "name": "Épisodes à voir",
+        "unit_of_measurement": "épisodes"
+      },
+      "time_to_spend": {
+        "name": "Temps à consacrer"
+      },
+      "progress": {
+        "name": "Progression"
+      },
+      "shows_not_started": {
+        "name": "Séries jamais commencées",
+        "unit_of_measurement": "séries"
+      },
+      "shows_to_catch_up_on": {
+        "name": "Séries à rattraper",
+        "unit_of_measurement": "séries"
+      },
+      "suggestion_of_the_day": {
+        "name": "Suggestion du jour"
+      },
+      "movies_to_watch": {
+        "name": "Films à voir",
+        "unit_of_measurement": "films"
+      },
+      "shows_in_progress": {
+        "name": "Séries en cours de visionnage",
+        "unit_of_measurement": "séries"
+      },
+      "badges": {
+        "name": "Badges",
+        "unit_of_measurement": "badges"
+      },
+      "shows": {
+        "name": "Séries au total",
+        "unit_of_measurement": "séries"
+      },
+      "shows_finished": {
+        "name": "Séries terminées",
+        "unit_of_measurement": "séries"
+      },
+      "episodes": {
+        "name": "Épisodes vus",
+        "unit_of_measurement": "épisodes"
+      },
+      "time_on_tv": {
+        "name": "Temps passé"
+      },
+      "movies": {
+        "name": "Films au total",
+        "unit_of_measurement": "films"
+      },
+      "xp": {
+        "name": "XP",
+        "unit_of_measurement": "xp"
+      },
+      "streak_days": {
+        "name": "Jours consécutifs"
+      },
+      "membership_duration": {
+        "name": "Ancienneté du compte"
+      },
+      "episodes_per_month": {
+        "name": "Épisodes par mois",
+        "unit_of_measurement": "épisodes/mois"
+      },
+      "favorite_genre": {
+        "name": "Genre préféré"
+      },
+      "previous_episode_airing": {
+        "name": "Épisode précédemment sorti"
+      },
+      "next_episode_airing": {
+        "name": "Prochain épisode à sortir"
+      },
+      "calendar_event_count": {
+        "name": "Nombre d'évènements du calendrier"
+      }
+    },
+    "binary_sensor": {
+      "episodes_available": {
+        "name": "Épisodes disponibles"
+      },
+      "movies_available": {
+        "name": "Films disponibles"
+      }
+    },
+    "calendar": {
+      "release_calendar": {
+        "name": "Calendrier des sorties"
+      }
+    },
+    "button": {
+      "clear_badges_cache": {
+        "name": "Vider le cache des badges"
+      },
+      "clear_planning_cache": {
+        "name": "Vider le cache du planning"
+      },
+      "clear_shows_to_catch_up_cache": {
+        "name": "Vider le cache des séries à rattraper"
+      }
+    }
+  },
+  "selector": {
+    "locale": {
+      "options": {
+        "fr": "Français",
+        "en": "Anglais"
+      }
+    }
+  },
+  "services": {
+    "mark_episode_watched": {
+      "name": "Marquer le(s) épisode(s) comme vu(s)",
+      "description": "Marque un ou plusieurs épisodes comme vus.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
+        }
+      }
+    },
+    "mark_episode_unwatched": {
+      "name": "Démarquer le(s) épisode(s) comme vu(s)",
+      "description": "Retire la marque « vu » d'un ou plusieurs épisodes. Échoue si un épisode n'est pas actuellement marqué comme vu.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
+        }
+      }
+    },
+    "rate_episode": {
+      "name": "Noter le(s) épisode(s)",
+      "description": "Note un ou plusieurs épisodes. Un épisode doit déjà être marqué comme vu pour être noté.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Note de 1 à 5."
+        }
+      }
+    },
+    "unrate_episode": {
+      "name": "Retirer la note du/des épisode(s)",
+      "description": "Retire la note d'un ou plusieurs épisodes.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "episode_id": {
+          "name": "Identifiant(s) d'épisode",
+          "description": "Un ou plusieurs identifiants d'épisode BetaSeries, séparés par des virgules (ex : 1001,1002)."
+        }
+      }
+    },
+    "mark_season_watched": {
+      "name": "Marquer la saison comme vue",
+      "description": "Marque tous les épisodes d'une saison comme vus.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        }
+      }
+    },
+    "mark_season_unwatched": {
+      "name": "Démarquer la saison comme vue",
+      "description": "Retire la marque « vu » de tous les épisodes d'une saison.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        }
+      }
+    },
+    "rate_season": {
+      "name": "Noter la saison",
+      "description": "Note une saison. La saison doit déjà être entièrement vue pour être notée.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Note de 1 à 5."
+        }
+      }
+    },
+    "unrate_season": {
+      "name": "Retirer la note de la saison",
+      "description": "Retire la note d'une saison.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "season": {
+          "name": "Saison",
+          "description": "Le numéro de la saison."
+        }
+      }
+    },
+    "rate_show": {
+      "name": "Noter la série",
+      "description": "Note une série.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Note de 1 à 5."
+        }
+      }
+    },
+    "unrate_show": {
+      "name": "Retirer la note de la série",
+      "description": "Retire la note d'une série.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "not_watched": {
+      "message": "Cet épisode ou cette saison n'est pas encore marqué(e) comme vu(e)."
+    },
+    "auth_error": {
+      "message": "BetaSeries a rejeté les identifiants enregistrés. Réauthentifiez l'intégration."
+    },
+    "service_call_failed": {
+      "message": "BetaSeries a rejeté la requête : {error}"
+    }
+  }
+}

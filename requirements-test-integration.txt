@@ -1,0 +1,19 @@
+# What the Home Assistant side's tests need (see .github/workflows/test.yml).
+#
+# One line, and no version, on purpose. pytest-homeassistant-custom-component
+# pins its whole world exactly - homeassistant, pytest, pytest-asyncio,
+# pytest-cov, coverage, and a dozen more - so restating any of them here could
+# only ever contradict it.
+#
+# Which release lands is decided by the workflow, not by this file: it passes
+# `homeassistant==<current stable>` alongside, and pip backtracks through
+# pytest-homeassistant-custom-component's releases until it finds the one built
+# for that Home Assistant. That is the point - CI answers "does this commit
+# work against the Home Assistant people are actually running", so the version
+# must not be frozen here.
+#
+# Leaving it unconstrained instead would pick up Home Assistant *betas*: the
+# latest release of this package tracks them (verified: 0.13.351 requires
+# homeassistant==2026.8.0b3), and an exact pin to a pre-release is one pip
+# honours. The workflow's constraint is what keeps CI on stable.
+pytest-homeassistant-custom-component

@@ -1,0 +1,3193 @@
+meta {
+  name: episodes
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/shows/episodes?id=6946&locale=en
+  body: none
+  auth: none
+}
+
+params:query {
+  id: 6946
+  locale: en
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Display episodes of a serie.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/shows/episodes?id=6946&locale=en
+    method: GET
+    mode: none
+    params:query: {
+      id: 6946
+      locale: en
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "episodes": [
+            {
+              "id": 298252,
+              "thetvdb_id": 4585012,
+              "youtube_id": null,
+              "title": "Le réveil",
+              "season": 1,
+              "episode": 1,
+              "code": "S01E01",
+              "global": 1,
+              "description": "En 1991, Alexandre Falco, jeune officier de police marié et père d'une petite fille, prend une balle dans la tête lors d'une intervention qui dérape. 2013 Falco ouvre enfin les yeux après 22 ans de coma pour avoir pris une balle dans la tête dans l'exercice de ses fonctions et passe de jeune officier de police à retraité. Dur retour à la réalité. Sa femme s'est remariée, sa petite fille est devenue femme... C'est sans compter sur sa détermination à reprendre ses fonctions et sa vie en main...",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 6,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s01e01",
+              "note": {
+                "total": 165,
+                "mean": 4.3575999999999996958877090946771204471588134765625,
+                "user": 0,
+                "moyenne": 4.3575999999999996958877090946771204471588134765625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2013-06-20",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96511"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497100"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095865"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764187"
+                }
+              ]
+            },
+            {
+              "id": 298253,
+              "thetvdb_id": 4585013,
+              "youtube_id": null,
+              "title": "Un nouveau départ",
+              "season": 1,
+              "episode": 2,
+              "code": "S01E02",
+              "global": 2,
+              "description": "Réintégré dans la police sous les ordres de son ancien partenaire Jean-Paul Ménard, devenu entre-temps commissaire, Falco fait désormais équipe avec le jeune lieutenant Chevalier, peu enclin à lui accorder sa confiance. Enquêtant sur le meurtre d'un chauffeur de taxi, il va faire la connaissance du médecin légiste de la brigade, Chéron, qui n'est autre que le compagnon de sa femme...",
+              "director": "Thierry Petit, Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin"
+              ],
+              "special": 0,
+              "comments": 7,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s01e02",
+              "note": {
+                "total": 143,
+                "mean": 4.30069999999999996731503415503539144992828369140625,
+                "user": 0,
+                "moyenne": 4.30069999999999996731503415503539144992828369140625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2013-06-20",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96515"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497101"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095866"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764194"
+                }
+              ]
+            },
+            {
+              "id": 298254,
+              "thetvdb_id": 4585048,
+              "youtube_id": null,
+              "title": "Zones d'ombre",
+              "season": 1,
+              "episode": 3,
+              "code": "S01E03",
+              "global": 3,
+              "description": "Falco est sous pression. Sa fille, Pauline, 22 ans, qu'il n'a pas revue depuis son réveil, rentre d'Inde. Entre excitation et appréhension, Falco s'interroge sur la place qu’il peut tenir dans la vie de cette jeune femme, qui ne le connaît pas. Parallèlement, ce retour exacerbe les tensions avec Philippe Chéron, compagnon de Carole et beau-père de Pauline. En de surcroît, les enquêteurs sont face à une étrange affaire : le meurtre violent d'une psychiatre qui menait une enquête sur le prétendu suicide d'une de ses patientes...",
+              "director": "Thierry Petit",
+              "writers": [
+                "Clothilde Jamin"
+              ],
+              "special": 0,
+              "comments": 3,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s01e03",
+              "note": {
+                "total": 148,
+                "mean": 4.3041000000000000369482222595252096652984619140625,
+                "user": 0,
+                "moyenne": 4.3041000000000000369482222595252096652984619140625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2013-06-27",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96519"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497102"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095867"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764189"
+                }
+              ]
+            },
+            {
+              "id": 298255,
+              "thetvdb_id": 4585049,
+              "youtube_id": null,
+              "title": "Rencontres assassines",
+              "season": 1,
+              "episode": 4,
+              "code": "S01E04",
+              "global": 4,
+              "description": "Falco et son équipe doivent affronter un empoisonneur, qui a les meurtres de plusieurs femmes à son actif. Il leur faut anticiper ses actions afin d'empêcher que le nombre de ses victimes n'augmente. Qui se cache derrière ce mode opératoire inquiétant ? Les victimes sont-elles aussi aléatoires qu'il y paraît de prime abord ? Parallèlement, la guérison de Falco met en péril l'équilibre du couple de Carole, sa femme. Va-t-elle choisir de reprendre sa vie avec lui ? Comment Chéron va-t-il réagir ?...",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin",
+                "Stéphane Carrié"
+              ],
+              "special": 0,
+              "comments": 1,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s01e04",
+              "note": {
+                "total": 142,
+                "mean": 4.28169999999999983941734171821735799312591552734375,
+                "user": 0,
+                "moyenne": 4.28169999999999983941734171821735799312591552734375
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2013-06-27",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96523"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497103"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095868"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764215"
+                }
+              ]
+            },
+            {
+              "id": 298256,
+              "thetvdb_id": 4585053,
+              "youtube_id": null,
+              "title": "Le petit chaperon rouge",
+              "season": 1,
+              "episode": 5,
+              "code": "S01E05",
+              "global": 5,
+              "description": "Une étudiante a été agressée. Elle est actuellement entre la vie et la mort. Au moment des faits, la jeune fille était déguisée en petit chaperon rouge. Falco et Chevalier sont chargés de l'enquête. Ils découvrent tout d'abord que l'étudiante menait une scolarité irréprochable et obtenait des résultats brillants. Mais la réalité, derrière les apparences, est bien plus complexe. Ainsi, la jeune fille mentait à son entourage depuis plusieurs mois. En parallèle, la relation entre Carole et Falco prend une nouvelle tournure, tandis que le passé de Falco refait surface et que les souvenirs de son accident lui reviennent...",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Hélène Duchateau",
+                "Clothilde Jamin"
+              ],
+              "special": 0,
+              "comments": 5,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s01e05",
+              "note": {
+                "total": 138,
+                "mean": 4.26809999999999956088458930025808513164520263671875,
+                "user": 0,
+                "moyenne": 4.26809999999999956088458930025808513164520263671875
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2013-07-04",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96527"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497104"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095869"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764214"
+                }
+              ]
+            },
+            {
+              "id": 298257,
+              "thetvdb_id": 4585054,
+              "youtube_id": null,
+              "title": "Tête à tête avec la mort",
+              "season": 1,
+              "episode": 6,
+              "code": "S01E06",
+              "global": 6,
+              "description": "Un voyant a été assassiné. Au fil de leurs investigations, les enquêteurs découvrent un deuxième cadavre, enterré en pleine forêt depuis plusieurs années. La vie personnelle de Falco se complique et vient perturber son travail : en effet, il tente parallèlement de découvrir la vérité sur les circonstances de son accident. Jusqu'où cette immersion dans le passé va-t-elle le mener ?...",
+              "director": "Marwen Abdallah",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 8,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s01e06",
+              "note": {
+                "total": 182,
+                "mean": 4.3955999999999999516830939683131873607635498046875,
+                "user": 0,
+                "moyenne": 4.3955999999999999516830939683131873607635498046875
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2013-07-04",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96534"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497105"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095870"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764213"
+                }
+              ]
+            },
+            {
+              "id": 373422,
+              "thetvdb_id": 4862764,
+              "youtube_id": null,
+              "title": "Comme des frères",
+              "season": 2,
+              "episode": 1,
+              "code": "S02E01",
+              "global": 7,
+              "description": "Falco est victime d’un accident de moto. Alors qu’il reprend ses esprits, le lieutenant de police aperçoit une petite fille perdue dans les bois qui bordent la route. Elle tient entre ses mains un ours couvert de sang. L'enfant a passé la soirée avec son frère Mathieu qui a disparu. Falco retrouve bientôt sa voiture. À proximité gît le cadavre d'un adolescent qui a été torturé. Il s’agit de Florian, le meilleur ami de Mathieu.",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 5,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s02e01",
+              "note": {
+                "total": 154,
+                "mean": 4.1104000000000002756905814749188721179962158203125,
+                "user": 0,
+                "moyenne": 4.1104000000000002756905814749188721179962158203125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2014-05-15",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96536"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96535"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497106"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095895"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764212"
+                }
+              ]
+            },
+            {
+              "id": 374571,
+              "thetvdb_id": 4868631,
+              "youtube_id": null,
+              "title": "La mort dans l'âme",
+              "season": 2,
+              "episode": 2,
+              "code": "S02E02",
+              "global": 8,
+              "description": "Le cadavre de Clara Bennetti, 21 ans, est retrouvé dans le lac des Buttes-Chaumont. La victime, qui a succombé à une méningite, avait été déclarée morte dix-sept ans plus tôt, assassinée par le tueur en série Michel Drouet. Falco pense que Clara a peut-être été séquestrée pendant toutes ces années. L’inspecteur commence par interroger Drouet, toujours emprisonné. Mais celui-ci refuse de parler sans contrepartie.",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin",
+                "Julien Teisseire"
+              ],
+              "special": 0,
+              "comments": 2,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s02e02",
+              "note": {
+                "total": 168,
+                "mean": 4.1905000000000001136868377216160297393798828125,
+                "user": 0,
+                "moyenne": 4.1905000000000001136868377216160297393798828125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2014-05-15",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96540"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96539"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497107"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095896"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764211"
+                }
+              ]
+            },
+            {
+              "id": 378431,
+              "thetvdb_id": 4884744,
+              "youtube_id": null,
+              "title": "Au clair de la lune",
+              "season": 2,
+              "episode": 3,
+              "code": "S02E03",
+              "global": 9,
+              "description": "Falco creuse le passé de Ménard, vingt-trois ans plus tôt… Au même moment, un groupe altermondialiste, jusqu'alors pacifiste, enlève la fille d'un riche industriel. Alors que le père mise sur une libération facile, tout dégénère lorsque les militants assassinent un innocent.",
+              "director": "Marwen Abdallah",
+              "writers": [
+                "Clothilde Jamin",
+                "Sullivan Le Postec",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 2,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s02e03",
+              "note": {
+                "total": 158,
+                "mean": 4.20249999999999968025576890795491635799407958984375,
+                "user": 0,
+                "moyenne": 4.20249999999999968025576890795491635799407958984375
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2014-05-22",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96544"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96543"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497108"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095897"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764210"
+                }
+              ]
+            },
+            {
+              "id": 378432,
+              "thetvdb_id": 4884745,
+              "youtube_id": null,
+              "title": "Dans la peau",
+              "season": 2,
+              "episode": 4,
+              "code": "S02E04",
+              "global": 10,
+              "description": "Alors que Falco est plus que jamais face aux mensonges du passé, le cadavre d'un menuisier est retrouvé chez lui, sauvagement exécuté… Etrangement, son identité est fausse. Sa fille, née en France, ignore tout de sa vraie identité…",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols",
+                "Pierre-Gilles Stehr"
+              ],
+              "special": 0,
+              "comments": 4,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s02e04",
+              "note": {
+                "total": 177,
+                "mean": 4.31069999999999975415221342700533568859100341796875,
+                "user": 0,
+                "moyenne": 4.31069999999999975415221342700533568859100341796875
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2014-05-22",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96547"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96550"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497109"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095898"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764209"
+                }
+              ]
+            },
+            {
+              "id": 378433,
+              "thetvdb_id": 4884746,
+              "youtube_id": null,
+              "title": "Samaël",
+              "season": 2,
+              "episode": 5,
+              "code": "S02E05",
+              "global": 11,
+              "description": "Falco ne parvient pas à accepter la mort de son meilleur ami, Ménard, une disparition qui le prive de la vérité sur leur passé commun. Alors que tout le commissariat est en deuil, un cadavre est retrouvé, assassiné dans ce qui s’apparente à un rituel chrétien. Une enquête commence, dans laquelle Falco souffre de la distance que Romain Chevalier prend avec lui. Remontant la trace des bonbonnes utilisées pour endormir la victime puis de bibles distribuées par un prieuré, Falco découvre Samaël, l’ange de la mort, un tueur en série qui s’apprête à frapper une quatrième fois. Les déductions du policier lui permettent d’empêcher un nouveau meurtre mais il est désormais la cible du fanatique religieux : lui, le ressuscité qui a vu Dieu.",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols",
+                "Sven Jacquet"
+              ],
+              "special": 0,
+              "comments": 3,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s02e05",
+              "note": {
+                "total": 163,
+                "mean": 4.21469999999999966888708513579331338405609130859375,
+                "user": 0,
+                "moyenne": 4.21469999999999966888708513579331338405609130859375
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2014-05-29",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96552"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96551"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497110"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095899"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764208"
+                }
+              ]
+            },
+            {
+              "id": 378434,
+              "thetvdb_id": 4884747,
+              "youtube_id": null,
+              "title": "Artifices",
+              "season": 2,
+              "episode": 6,
+              "code": "S02E06",
+              "global": 12,
+              "description": "Alors que la DPJ est confiée à une nouvelle commissaire, remplaçante de Ménard, Romain a disparu... Falco reçoit une vidéo le montrant attaché et entravé dans des kilos d'explosifs. Il sert de levier pour pousser Falco à aider un prisonnier à s'évader des locaux de l'IGS. Le policier commence par refuser, mais le ravisseur, une femme, extirpe par la force à Romain de quoi faire pencher la balance : Pauline et Carole. Alors que Falco accepte le chantage, Eva enquête sur l'homme qui doit s'évader, Alban Dauzier, et cherche à identifier et à localiser la femme qui a enlevé Romain. La tentative d'évasion tourne court et se transforme en prise d'otage. Falco parvient à s'en sortir, mais se retrouve avec sa propre DPJ et l'IGS à ses trousses. Isolé, il ne peut compter que sur lui-même pour parvenir à sauver Romain.",
+              "director": "Alexandre Laurent",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols",
+                "Stéphane Carrié"
+              ],
+              "special": 0,
+              "comments": 8,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s02e06",
+              "note": {
+                "total": 211,
+                "mean": 4.48819999999999996731503415503539144992828369140625,
+                "user": 0,
+                "moyenne": 4.48819999999999996731503415503539144992828369140625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2014-05-29",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96556"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96555"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497111"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095900"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764191"
+                }
+              ]
+            },
+            {
+              "id": 464369,
+              "thetvdb_id": 5169579,
+              "youtube_id": null,
+              "title": "Chaos (1ère partie)",
+              "season": 3,
+              "episode": 1,
+              "code": "S03E01",
+              "global": 13,
+              "description": "Plus d’un an après la mort de Ménard et l’explosion de la bombe qu’a subi Romain, Falco vit en forêt, seul, fuyant la violence et la ville. Il est fermement décidé à ne plus remettre un pied dans la police. Mais le sort en décide autrement. Un mystérieux tueur en série sévit dans la capitale, agissant semble-t-il pour le compte de Michel Drouet, un tueur d’enfant, sous les barreaux depuis vingt ans. Falco est le seul à l'avoir fait parler dans le cadre d’une précédente enquête. Pour le commissaire Pereggi, Falco est l'unique moyen d’arrêter le massacre et de faire parler Drouet. Il faut le convaincre de revenir. A contrecœur, Falco finit par accepter. Deux jours. Pas plus. Mais l’affrontement entre Drouet et Falco n’est que le début d’une succession d’évènements qui se termineront de façon tragique et surprenante...",
+              "director": "Julius Berg",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 7,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e01",
+              "note": {
+                "total": 162,
+                "mean": 4.27160000000000028563817977556027472019195556640625,
+                "user": 0,
+                "moyenne": 4.27160000000000028563817977556027472019195556640625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-02",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96560"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96559"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497112"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095907"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764207"
+                }
+              ]
+            },
+            {
+              "id": 464370,
+              "thetvdb_id": 5169580,
+              "youtube_id": null,
+              "title": "Chaos (2ème partie)",
+              "season": 3,
+              "episode": 2,
+              "code": "S03E02",
+              "global": 14,
+              "description": "Falco et toute l'équipe de la DPJ se sont faits manipuler par Michel Drouet qui a réussi à s'évader. Pour Falco, il ne cherche pas simplement à recouvrer la liberté. Âgé et malade, Drouet a un plan... Et des cibles bien précises. Alors que Falco donne tout pour arrêter ce tueur et empêcher qu'il ne tue à nouveau, il se heurte à sa condition de simple civil : il n'est plus flic, et c'est lui qui l'a choisi. Entre enquête en sous-marin, vieilles rancœurs et retrouvailles avec ses amis, Falco va devoir affronter son passé.",
+              "director": "Julius Berg",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 7,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e02",
+              "note": {
+                "total": 177,
+                "mean": 4.30510000000000037090330806677229702472686767578125,
+                "user": 0,
+                "moyenne": 4.30510000000000037090330806677229702472686767578125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-02",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96564"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96563"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497113"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095908"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764205"
+                }
+              ]
+            },
+            {
+              "id": 464371,
+              "thetvdb_id": 5169581,
+              "youtube_id": null,
+              "title": "A la folie",
+              "season": 3,
+              "episode": 3,
+              "code": "S03E03",
+              "global": 15,
+              "description": "Christine Malot est appelée en pleine nuit par l’hôpital : excellente nouvelle, un donneur a été trouvé pour greffer un cœur sain à son fils, Florian. Mais une fois sur place, son espoir est brisé par l’arrivée de Falco et Chéron. Le donneur a vraisemblablement été victime d’un meurtre. La greffe est annulée.",
+              "director": "Julien Despaux",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols",
+                "Pierre-Gilles Stehr"
+              ],
+              "special": 0,
+              "comments": 7,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e03",
+              "note": {
+                "total": 163,
+                "mean": 4.06130000000000013216094885137863457202911376953125,
+                "user": 0,
+                "moyenne": 4.06130000000000013216094885137863457202911376953125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-09",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96568"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96567"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497114"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095909"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764206"
+                }
+              ]
+            },
+            {
+              "id": 464372,
+              "thetvdb_id": 5169582,
+              "youtube_id": null,
+              "title": "A l'état brut",
+              "season": 3,
+              "episode": 4,
+              "code": "S03E04",
+              "global": 16,
+              "description": "Une jeune fille, âgée de dix-sept ans, est retrouvée défenestrée de son foyer pour jeunes délinquantes. La blessure au couteau qui orne son abdomen est sans équivoque : elle a été assassinée. Falco et Chevalier découvrent un quartier au bord de l’explosion.",
+              "director": "Julien Despaux",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols",
+                "Sven Jacquet"
+              ],
+              "special": 0,
+              "comments": 8,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e04",
+              "note": {
+                "total": 167,
+                "mean": 4.10179999999999989057641869294457137584686279296875,
+                "user": 0,
+                "moyenne": 4.10179999999999989057641869294457137584686279296875
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-09",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96572"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96571"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497115"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095910"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764204"
+                }
+              ]
+            },
+            {
+              "id": 475811,
+              "thetvdb_id": 5169583,
+              "youtube_id": null,
+              "title": "Sans pitié",
+              "season": 3,
+              "episode": 5,
+              "code": "S03E05",
+              "global": 17,
+              "description": "Une femme de soixante ans est sauvagement agressée et laissée presque morte, en pleine rue, en plein jour. Falco et Romain sont sous le choc : ses doigts ont été brisés pour lui faire avouer quelque chose... mais elle refuse de dire quoi. Ce quelque chose la lie justement à un meurtre survenu une semaine plus tôt, dans des circonstances similaires.",
+              "director": "Jean-Christophe Delpias",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols",
+                "Stéphane Carrié"
+              ],
+              "special": 0,
+              "comments": 3,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e05",
+              "note": {
+                "total": 157,
+                "mean": 4.1592000000000002302158463862724602222442626953125,
+                "user": 0,
+                "moyenne": 4.1592000000000002302158463862724602222442626953125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-16",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96576"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96575"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497116"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095911"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764186"
+                }
+              ]
+            },
+            {
+              "id": 475812,
+              "thetvdb_id": 5169584,
+              "youtube_id": null,
+              "title": "Sacrifices",
+              "season": 3,
+              "episode": 6,
+              "code": "S03E06",
+              "global": 18,
+              "description": "La BRI intervient en force dans le pavillon d'un collectionneur victime d'un cambriolage. Coups de feu. Poursuite. Les braqueurs abandonnent l'un d'entre eux, tué par balles. La DPJ est mis sur l'affaire mais Vallès, vieux commissaire concurrent de Pereggi, s'oppose à leur enquête. Falco et Romain n'ont qu'un choix: enquêter sous le manteau... méthode que Falco pousse jusqu'au bout.",
+              "director": "Jean-Christophe Delpias",
+              "writers": [
+                "Clothilde Jamin",
+                "Florent Meyer",
+                "Olivier Dujols",
+                "Antonin Martin-Hilbert"
+              ],
+              "special": 0,
+              "comments": 11,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e06",
+              "note": {
+                "total": 177,
+                "mean": 4.32200000000000006394884621840901672840118408203125,
+                "user": 0,
+                "moyenne": 4.32200000000000006394884621840901672840118408203125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-16",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96580"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96579"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497117"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095912"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764203"
+                }
+              ]
+            },
+            {
+              "id": 475813,
+              "thetvdb_id": 5169585,
+              "youtube_id": null,
+              "title": "Sous les cendres",
+              "season": 3,
+              "episode": 7,
+              "code": "S03E07",
+              "global": 19,
+              "description": "Un squelette sans tête est retrouvé dans une friche parisienne. Les premiers indices pointent vers une disparition jamais résolue, celle de Yazel Brahni, huit ans plus tôt. Le principal suspect était son ancien amant et professeur de dessin, Ludovic Perroa, jamais inculpé. Falco relance l'enquête grâce à ces nouveaux éléments, offrant l'espoir de comprendre ce qu'il s'est passé au mari et à la fille de la disparue. Seulement la mise en scène qui semblait justement coller avec la personnalité provocatrice de l'artiste prouve qu'il n'a rien à y voir. Il ne s'agit même pas du bon cadavre. Falco et Chevalier sont dépassés, d'autant plus que Falco, retrouve enfin la trace de Ponthieux. Ce dernier est la seule piste du flic pour comprendre pourquoi Ménard a été contraint de lui tirer dessus.",
+              "director": "Jean-Christophe Delpias",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols",
+                "Sven Jacquet"
+              ],
+              "special": 0,
+              "comments": 2,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e07",
+              "note": {
+                "total": 150,
+                "mean": 4.1867000000000000881072992342524230480194091796875,
+                "user": 0,
+                "moyenne": 4.1867000000000000881072992342524230480194091796875
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-23",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96583"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96586"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497118"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095913"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764192"
+                }
+              ]
+            },
+            {
+              "id": 475814,
+              "thetvdb_id": 5169588,
+              "youtube_id": null,
+              "title": "Vox populi",
+              "season": 3,
+              "episode": 8,
+              "code": "S03E08",
+              "global": 20,
+              "description": "Eléonore, que Falco avait mise à l'abri quelques temps, revient dans sa vie. Elle est bien décidée à comprendre qui a manipulé leur passé et pourquoi. Seulement Falco ne peut pas à la fois enquêter et la protéger. Les choix d'Eléonore vont alors les mettre tous les deux en danger. Au même moment, un policier proche de la retraite est enlevé et son ravisseur promet de le juger. Une course contre la montre s'engage. Falco et Romain doivent découvrent que celui qui détient le flic s'appelle Louis.",
+              "director": "Jean-Christophe Delpias",
+              "writers": [
+                "Clothilde Jamin",
+                "Clélia Constantine",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 3,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e08",
+              "note": {
+                "total": 172,
+                "mean": 4.31400000000000005684341886080801486968994140625,
+                "user": 0,
+                "moyenne": 4.31400000000000005684341886080801486968994140625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-23",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96588"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96587"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497119"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095914"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764202"
+                }
+              ]
+            },
+            {
+              "id": 479429,
+              "thetvdb_id": 5169589,
+              "youtube_id": null,
+              "title": "Intoxications",
+              "season": 3,
+              "episode": 9,
+              "code": "S03E09",
+              "global": 21,
+              "description": "Un cadavre est retrouvé asphyxié au dichlorométhane dans une vieille remorque. Si son identité est inconnue, il a laissé un message: un début de nom "Lor". Falco et son équipe mettent alors le doigt dans un scandale sanitaire étouffé par l'entreprise responsable, Orfleur. Deux pistes s'ouvrent. Une victime du scandale qui veut se venger... ou au contraire le PDG d'Orfleur qui ferait taire ceux qui pourraient le faire plonger. Au centre du tourbillon, Léa de Butler, la n°2 d'Orfleur qui oscille entre se taire et tout balancer... Alors que sa vie de famille est plombée par son incapacité à communiquer avec son mari. Falco arrivera-t-il à la sauver des multiples adversaires qui la rêvent morte?",
+              "director": "Marwen Abdallah",
+              "writers": [
+                "Clothilde Jamin",
+                "Florent Meyer",
+                "Olivier Dujols",
+                "Antonin Martin-Hilbert"
+              ],
+              "special": 0,
+              "comments": 1,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e09",
+              "note": {
+                "total": 156,
+                "mean": 4.2371999999999996333599483477883040904998779296875,
+                "user": 0,
+                "moyenne": 4.2371999999999996333599483477883040904998779296875
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-30",
+              "watched_by": [],
+              "seen_total": 2920,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96591"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96594"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497120"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095915"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764201"
+                }
+              ]
+            },
+            {
+              "id": 479430,
+              "thetvdb_id": 5169590,
+              "youtube_id": null,
+              "title": "Babylone",
+              "season": 3,
+              "episode": 10,
+              "code": "S03E10",
+              "global": 22,
+              "description": "Pauline has disappeared. Falco is convinced that she has been kidnapped by Darrigade, the man who for 25 years has made his life and that of the late Ménard hell. But Falco refuses the help he would need to find his daughter... and a doubt gradually settles in the heads of his friends. What if he was delirious? If everything was just a consequence of his coma? Falco is isolated and will end up interned in HP to finally prove that he is the victim of a plot. His friends finally by his side, they investigate together to find Pauline. But before saving her, it will be necessary to thwart Darrigade's plans and confront her one last time on her terrain, that of manipulation and pretense.",
+              "director": "Marwen Abdallah",
+              "writers": [
+                "Clothilde Jamin",
+                "Olivier Dujols"
+              ],
+              "special": 0,
+              "comments": 10,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s03e10",
+              "note": {
+                "total": 215,
+                "mean": 4.56740000000000012647660696529783308506011962890625,
+                "user": 0,
+                "moyenne": 4.56740000000000012647660696529783308506011962890625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2015-04-30",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96595"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96598"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497121"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095916"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764188"
+                }
+              ]
+            },
+            {
+              "id": 640869,
+              "thetvdb_id": 5559881,
+              "youtube_id": null,
+              "title": "Double peine, 1ère partie",
+              "season": 4,
+              "episode": 1,
+              "code": "S04E01",
+              "global": 23,
+              "description": "Falco is mobilized by the disturbing disappearance of Audrey, a young woman abducted from her home. At the same time, he supports his ex-wife and his daughter, hard hit by Chéron's incarceration. Will Falco succeed in exonerating his friend?",
+              "director": "Jean Luc Herbulot",
+              "writers": [
+                "Clothilde Jamin",
+                "Clélia Constantine",
+                "Olivier Dujols",
+                "Sven Jacquet"
+              ],
+              "special": 0,
+              "comments": 1,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e01",
+              "note": {
+                "total": 164,
+                "mean": 4.304899999999999948840923025272786617279052734375,
+                "user": 0,
+                "moyenne": 4.304899999999999948840923025272786617279052734375
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-07",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96600"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96599"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497122"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095917"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764200"
+                }
+              ]
+            },
+            {
+              "id": 640870,
+              "thetvdb_id": 5559890,
+              "youtube_id": null,
+              "title": "Double peine, 2ème partie",
+              "season": 4,
+              "episode": 2,
+              "code": "S04E02",
+              "global": 24,
+              "description": "La disparition d’Audrey prend une autre ampleur quand on découvre qu’elle n’est pas la seule victime. Falco et son équipe doivent à tout prix arrêter le tueur avant qu’il ne récidive. Dans cette course contre la montre, Falco lutte toujours contre ses migraines et croise la route d’un mystérieux Maxime, qui cherche à se rapprocher de lui...",
+              "director": "Jean Luc Herbulot",
+              "writers": [
+                "Clothilde Jamin",
+                "Clélia Constantine",
+                "Olivier Dujols",
+                "Sven Jacquet"
+              ],
+              "special": 0,
+              "comments": 2,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e02",
+              "note": {
+                "total": 174,
+                "mean": 4.36779999999999990478727340814657509326934814453125,
+                "user": 0,
+                "moyenne": 4.36779999999999990478727340814657509326934814453125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-07",
+              "watched_by": [],
+              "seen_total": 2526,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96604"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96603"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497123"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095918"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764199"
+                }
+              ]
+            },
+            {
+              "id": 640871,
+              "thetvdb_id": 5559899,
+              "youtube_id": null,
+              "title": "Asphyxie",
+              "season": 4,
+              "episode": 3,
+              "code": "S04E03",
+              "global": 25,
+              "description": "Le coma de Falco met sa famille et ses coéquipiers à rude épreuve. Pourtant, il faut continuer à se battre : une femme les appelle à l’aide avant de disparaître en laissant la gourmette d’un enfant. Maxime intègre l’équipe de Romain et d’Eva, s’empare de l’affaire et étonne avec ses méthodes très particulières.",
+              "director": "Jean-Christophe Delpias",
+              "writers": [
+                "Clothilde Jamin",
+                "Clélia Constantine",
+                "Olivier Dujols",
+                "Sven Jacquet"
+              ],
+              "special": 0,
+              "comments": 1,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e03",
+              "note": {
+                "total": 139,
+                "mean": 4.179899999999999948840923025272786617279052734375,
+                "user": 0,
+                "moyenne": 4.179899999999999948840923025272786617279052734375
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-14",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96607"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96610"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497124"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095919"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764198"
+                }
+              ]
+            },
+            {
+              "id": 640872,
+              "thetvdb_id": 5559904,
+              "youtube_id": null,
+              "title": "Dernière danse",
+              "season": 4,
+              "episode": 4,
+              "code": "S04E04",
+              "global": 26,
+              "description": "Tandis que Falco subit l’intervention de la dernière chance, Maxime, Romain et Eva enquêtent sur la mort d’une femme qui voulait changer de vie. Les méthodes de Maxime séduisent Eva, mais finiront-elle par vaincre les réticences de Romain ?",
+              "director": "Jean-Christophe Delpias",
+              "writers": [
+                "Clothilde Jamin",
+                "Clélia Constantine",
+                "Olivier Dujols",
+                "Sven Jacquet"
+              ],
+              "special": 0,
+              "comments": 12,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e04",
+              "note": {
+                "total": 154,
+                "mean": 4.30520000000000013784529073745943605899810791015625,
+                "user": 0,
+                "moyenne": 4.30520000000000013784529073745943605899810791015625
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-14",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96611"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96614"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497125"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095920"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764197"
+                }
+              ]
+            },
+            {
+              "id": 643722,
+              "thetvdb_id": 5565692,
+              "youtube_id": null,
+              "title": "Loin des yeux",
+              "season": 4,
+              "episode": 5,
+              "code": "S04E05",
+              "global": 27,
+              "description": "Deux jeunes filles âgées de 16 ans, Anaïs et Nadia, ont disparu alors qu’elles étaient sorties en cachette en mentant à leurs parents. La mère de Nadia reçoit un mystérieux message : a priori, les filles sont en danger. Une crainte qui se confirme lorsqu’une image de vidéosurveillance les montre, emmenées de force dans une camionnette.",
+              "director": "",
+              "writers": [],
+              "special": 0,
+              "comments": 2,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e05",
+              "note": {
+                "total": 137,
+                "mean": 4.240899999999999891997504164464771747589111328125,
+                "user": 0,
+                "moyenne": 4.240899999999999891997504164464771747589111328125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-21",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96615"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96618"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497126"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095921"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764196"
+                }
+              ]
+            },
+            {
+              "id": 643723,
+              "thetvdb_id": 5565693,
+              "youtube_id": null,
+              "title": "Le poids du silence",
+              "season": 4,
+              "episode": 6,
+              "code": "S04E06",
+              "global": 28,
+              "description": "Drame dans un parc parisien. Un homme tue trois personnes avec un fusil longue distance. Les premiers éléments sont clairs : seul un militaire aurait été capable de tirs aussi précis. Pourtant, alors qu’un suspect est arrêté, une deuxième tuerie a lieu.",
+              "director": "",
+              "writers": [],
+              "special": 0,
+              "comments": 1,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e06",
+              "note": {
+                "total": 142,
+                "mean": 4.16899999999999959499064061674289405345916748046875,
+                "user": 0,
+                "moyenne": 4.16899999999999959499064061674289405345916748046875
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-21",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96619"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96622"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497127"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095922"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764195"
+                }
+              ]
+            },
+            {
+              "id": 645536,
+              "thetvdb_id": 5572306,
+              "youtube_id": null,
+              "title": "Faux-semblants",
+              "season": 4,
+              "episode": 7,
+              "code": "S04E07",
+              "global": 29,
+              "description": "Macabre découverte dans une ruelle parisienne. Victoria, jeune fille au pair, est retrouvée étranglée, les yeux arrachés. La piste s’oriente rapidement vers ses employeurs, Flore et Vincent Lesieur. Qui peut en vouloir à Flore, cette jeune blogueuse médiatisée, maman d’une petite fille, et pourquoi ?",
+              "director": "",
+              "writers": [],
+              "special": 0,
+              "comments": 1,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e07",
+              "note": {
+                "total": 137,
+                "mean": 4.16059999999999963193886287626810371875762939453125,
+                "user": 0,
+                "moyenne": 4.16059999999999963193886287626810371875762939453125
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-28",
+              "watched_by": [],
+              "seen_total": null,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96623"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96626"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497128"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095923"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764193"
+                }
+              ]
+            },
+            {
+              "id": 645537,
+              "thetvdb_id": 5572312,
+              "youtube_id": null,
+              "title": "Para bellum",
+              "season": 4,
+              "episode": 8,
+              "code": "S04E08",
+              "global": 30,
+              "description": "Pour retrouver Ludivine, qui a refait sa vie sous une nouvelle identité, Maxime doit faire libérer Chéron de prison. Impossible ? Pas lorsqu'on sait comment mettre la pression à ses anciens collègues du service des infiltrations... Maxime se livre à son ennemie de toujours, madame Perrot. Il force ainsi son ancien service à tout faire pour le sortir de là.",
+              "director": "",
+              "writers": [],
+              "special": 0,
+              "comments": 2,
+              "show_slug": "falco-le-dernier-flic",
+              "resource_url": "https://www.betaseries.com/episode/falco-le-dernier-flic/s04e08",
+              "note": {
+                "total": 175,
+                "mean": 4.39430000000000031690206014900468289852142333984375,
+                "user": 0,
+                "moyenne": 4.39430000000000031690206014900468289852142333984375
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "hidden": false,
+                "downloaded": false,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "date": "2016-04-28",
+              "watched_by": [],
+              "seen_total": 2341,
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "show": {
+                "id": 6946,
+                "thetvdb_id": 270448,
+                "title": "Falco",
+                "in_account": false
+              },
+              "platform_links": [
+                {
+                  "platform_id": "6",
+                  "platform": "Apple iTunes",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96627"
+                },
+                {
+                  "platform_id": "12",
+                  "platform": "Bbox VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/96630"
+                },
+                {
+                  "platform_id": "5",
+                  "platform": "Canal Play VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/5.jpg",
+                  "link": "https://www.betaseries.com/link/58497129"
+                },
+                {
+                  "platform_id": "16",
+                  "platform": "Orange VOD",
+                  "color": "#3B8DD0",
+                  "type": "vod",
+                  "day": null,
+                  "date": null,
+                  "force_display": false,
+                  "logo": null,
+                  "link": "https://www.betaseries.com/link/2095924"
+                },
+                {
+                  "platform_id": "416",
+                  "platform": "TF1+",
+                  "color": "#0E00EC",
+                  "type": "avod",
+                  "day": "2026-05-14",
+                  "date": "1778742000",
+                  "force_display": true,
+                  "logo": "https://pictures.betaseries.com/platforms/416.jpg",
+                  "link": "https://www.betaseries.com/link/62764190"
+                }
+              ]
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}

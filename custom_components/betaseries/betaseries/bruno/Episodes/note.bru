@@ -1,0 +1,189 @@
+meta {
+  name: note
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/episodes/note
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: 3905073,3685365
+  note: 4
+}
+
+docs {
+  Rate an episode with a score from 1 to 5.
+}
+
+example {
+  name: example - 200
+
+  request: {
+    url: {{baseUrl}}/episodes/note
+    method: POST
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 3905073
+      note: 4
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "episode": {
+            "id": 3905073,
+            "thetvdb_id": 11603666,
+            "youtube_id": null,
+            "title": "Urlaub",
+            "season": 2,
+            "episode": 1,
+            "show": {
+              "id": 38605,
+              "thetvdb_id": 417272,
+              "title": "Achtsam Morden",
+              "in_account": true,
+              "slug": "achtsam-morden",
+              "creation": "2024",
+              "status": "Continuing",
+              "description": "Quand un avocat de la mafia suit un cours de pleine conscience pour mieux équilibrer travail et vie privée, il découvre de nouvelles stratégies d'adaptation étonnantes, dont le meurtre."
+            },
+            "code": "S02E01",
+            "global": 9,
+            "special": 0,
+            "description": "Nicole s'embrouille les pinceaux avec ses preuves. Lors de vacances en famille en Autriche, Björn essaie de se détendre, mais un sérieux faux pas révèle qu'il y a encore du boulot.",
+            "date": "2026-05-29",
+            "length": 37,
+            "note": {
+              "total": 47,
+              "mean": 3.80851063829787239711777147022075951099395751953125,
+              "date": "1785696209",
+              "user": 4
+            },
+            "user": {
+              "seen": true,
+              "seen_date": "2026-08-03 21:43:56",
+              "hidden": false,
+              "downloaded": false,
+              "friends_watched": [],
+              "rewatch": {
+                "total": 0,
+                "dates": []
+              }
+            },
+            "comments": 2,
+            "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e01",
+            "subtitles": [],
+            "seen_total": 1973,
+            "platform_links": [
+              {
+                "platform_id": "1",
+                "platform": "Netflix",
+                "color": "#000000",
+                "type": "svod",
+                "day": "2026-05-28",
+                "date": "1779919200",
+                "force_display": false,
+                "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                "link": "https://www.betaseries.com/link/62762471"
+              }
+            ],
+            "releasesSvod": {
+              "displayOriginal": true,
+              "releases": []
+            },
+            "characters": [],
+            "director": "",
+            "writers": [],
+            "crew": {
+              "writers": [],
+              "directors": []
+            }
+          },
+          "note": 4,
+          "errors": []
+        }
+      '''
+    }
+  }
+}
+
+example {
+  name: example - 400
+
+  request: {
+    url: {{baseUrl}}/episodes/note
+    method: POST
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 3905073,3685365
+      note: 4
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 400
+      text: Bad Request
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "errors": [
+            {
+              "code": 2005,
+              "text": "L'utilisateur n'a pas marqué cet épisode comme vu."
+            }
+          ]
+        }
+      '''
+    }
+  }
+}

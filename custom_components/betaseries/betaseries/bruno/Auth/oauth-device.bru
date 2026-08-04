@@ -1,0 +1,78 @@
+meta {
+  name: oauth-device
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/oauth/device
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+}
+
+body:form-urlencoded {
+  client_id: {{apiKey}}
+}
+
+script:post-response {
+  // Capture device_code so the next request can poll for the token
+  const body = res.getBody();
+  if (body && body.device_code) {
+    bru.setEnvVar("deviceCode", body.device_code);
+  }
+}
+
+docs {
+  Retrieves a code to present to the user for identification on a remote device (e.g., Television).
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/oauth/device
+    method: POST
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+    }
+
+    body:form-urlencoded: {
+      client_id: {{apiKey}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-store, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "device_code": "xxxxxx",
+          "user_code": "955-247",
+          "verification_url": "https://www.betaseries.com/device",
+          "expires_in": 1800,
+          "interval": 5
+        }
+      '''
+    }
+  }
+}

@@ -1,0 +1,271 @@
+meta {
+  name: unwatched
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/episodes/watched
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  id: 3905073,3685365
+}
+
+docs {
+  Remove the watched mark from one or more episodes, allowing for multiple episodes to be specified.
+}
+
+example {
+  name: example - 400
+
+  request: {
+    url: {{baseUrl}}/episodes/watched
+    method: DELETE
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 3905073
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 400
+      text: Bad Request
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "errors": [
+            {
+              "code": 2005,
+              "text": "L'utilisateur n'a pas marqué cet épisode comme vu."
+            }
+          ]
+        }
+      '''
+    }
+  }
+}
+
+example {
+  name: example - 200
+
+  request: {
+    url: {{baseUrl}}/episodes/watched
+    method: DELETE
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 3905073,3685365
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "episodes": [
+            {
+              "id": 3905073,
+              "thetvdb_id": 11603666,
+              "youtube_id": null,
+              "title": "Urlaub",
+              "season": 2,
+              "episode": 1,
+              "show": {
+                "id": 38605,
+                "thetvdb_id": 417272,
+                "title": "Achtsam Morden",
+                "in_account": true,
+                "slug": "achtsam-morden",
+                "creation": "2024",
+                "status": "Continuing",
+                "description": "Quand un avocat de la mafia suit un cours de pleine conscience pour mieux équilibrer travail et vie privée, il découvre de nouvelles stratégies d'adaptation étonnantes, dont le meurtre."
+              },
+              "code": "S02E01",
+              "global": 9,
+              "special": 0,
+              "description": "Nicole s'embrouille les pinceaux avec ses preuves. Lors de vacances en famille en Autriche, Björn essaie de se détendre, mais un sérieux faux pas révèle qu'il y a encore du boulot.",
+              "date": "2026-05-29",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 2,
+              "resource_url": "https://www.betaseries.com/episode/achtsam-morden/s02e01",
+              "subtitles": [],
+              "seen_total": 1973,
+              "platform_links": [
+                {
+                  "platform_id": "1",
+                  "platform": "Netflix",
+                  "color": "#000000",
+                  "type": "svod",
+                  "day": "2026-05-28",
+                  "date": "1779919200",
+                  "force_display": false,
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg",
+                  "link": "https://www.betaseries.com/link/62762471"
+                }
+              ],
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "characters": [],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 3685365,
+              "thetvdb_id": 11156503,
+              "youtube_id": null,
+              "title": "Episode 1",
+              "season": 3,
+              "episode": 1,
+              "show": {
+                "id": 26491,
+                "thetvdb_id": 376472,
+                "title": "Alice in Borderland (2020)",
+                "in_account": true,
+                "slug": "alice-in-borderland-2020",
+                "creation": "2020",
+                "status": "Ended",
+                "description": "Un jeune homme fou de jeux vidéo se retrouve avec ses deux amis dans un Tokyo alternatif où ils doivent disputer des jeux dangereux pour survivre."
+              },
+              "code": "S03E01",
+              "global": 17,
+              "special": 0,
+              "description": "De retour dans le monde réel sans aucun souvenir de Borderland, Arisu et Usagi rencontrent Ryuji, un professeur obsédé par les expériences de mort imminente.",
+              "date": "2025-09-25",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 18,
+              "resource_url": "https://www.betaseries.com/episode/alice-in-borderland-2020/s03e01",
+              "subtitles": [],
+              "seen_total": 16095,
+              "platform_links": [],
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "characters": [
+                {
+                  "actor": "Kento Yamazaki",
+                  "personId": "82066",
+                  "picture": "https://pictures.betaseries.com/persons/k3o9F4J4rfPXA7YEcpIJkZqREpb.jpg",
+                  "name": "Ryohei Arisu",
+                  "guest": false,
+                  "slug": "kento-yamazaki"
+                },
+                {
+                  "actor": "Tao Tsuchiya",
+                  "personId": "1764",
+                  "picture": "https://pictures.betaseries.com/persons/n2665l3bguzDTm5CnyP99ipU9Z0.jpg",
+                  "name": "Yuzuha Usagi",
+                  "guest": false,
+                  "slug": "tao-tsuchiya"
+                },
+                {
+                  "actor": "Nijirō Murakami",
+                  "personId": "93442",
+                  "picture": "https://pictures.betaseries.com/persons/ixKuljx33a5JqY28CsdEavflS1b.jpg",
+                  "name": "Chishiya",
+                  "guest": false,
+                  "slug": "nijir-murakami"
+                },
+                {
+                  "actor": "Aya Asahina",
+                  "personId": "128616",
+                  "picture": "https://pictures.betaseries.com/persons/zF3la0KvayUV3uACYPiBgCRIQcI.jpg",
+                  "name": "Kuina",
+                  "guest": false,
+                  "slug": "aya-asahina"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}

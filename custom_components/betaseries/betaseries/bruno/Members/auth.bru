@@ -1,0 +1,94 @@
+meta {
+  name: auth
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/members/auth?login={{login}}&password={{password}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  login: {{login}}
+  password: {{password}}
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+}
+
+script:post-response {
+  // Token may come back as `access_token=xxxx` (urlencoded) OR as JSON - handle both
+  const body = res.getBody();
+  let token;
+  if (typeof body === "string") {
+    const m = body.match(/token=([^&\s]+)/);
+    if (m) token = m[1];
+  } else if (body && body.token) {
+    token = body.token;
+  }
+  if (token) bru.setEnvVar("token", token);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Standard member authentication.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/members/auth?login={{login}}&password={{password}}
+    method: POST
+    mode: none
+    params:query: {
+      login: {{login}}
+      password: {{password}}
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "user": {
+            "id": 278876,
+            "login": "example_user",
+            "xp": 5980,
+            "in_account": false
+          },
+          "token": "xxxxxx",
+          "hash": "xxxxxx",
+          "errors": []
+        }
+      '''
+    }
+  }
+}

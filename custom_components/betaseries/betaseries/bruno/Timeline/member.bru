@@ -1,0 +1,1817 @@
+meta {
+  name: member
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/timeline/member?id={{userId}}&nbpp=100
+  body: none
+  auth: none
+}
+
+params:query {
+  id: {{userId}}
+  nbpp: 100
+  ~since_id:
+  ~last_id:
+  ~types:
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Displays the latest events of the specified member.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/timeline/member?id={{userId}}&nbpp=100
+    method: GET
+    mode: none
+    params:query: {
+      id: {{userId}}
+      nbpp: 100
+      ~since_id:
+      ~last_id:
+      ~types:
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "events": [
+            {
+              "id": 2220001980,
+              "type": "badge",
+              "ref": null,
+              "ref_id": 285,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a gagné le badge <a href=\"/membre/example_user/badges\">Schtroumpf à lunettes</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 12:18:50",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2220001976,
+              "type": "unarchive",
+              "ref": null,
+              "ref_id": 4189,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a sorti des archives la série <a href=\"/serie/black-mirror\">Black Mirror</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 12:17:15",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219944567,
+              "type": "markas",
+              "ref": "3965195",
+              "ref_id": 3965195,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/wool/s03e04\">Silo S03E04</a> - Whatever You Do, Don't Go Home.",
+              "picture_url": "",
+              "date": "2026-07-26 05:20:30",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219944557,
+              "type": "markas",
+              "ref": "3965193",
+              "ref_id": 3965193,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/wool/s03e02\">Silo S03E02</a> - It's All Good.",
+              "picture_url": "",
+              "date": "2026-07-26 05:20:21",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219944560,
+              "type": "markas",
+              "ref": "3965194",
+              "ref_id": 3965194,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/wool/s03e03\">Silo S03E03</a> - A Dark Web.",
+              "picture_url": "",
+              "date": "2026-07-26 05:18:50",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941369,
+              "type": "season_watched",
+              "ref": "13381.1",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 1 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:49:26",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941367,
+              "type": "season_watched",
+              "ref": "13381.3",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 3 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:49:22",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941364,
+              "type": "season_watched",
+              "ref": "13381.4",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 4 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:49:19",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941347,
+              "type": "season_watched",
+              "ref": "13381.6",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 6 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:48:42",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941345,
+              "type": "season_watched",
+              "ref": "13381.7",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 7 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:48:36",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941377,
+              "type": "season_watched",
+              "ref": "13381.9",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 9 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:48:04",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941368,
+              "type": "season_watched",
+              "ref": "13381.2",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 2 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:47:51",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941323,
+              "type": "markas",
+              "ref": "3821561",
+              "ref_id": 3821561,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/hijack/s02e04\">Hijack S02E04</a> - Switch.",
+              "picture_url": "",
+              "date": "2026-07-26 03:47:30",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941312,
+              "type": "markas",
+              "ref": "3821560",
+              "ref_id": 3821560,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/hijack/s02e03\">Hijack S02E03</a> - Baggage.",
+              "picture_url": "",
+              "date": "2026-07-26 03:47:26",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941311,
+              "type": "markas",
+              "ref": "3821559",
+              "ref_id": 3821559,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/hijack/s02e02\">Hijack S02E02</a> - Control.",
+              "picture_url": "",
+              "date": "2026-07-26 03:47:23",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941310,
+              "type": "markas",
+              "ref": "3821558",
+              "ref_id": 3821558,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/hijack/s02e01\">Hijack S02E01</a> - Signal.",
+              "picture_url": "",
+              "date": "2026-07-26 03:47:22",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941350,
+              "type": "season_watched",
+              "ref": "13381.5",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 5 de la série <a href=\"/serie/below-deck-mediterranean\">Below Deck Mediterranean</a>.",
+              "picture_url": "",
+              "date": "2026-07-26 03:47:12",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941276,
+              "type": "markas",
+              "ref": "2918518",
+              "ref_id": 2918518,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e11\">Moving S01E11</a> - Romanticist.",
+              "picture_url": "",
+              "date": "2026-07-26 03:46:15",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941275,
+              "type": "markas",
+              "ref": "2918517",
+              "ref_id": 2918517,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e10\">Moving S01E10</a> - The Monster.",
+              "picture_url": "",
+              "date": "2026-07-26 03:46:13",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2219941273,
+              "type": "markas",
+              "ref": "2918516",
+              "ref_id": 2918516,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e09\">Moving S01E09</a> - Humanists.",
+              "picture_url": "",
+              "date": "2026-07-26 03:46:09",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2217786727,
+              "type": "markas",
+              "ref": "2438607",
+              "ref_id": 2438607,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/invasion-2021/s01e06\">Invasion (2021) S01E06</a> - Home Invasion.",
+              "picture_url": "",
+              "date": "2026-07-19 15:27:31",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2217785614,
+              "type": "season_watched",
+              "ref": "31898.2",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 2 de la série <a href=\"/serie/below-deck-down-under\">Below Deck Down Under</a>.",
+              "picture_url": "",
+              "date": "2026-07-19 15:26:01",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2217784750,
+              "type": "markas",
+              "ref": "2918514",
+              "ref_id": 2918514,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e07\">Moving S01E07</a> - The Stranger.",
+              "picture_url": "",
+              "date": "2026-07-19 15:23:54",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2217784758,
+              "type": "markas",
+              "ref": "2918515",
+              "ref_id": 2918515,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e08\">Moving S01E08</a> - Black.",
+              "picture_url": "",
+              "date": "2026-07-19 15:20:08",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2217782627,
+              "type": "archive",
+              "ref": null,
+              "ref_id": 44331,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a archivé la série <a href=\"/serie/el-refugio-atomico\">El refugio atomico</a>.",
+              "picture_url": "",
+              "date": "2026-07-19 15:19:07",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2217782595,
+              "type": "unarchive",
+              "ref": null,
+              "ref_id": 44331,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a sorti des archives la série <a href=\"/serie/el-refugio-atomico\">El refugio atomico</a>.",
+              "picture_url": "",
+              "date": "2026-07-19 15:19:00",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2217783381,
+              "type": "season_watched",
+              "ref": "34725.2",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 2 de la série <a href=\"/serie/the-never-game\">Tracker (2024)</a>.",
+              "picture_url": "",
+              "date": "2026-07-19 15:16:30",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216743538,
+              "type": "markas",
+              "ref": "2918512",
+              "ref_id": 2918512,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e05\">Moving S01E05</a> - Recall.",
+              "picture_url": "",
+              "date": "2026-07-16 23:09:26",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216743458,
+              "type": "markas",
+              "ref": "2918511",
+              "ref_id": 2918511,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e04\">Moving S01E04</a> - The Secret.",
+              "picture_url": "",
+              "date": "2026-07-16 23:09:19",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216743213,
+              "type": "add_serie",
+              "ref": null,
+              "ref_id": 31940,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a ajouté la série <a href=\"/serie/moving\">Moving</a> à sa liste.",
+              "picture_url": "",
+              "date": "2026-07-16 23:09:04",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216743570,
+              "type": "markas",
+              "ref": "2918513",
+              "ref_id": 2918513,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e06\">Moving S01E06</a> - Bungaeman.",
+              "picture_url": "",
+              "date": "2026-07-16 23:07:01",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216743444,
+              "type": "markas",
+              "ref": "2663058",
+              "ref_id": 2663058,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e03\">Moving S01E03</a> - 1+1.",
+              "picture_url": "",
+              "date": "2026-07-16 23:06:52",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216743431,
+              "type": "markas",
+              "ref": "2781761",
+              "ref_id": 2781761,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e02\">Moving S01E02</a> - Booyang: Family Support, Levitation.",
+              "picture_url": "",
+              "date": "2026-07-16 23:06:45",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216743416,
+              "type": "markas",
+              "ref": "2781760",
+              "ref_id": 2781760,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/moving/s01e01\">Moving S01E01</a> - Senior Year.",
+              "picture_url": "",
+              "date": "2026-07-16 23:05:28",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216057987,
+              "type": "archive",
+              "ref": null,
+              "ref_id": 29793,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a archivé la série <a href=\"/serie/retreat\">A Murder at the End of the World</a>.",
+              "picture_url": "",
+              "date": "2026-07-15 17:08:18",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216056943,
+              "type": "markas",
+              "ref": "2956299",
+              "ref_id": 2956299,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/retreat/s01e06\">A Murder at the End of the World S01E06</a> - Crime Seen.",
+              "picture_url": "",
+              "date": "2026-07-15 17:03:41",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2216056955,
+              "type": "markas",
+              "ref": "2956300",
+              "ref_id": 2956300,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/retreat/s01e07\">A Murder at the End of the World S01E07</a> - Retreat.",
+              "picture_url": "",
+              "date": "2026-07-15 17:02:27",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2215518044,
+              "type": "season_watched",
+              "ref": "29793.1",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 1 de la série <a href=\"/serie/retreat\">A Murder at the End of the World</a>.",
+              "picture_url": "",
+              "date": "2026-07-14 22:57:25",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2215518328,
+              "type": "badge",
+              "ref": null,
+              "ref_id": 265,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a gagné le badge <a href=\"/membre/example_user/badges\">Jour de la Bastille</a>.",
+              "picture_url": "",
+              "date": "2026-07-14 22:55:21",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2215517981,
+              "type": "add_serie",
+              "ref": null,
+              "ref_id": 29793,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a ajouté la série <a href=\"/serie/retreat\">A Murder at the End of the World</a> à sa liste.",
+              "picture_url": "",
+              "date": "2026-07-14 22:54:50",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2197928280,
+              "type": "markas",
+              "ref": "3756197",
+              "ref_id": 3756197,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/blanca-2021/s03e06\">Blanca S03E06</a> - Il bambino.",
+              "picture_url": "",
+              "date": "2026-07-04 20:54:32",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2197928016,
+              "type": "markas",
+              "ref": "3809504",
+              "ref_id": 3809504,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/animal/s01e09\">Animal S01E09</a> - Un día de perros.",
+              "picture_url": "",
+              "date": "2026-07-04 20:54:07",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2197927332,
+              "type": "markas",
+              "ref": "3603963",
+              "ref_id": 3603963,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e15\">Tracker (2024) S02E15</a> - The Grey Goose.",
+              "picture_url": "",
+              "date": "2026-07-04 20:53:22",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2197927872,
+              "type": "markas",
+              "ref": "3793214",
+              "ref_id": 3793214,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/animal/s01e08\">Animal S01E08</a> - Las cataratas del Niágara.",
+              "picture_url": "",
+              "date": "2026-07-04 20:52:42",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2197925655,
+              "type": "badge",
+              "ref": null,
+              "ref_id": 264,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a gagné le badge <a href=\"/membre/example_user/badges\">Fête de l’Indépendance</a>.",
+              "picture_url": "",
+              "date": "2026-07-04 20:51:00",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2197925619,
+              "type": "markas",
+              "ref": "3965192",
+              "ref_id": 3965192,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/wool/s03e01\">Silo S03E01</a> - Who Are You?.",
+              "picture_url": "",
+              "date": "2026-07-04 20:50:58",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2190520877,
+              "type": "markas",
+              "ref": "2931206",
+              "ref_id": 2931206,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s02e03\">Below Deck Down Under S02E03</a> - Ice, Ice, Maybe.",
+              "picture_url": "",
+              "date": "2026-06-06 23:53:28",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2190520875,
+              "type": "markas",
+              "ref": "2931205",
+              "ref_id": 2931205,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s02e02\">Below Deck Down Under S02E02</a> - Floating Circus.",
+              "picture_url": "",
+              "date": "2026-06-06 23:53:27",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2190520885,
+              "type": "markas",
+              "ref": "2933749",
+              "ref_id": 2933749,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s02e06\">Below Deck Down Under S02E06</a> - All Wrong.",
+              "picture_url": "",
+              "date": "2026-06-06 23:51:24",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2190520880,
+              "type": "markas",
+              "ref": "2931208",
+              "ref_id": 2931208,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s02e05\">Below Deck Down Under S02E05</a> - Everyone Everywhere All at Once.",
+              "picture_url": "",
+              "date": "2026-06-06 23:51:08",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2190520874,
+              "type": "markas",
+              "ref": "2923088",
+              "ref_id": 2923088,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s02e01\">Below Deck Down Under S02E01</a> - Yes, We Cairns!.",
+              "picture_url": "",
+              "date": "2026-06-06 23:51:02",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2190520870,
+              "type": "season_watched",
+              "ref": "31898.1",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 1 de la série <a href=\"/serie/below-deck-down-under\">Below Deck Down Under</a>.",
+              "picture_url": "",
+              "date": "2026-06-06 23:50:56",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2190520879,
+              "type": "markas",
+              "ref": "2931207",
+              "ref_id": 2931207,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s02e04\">Below Deck Down Under S02E04</a> - All’s Fair in Love and Downpour.",
+              "picture_url": "",
+              "date": "2026-06-06 23:49:57",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189989165,
+              "type": "archive",
+              "ref": null,
+              "ref_id": 44980,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a archivé la série <a href=\"/serie/wayward\">Wayward</a>.",
+              "picture_url": "",
+              "date": "2026-05-28 21:40:41",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189989145,
+              "type": "markas",
+              "ref": "3737980",
+              "ref_id": 3737980,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/wayward/s01e07\">Wayward S01E07</a> - Ascend.",
+              "picture_url": "",
+              "date": "2026-05-28 21:40:26",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189988948,
+              "type": "markas",
+              "ref": "2661032",
+              "ref_id": 2661032,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s01e01\">Below Deck Down Under S01E01</a> - G'Day Mate!.",
+              "picture_url": "",
+              "date": "2026-05-28 21:40:17",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189989183,
+              "type": "del_serie",
+              "ref": null,
+              "ref_id": 20737,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a supprimé la série <a href=\"/serie/for-all-mankind\">For All Mankind</a> de sa liste.",
+              "picture_url": "",
+              "date": "2026-05-28 21:39:48",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189989147,
+              "type": "markas",
+              "ref": "3737981",
+              "ref_id": 3737981,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/wayward/s01e08\">Wayward S01E08</a> - Leap.",
+              "picture_url": "",
+              "date": "2026-05-28 21:39:18",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189988958,
+              "type": "markas",
+              "ref": "2661035",
+              "ref_id": 2661035,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s01e04\">Below Deck Down Under S01E04</a> - The Pirate's Booty.",
+              "picture_url": "",
+              "date": "2026-05-28 21:38:13",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189988951,
+              "type": "markas",
+              "ref": "2661034",
+              "ref_id": 2661034,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s01e03\">Below Deck Down Under S01E03</a> - The Plunger from Down Under.",
+              "picture_url": "",
+              "date": "2026-05-28 21:37:59",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189988949,
+              "type": "markas",
+              "ref": "2661033",
+              "ref_id": 2661033,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/below-deck-down-under/s01e02\">Below Deck Down Under S01E02</a> - Unchained and Untamed.",
+              "picture_url": "",
+              "date": "2026-05-28 21:37:57",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189882487,
+              "type": "season_watched",
+              "ref": "31898.3",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 3 de la série <a href=\"/serie/below-deck-down-under\">Below Deck Down Under</a>.",
+              "picture_url": "",
+              "date": "2026-05-27 00:01:33",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2189882486,
+              "type": "add_serie",
+              "ref": null,
+              "ref_id": 31898,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a ajouté la série <a href=\"/serie/below-deck-down-under\">Below Deck Down Under</a> à sa liste.",
+              "picture_url": "",
+              "date": "2026-05-27 00:01:30",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188527707,
+              "type": "markas",
+              "ref": "3594475",
+              "ref_id": 3594475,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e14\">Tracker (2024) S02E14</a> - Exodus.",
+              "picture_url": "",
+              "date": "2026-05-07 19:50:22",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188527664,
+              "type": "markas",
+              "ref": "1011496",
+              "ref_id": 1011496,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/save-me-2018/s01e02\">Save Me (2018) S01E02</a> - Episode 2.",
+              "picture_url": "",
+              "date": "2026-05-07 19:49:32",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188506673,
+              "type": "markas",
+              "ref": "3585468",
+              "ref_id": 3585468,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e12\">Tracker (2024) S02E12</a> - Monster.",
+              "picture_url": "",
+              "date": "2026-05-07 14:10:30",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188506678,
+              "type": "markas",
+              "ref": "3585469",
+              "ref_id": 3585469,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e13\">Tracker (2024) S02E13</a> - Neptune.",
+              "picture_url": "",
+              "date": "2026-05-07 14:10:27",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188506615,
+              "type": "markas",
+              "ref": "1011495",
+              "ref_id": 1011495,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/save-me-2018/s01e01\">Save Me (2018) S01E01</a> - Episode 1.",
+              "picture_url": "",
+              "date": "2026-05-07 14:10:04",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188506537,
+              "type": "markas",
+              "ref": "3893062",
+              "ref_id": 3893062,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/reykjavik-fusion/s01e05\">Reykjavik Fusion S01E05</a> - Parent.",
+              "picture_url": "",
+              "date": "2026-05-07 14:09:39",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188506569,
+              "type": "markas",
+              "ref": "3893063",
+              "ref_id": 3893063,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/reykjavik-fusion/s01e06\">Reykjavik Fusion S01E06</a> - Hard Birch Plywood.",
+              "picture_url": "",
+              "date": "2026-05-07 14:08:44",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354280,
+              "type": "badge",
+              "ref": null,
+              "ref_id": 283,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a gagné le badge <a href=\"/membre/example_user/badges\">Sérievore du monde</a>.",
+              "picture_url": "",
+              "date": "2026-05-05 11:53:04",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354279,
+              "type": "add_serie",
+              "ref": null,
+              "ref_id": 17426,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a ajouté la série <a href=\"/serie/save-me-2018\">Save Me (2018)</a> à sa liste.",
+              "picture_url": "",
+              "date": "2026-05-05 11:53:04",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354179,
+              "type": "markas",
+              "ref": "3893054",
+              "ref_id": 3893054,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/reykjavik-fusion/s01e02\">Reykjavik Fusion S01E02</a> - Foundation.",
+              "picture_url": "",
+              "date": "2026-05-05 11:51:06",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354174,
+              "type": "add_serie",
+              "ref": null,
+              "ref_id": 46208,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a ajouté la série <a href=\"/serie/reykjavik-fusion\">Reykjavik Fusion</a> à sa liste.",
+              "picture_url": "",
+              "date": "2026-05-05 11:50:59",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354182,
+              "type": "markas",
+              "ref": "3893061",
+              "ref_id": 3893061,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/reykjavik-fusion/s01e04\">Reykjavik Fusion S01E04</a> - Santa Mary Gran Reserva.",
+              "picture_url": "",
+              "date": "2026-05-05 11:48:56",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354175,
+              "type": "badge",
+              "ref": null,
+              "ref_id": 291,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a gagné le badge <a href=\"/membre/example_user/badges\">Sérievore</a>.",
+              "picture_url": "",
+              "date": "2026-05-05 11:48:47",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354181,
+              "type": "markas",
+              "ref": "3893060",
+              "ref_id": 3893060,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/reykjavik-fusion/s01e03\">Reykjavik Fusion S01E03</a> - Fresh Gooseberries.",
+              "picture_url": "",
+              "date": "2026-05-05 11:47:45",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2188354177,
+              "type": "markas",
+              "ref": "3791960",
+              "ref_id": 3791960,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/reykjavik-fusion/s01e01\">Reykjavik Fusion S01E01</a> - Just One.",
+              "picture_url": "",
+              "date": "2026-05-05 11:47:43",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211123,
+              "type": "markas",
+              "ref": "3452479",
+              "ref_id": 3452479,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e09\">Tracker (2024) S02E09</a> - The Disciple.",
+              "picture_url": "",
+              "date": "2026-04-18 23:52:39",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211095,
+              "type": "markas",
+              "ref": "3433218",
+              "ref_id": 3433218,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e03\">Tracker (2024) S02E03</a> - Bloodlines.",
+              "picture_url": "",
+              "date": "2026-04-18 23:52:09",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211085,
+              "type": "season_watched",
+              "ref": "34725.1",
+              "ref_id": 0,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder la saison 1 de la série <a href=\"/serie/the-never-game\">Tracker (2024)</a>.",
+              "picture_url": "",
+              "date": "2026-04-18 23:51:58",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211130,
+              "type": "markas",
+              "ref": "3585466",
+              "ref_id": 3585466,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e10\">Tracker (2024) S02E10</a> - Nightingale.",
+              "picture_url": "",
+              "date": "2026-04-18 23:50:39",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211101,
+              "type": "markas",
+              "ref": "3447705",
+              "ref_id": 3447705,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e06\">Tracker (2024) S02E06</a> - Trust Fall.",
+              "picture_url": "",
+              "date": "2026-04-18 23:50:07",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211099,
+              "type": "markas",
+              "ref": "3440596",
+              "ref_id": 3440596,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e05\">Tracker (2024) S02E05</a> - Preternatural.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:59",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211097,
+              "type": "markas",
+              "ref": "3435598",
+              "ref_id": 3435598,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e04\">Tracker (2024) S02E04</a> - Noble Rot.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:58",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211093,
+              "type": "markas",
+              "ref": "3417733",
+              "ref_id": 3417733,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e01\">Tracker (2024) S02E01</a> - Out of the Past.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:57",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211094,
+              "type": "markas",
+              "ref": "3430885",
+              "ref_id": 3430885,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e02\">Tracker (2024) S02E02</a> - Ontological Shock.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:54",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211083,
+              "type": "add_serie",
+              "ref": null,
+              "ref_id": 34725,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a ajouté la série <a href=\"/serie/the-never-game\">Tracker (2024)</a> à sa liste.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:43",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211135,
+              "type": "markas",
+              "ref": "3585467",
+              "ref_id": 3585467,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e11\">Tracker (2024) S02E11</a> - Shades of Grey.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:40",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211109,
+              "type": "markas",
+              "ref": "3447707",
+              "ref_id": 3447707,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e08\">Tracker (2024) S02E08</a> - The Night Movers.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:13",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187211103,
+              "type": "markas",
+              "ref": "3447706",
+              "ref_id": 3447706,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/the-never-game/s02e07\">Tracker (2024) S02E07</a> - Man's Best Friend.",
+              "picture_url": "",
+              "date": "2026-04-18 23:49:08",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204609,
+              "type": "archive",
+              "ref": null,
+              "ref_id": 31999,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a archivé la série <a href=\"/serie/bosch-legacy\">Bosch: Legacy</a>.",
+              "picture_url": "",
+              "date": "2026-04-18 22:12:25",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204633,
+              "type": "archive",
+              "ref": null,
+              "ref_id": 8191,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "a archivé la série <a href=\"/serie/bosch\">Bosch</a>.",
+              "picture_url": "",
+              "date": "2026-04-18 22:11:39",
+              "comments": 0,
+              "data": [],
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204345,
+              "type": "markas",
+              "ref": "3612131",
+              "ref_id": 3612131,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/bosch-legacy/s03e09\">Bosch: Legacy S03E09</a> - Badlands.",
+              "picture_url": "",
+              "date": "2026-04-18 22:11:00",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204340,
+              "type": "markas",
+              "ref": "3612129",
+              "ref_id": 3612129,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/bosch-legacy/s03e07\">Bosch: Legacy S03E07</a> - Welcome to the Other Side.",
+              "picture_url": "",
+              "date": "2026-04-18 22:10:57",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204333,
+              "type": "markas",
+              "ref": "3612128",
+              "ref_id": 3612128,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/bosch-legacy/s03e06\">Bosch: Legacy S03E06</a> - Broken Order.",
+              "picture_url": "",
+              "date": "2026-04-18 22:10:54",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204329,
+              "type": "markas",
+              "ref": "3612126",
+              "ref_id": 3612126,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/bosch-legacy/s03e04\">Bosch: Legacy S03E04</a> - Whip-poor-wills.",
+              "picture_url": "",
+              "date": "2026-04-18 22:10:52",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204319,
+              "type": "markas",
+              "ref": "3548598",
+              "ref_id": 3548598,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/bosch-legacy/s03e01\">Bosch: Legacy S03E01</a> - Goes Where It Goes.",
+              "picture_url": "",
+              "date": "2026-04-18 22:10:46",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204342,
+              "type": "markas",
+              "ref": "3612130",
+              "ref_id": 3612130,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/bosch-legacy/s03e08\">Bosch: Legacy S03E08</a> - La Zona Rosa.",
+              "picture_url": "",
+              "date": "2026-04-18 22:08:45",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            },
+            {
+              "id": 2187204325,
+              "type": "markas",
+              "ref": "3612124",
+              "ref_id": 3612124,
+              "user": "example_user",
+              "user_id": 42,
+              "html": "vient de regarder <a href=\"/episode/bosch-legacy/s03e02\">Bosch: Legacy S03E02</a> - Bosching Bosch.",
+              "picture_url": "",
+              "date": "2026-04-18 22:08:41",
+              "comments": 0,
+              "data": {
+                "note": null
+              },
+              "first_comments": [],
+              "comments_by_user": 0,
+              "is_club_member": false
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}

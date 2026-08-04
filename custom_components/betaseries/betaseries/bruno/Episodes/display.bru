@@ -1,0 +1,382 @@
+meta {
+  name: display
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/episodes/display?id=38605,38606
+  body: none
+  auth: none
+}
+
+params:query {
+  id: 38605,38606
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Show details of one or more episodes, allowing for multiple IDs and various information sources.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/episodes/display?id=38605,38606
+    method: GET
+    mode: none
+    params:query: {
+      id: 38605,38606
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "episodes": [
+            {
+              "id": 38605,
+              "thetvdb_id": 363842,
+              "youtube_id": null,
+              "title": "Cat's Bell",
+              "season": 1,
+              "episode": 13,
+              "show": {
+                "id": 1485,
+                "thetvdb_id": 71618,
+                "title": "Hyper Police",
+                "in_account": false,
+                "slug": "hyperpolice",
+                "creation": "1997",
+                "status": "Ended",
+                "description": "In the year 22 H. C. (Holy Century), Humans are an endangered species, and Shinjuku is now a town populated with demons, goblins and monsters. Crime runs rampant, and so together with the national police force, private police forces have been founded to maintain public peace and order."
+              },
+              "code": "S01E13",
+              "global": 13,
+              "special": 0,
+              "description": "",
+              "date": "1997-07-04",
+              "note": {
+                "total": 0,
+                "mean": 0,
+                "date": "1784858804",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/hyperpolice/s01e13",
+              "subtitles": [],
+              "seen_total": 4,
+              "platform_links": [],
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "characters": [
+                {
+                  "actor": "石野竜三",
+                  "personId": "77271",
+                  "picture": "https://pictures.betaseries.com/persons/iHTQMY1JJEIMV8y94W8JNsjJbfm.jpg",
+                  "name": "Tommy Fujioka",
+                  "guest": false,
+                  "slug": "shi-ye-long-san"
+                },
+                {
+                  "actor": "芝原チヤコ",
+                  "personId": "68653",
+                  "picture": "https://pictures.betaseries.com/persons/y9wNAvXnGvJ9kRsOXBLO3tBRcfH.jpg",
+                  "name": "Sakura Bokuseiinmonzeninari",
+                  "guest": false,
+                  "slug": "zhi-yuanchiyako"
+                },
+                {
+                  "actor": "宮村優子",
+                  "personId": "75315",
+                  "picture": "https://pictures.betaseries.com/persons/lVxXWzREWxixZ51EK4gmz9LqCV9.jpg",
+                  "name": "Natsuki Sasahara",
+                  "guest": false,
+                  "slug": "gong-cun-you-zi"
+                },
+                {
+                  "actor": "Akio Ōtsuka",
+                  "personId": "2496",
+                  "picture": "https://pictures.betaseries.com/persons/uH9oiqOOgrsz2zNnouVZ1qPzDyb.jpg",
+                  "name": "Batanen Fujioka",
+                  "guest": false,
+                  "slug": "akio-tsuka"
+                },
+                {
+                  "actor": "Koichi Tochika",
+                  "personId": "130208",
+                  "picture": "https://pictures.betaseries.com/persons/wZYe5RmOLYIhpesKEaFIxz7YN7G.jpg",
+                  "name": "Bob",
+                  "guest": false,
+                  "slug": "koichi-tochika"
+                },
+                {
+                  "actor": "Toshihiko Seki",
+                  "personId": "2493",
+                  "picture": "https://pictures.betaseries.com/persons/7jUPvx4hxWZWZJgyiCwd8KxWuvI.jpg",
+                  "name": "Sakunoshin Chikura",
+                  "guest": false,
+                  "slug": "toshihiko-seki"
+                },
+                {
+                  "actor": "引田有美",
+                  "personId": "269042",
+                  "picture": "https://pictures.betaseries.com/persons/8PxZZvwzlxYYSe4ooqtIVlWDQBW.jpg",
+                  "name": "Naoko Kondo",
+                  "guest": false,
+                  "slug": "yin-tian-you-mei"
+                },
+                {
+                  "actor": "坂東尚樹",
+                  "personId": "83211",
+                  "picture": "https://pictures.betaseries.com/persons/6khw1tul1qGP4l3SWauppE3hVUc.jpg",
+                  "name": "Mudagami (voice)",
+                  "guest": false,
+                  "slug": "ban-dong-shang-shu"
+                },
+                {
+                  "actor": "Takuma Suzuki",
+                  "personId": "75201",
+                  "picture": "https://pictures.betaseries.com/persons/dLan4nX3jX8pAWiOgfhyJNjFKnr.jpg",
+                  "name": "Nupu",
+                  "guest": false,
+                  "slug": "takuma-suzuki"
+                },
+                {
+                  "actor": "天野由梨",
+                  "personId": "4036",
+                  "picture": "https://pictures.betaseries.com/persons/6GfVyLY7womSNFfIQGLbo25WGeB.jpg",
+                  "name": "Peau D'Roquefort",
+                  "guest": false,
+                  "slug": "tian-ye-you-li"
+                },
+                {
+                  "actor": "Kotono Mitsuishi",
+                  "personId": "34333",
+                  "picture": "https://pictures.betaseries.com/persons/mvKgkuAVVMmjkFWlwVQu8KCa80O.jpg",
+                  "name": "Fonne Walkure",
+                  "guest": false,
+                  "slug": "kotono-mitsuishi"
+                },
+                {
+                  "actor": "三橋加奈子",
+                  "personId": "111902",
+                  "picture": "https://pictures.betaseries.com/persons/47itMqJIuXsHnK6FVBl3OoucggL.jpg",
+                  "name": "Samansa Grey",
+                  "guest": false,
+                  "slug": "san-qiao-jia-nai-zi"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            },
+            {
+              "id": 38606,
+              "thetvdb_id": 363841,
+              "youtube_id": null,
+              "title": "Osaka Rhapsody",
+              "season": 1,
+              "episode": 12,
+              "show": {
+                "id": 1485,
+                "thetvdb_id": 71618,
+                "title": "Hyper Police",
+                "in_account": false,
+                "slug": "hyperpolice",
+                "creation": "1997",
+                "status": "Ended",
+                "description": "In the year 22 H. C. (Holy Century), Humans are an endangered species, and Shinjuku is now a town populated with demons, goblins and monsters. Crime runs rampant, and so together with the national police force, private police forces have been founded to maintain public peace and order."
+              },
+              "code": "S01E12",
+              "global": 12,
+              "special": 0,
+              "description": "",
+              "date": "1997-06-27",
+              "note": {
+                "total": 1,
+                "mean": 4,
+                "date": "1783901637",
+                "user": 0
+              },
+              "user": {
+                "seen": false,
+                "seen_date": null,
+                "downloaded": false,
+                "friends_watched": null,
+                "rewatch": {
+                  "total": 0,
+                  "dates": []
+                }
+              },
+              "comments": 0,
+              "resource_url": "https://www.betaseries.com/episode/hyperpolice/s01e12",
+              "subtitles": [],
+              "seen_total": 5,
+              "platform_links": [],
+              "releasesSvod": {
+                "displayOriginal": true,
+                "releases": []
+              },
+              "characters": [
+                {
+                  "actor": "石野竜三",
+                  "personId": "77271",
+                  "picture": "https://pictures.betaseries.com/persons/iHTQMY1JJEIMV8y94W8JNsjJbfm.jpg",
+                  "name": "Tommy Fujioka",
+                  "guest": false,
+                  "slug": "shi-ye-long-san"
+                },
+                {
+                  "actor": "芝原チヤコ",
+                  "personId": "68653",
+                  "picture": "https://pictures.betaseries.com/persons/y9wNAvXnGvJ9kRsOXBLO3tBRcfH.jpg",
+                  "name": "Sakura Bokuseiinmonzeninari",
+                  "guest": false,
+                  "slug": "zhi-yuanchiyako"
+                },
+                {
+                  "actor": "宮村優子",
+                  "personId": "75315",
+                  "picture": "https://pictures.betaseries.com/persons/lVxXWzREWxixZ51EK4gmz9LqCV9.jpg",
+                  "name": "Natsuki Sasahara",
+                  "guest": false,
+                  "slug": "gong-cun-you-zi"
+                },
+                {
+                  "actor": "Akio Ōtsuka",
+                  "personId": "2496",
+                  "picture": "https://pictures.betaseries.com/persons/uH9oiqOOgrsz2zNnouVZ1qPzDyb.jpg",
+                  "name": "Batanen Fujioka",
+                  "guest": false,
+                  "slug": "akio-tsuka"
+                },
+                {
+                  "actor": "Koichi Tochika",
+                  "personId": "130208",
+                  "picture": "https://pictures.betaseries.com/persons/wZYe5RmOLYIhpesKEaFIxz7YN7G.jpg",
+                  "name": "Bob",
+                  "guest": false,
+                  "slug": "koichi-tochika"
+                },
+                {
+                  "actor": "Toshihiko Seki",
+                  "personId": "2493",
+                  "picture": "https://pictures.betaseries.com/persons/7jUPvx4hxWZWZJgyiCwd8KxWuvI.jpg",
+                  "name": "Sakunoshin Chikura",
+                  "guest": false,
+                  "slug": "toshihiko-seki"
+                },
+                {
+                  "actor": "引田有美",
+                  "personId": "269042",
+                  "picture": "https://pictures.betaseries.com/persons/8PxZZvwzlxYYSe4ooqtIVlWDQBW.jpg",
+                  "name": "Naoko Kondo",
+                  "guest": false,
+                  "slug": "yin-tian-you-mei"
+                },
+                {
+                  "actor": "坂東尚樹",
+                  "personId": "83211",
+                  "picture": "https://pictures.betaseries.com/persons/6khw1tul1qGP4l3SWauppE3hVUc.jpg",
+                  "name": "Mudagami (voice)",
+                  "guest": false,
+                  "slug": "ban-dong-shang-shu"
+                },
+                {
+                  "actor": "Takuma Suzuki",
+                  "personId": "75201",
+                  "picture": "https://pictures.betaseries.com/persons/dLan4nX3jX8pAWiOgfhyJNjFKnr.jpg",
+                  "name": "Nupu",
+                  "guest": false,
+                  "slug": "takuma-suzuki"
+                },
+                {
+                  "actor": "天野由梨",
+                  "personId": "4036",
+                  "picture": "https://pictures.betaseries.com/persons/6GfVyLY7womSNFfIQGLbo25WGeB.jpg",
+                  "name": "Peau D'Roquefort",
+                  "guest": false,
+                  "slug": "tian-ye-you-li"
+                },
+                {
+                  "actor": "Kotono Mitsuishi",
+                  "personId": "34333",
+                  "picture": "https://pictures.betaseries.com/persons/mvKgkuAVVMmjkFWlwVQu8KCa80O.jpg",
+                  "name": "Fonne Walkure",
+                  "guest": false,
+                  "slug": "kotono-mitsuishi"
+                },
+                {
+                  "actor": "三橋加奈子",
+                  "personId": "111902",
+                  "picture": "https://pictures.betaseries.com/persons/47itMqJIuXsHnK6FVBl3OoucggL.jpg",
+                  "name": "Samansa Grey",
+                  "guest": false,
+                  "slug": "san-qiao-jia-nai-zi"
+                },
+                {
+                  "actor": "Wakana Yamazaki",
+                  "personId": "118231",
+                  "picture": "https://pictures.betaseries.com/persons/1hBk3w3v1p1VuAHs5On9nvL2rX2.jpg",
+                  "name": "",
+                  "guest": true,
+                  "slug": "wakana-yamazaki"
+                }
+              ],
+              "director": "",
+              "writers": [],
+              "crew": {
+                "writers": [],
+                "directors": []
+              }
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
+}

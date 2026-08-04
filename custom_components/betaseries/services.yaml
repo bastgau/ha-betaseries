@@ -1,0 +1,69 @@
+mark_episode_watched:
+  fields:
+    config_entry: &config_entry
+      required: true
+      selector:
+        config_entry:
+          integration: betaseries
+    episode_id: &episode_id
+      required: true
+      selector:
+        text:
+mark_episode_unwatched:
+  fields:
+    config_entry: *config_entry
+    episode_id: *episode_id
+rate_episode:
+  fields:
+    config_entry: *config_entry
+    episode_id: *episode_id
+    note: &note
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 5
+          step: 1
+          mode: box
+unrate_episode:
+  fields:
+    config_entry: *config_entry
+    episode_id: *episode_id
+mark_season_watched:
+  fields:
+    config_entry: *config_entry
+    show_id: &show_id
+      required: true
+      selector:
+        text:
+    season: &season
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+mark_season_unwatched:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
+    season: *season
+rate_season:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
+    season: *season
+    note: *note
+unrate_season:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
+    season: *season
+rate_show:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
+    note: *note
+unrate_show:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
