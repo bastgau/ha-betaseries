@@ -35,11 +35,10 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret"}
-# What's actually submitted to the "user" step form - USER_INPUT plus the
-# locale field the form also requires, kept separate so USER_INPUT (used to
-# seed MockConfigEntry.data in reauth tests) stays realistic: entry.data
-# never contains "locale", only entry.options does.
+# Credentials sumbitted via the form (includes client_secret for device flow).
 USER_STEP_INPUT = {**USER_INPUT, CONF_LOCALE: "fr"}
+# What's actually stored in entry.data (client_secret is not persisted).
+SAVED_DATA = {CONF_API_KEY: "test-api-key"}
 
 DEVICE_CODE_DATA = DeviceCodeData(
     device_code="device-code",
@@ -76,7 +75,6 @@ async def test_full_flow_success(hass: HomeAssistant, mock_setup_entry: AsyncMoc
     assert result["title"] == "test_user"
     assert result["data"] == {
         CONF_API_KEY: "test-api-key",
-        CONF_CLIENT_SECRET: "test-client-secret",
         "access_token": "token123",
     }
     assert result["options"] == {CONF_LOCALE: "fr"}
@@ -249,7 +247,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "old-token"},
+        data={**SAVED_DATA, "access_token": "old-token"},
         options={CONF_MEMBER_SCAN_INTERVAL: 30},
     )
     entry.add_to_hass(hass)
@@ -287,7 +285,7 @@ async def test_reauth_flow_wrong_account_aborts(  # pylint: disable=unused-argum
     mock_setup_entry: AsyncMock,  # noqa: ARG001
 ) -> None:
     """Abort without touching the entry if reauth completes with a different member id."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data={**USER_INPUT, "access_token": "old-token"})
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data={**SAVED_DATA, "access_token": "old-token"})
     entry.add_to_hass(hass)
 
     mock_auth = AsyncMock()
@@ -328,7 +326,7 @@ async def test_reauth_flow_defaults_locale_to_entrys_current_option(hass: HomeAs
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "old-token"},
+        data={**SAVED_DATA, "access_token": "old-token"},
         options={CONF_LOCALE: "en"},
     )
     entry.add_to_hass(hass)

@@ -16,16 +16,15 @@ from custom_components.betaseries.const import CONF_PLANNING_MONTHS_BEHIND, DOMA
 from custom_components.betaseries.diagnostics import async_get_config_entry_diagnostics
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
 from tests.betaseries.test_sensor import MEMBER_DATA
 from tests.conftest import client_mock
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-USER_INPUT = {
+SAVED_DATA = {
     CONF_API_KEY: "test-api-key",
-    CONF_CLIENT_SECRET: "test-client-secret",
     CONF_ACCESS_TOKEN: "token123",
 }
 
@@ -62,7 +61,7 @@ async def _setup(hass: HomeAssistant, *, planning_fails: bool = False) -> MockCo
         domain=DOMAIN,
         unique_id="42",
         title="test_user",
-        data=USER_INPUT,
+        data=SAVED_DATA,
         options={CONF_PLANNING_MONTHS_BEHIND: 0},
     )
     entry.add_to_hass(hass)
@@ -101,10 +100,8 @@ async def test_diagnostics_redact_every_credential(hass: HomeAssistant) -> None:
 
     data = result["entry"]["data"]
     assert data[CONF_API_KEY] == "**REDACTED**"
-    assert data[CONF_CLIENT_SECRET] == "**REDACTED**"
     assert data[CONF_ACCESS_TOKEN] == "**REDACTED**"
     assert "test-api-key" not in str(result)
-    assert "test-client-secret" not in str(result)
     assert "token123" not in str(result)
 
 

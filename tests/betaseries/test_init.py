@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret"}
+SAVED_DATA = {CONF_API_KEY: "test-api-key"}
 
 MEMBER_DATA = MemberData(
     identity=MemberIdentity(id="42", login="test_user"),
@@ -56,7 +57,7 @@ async def test_setup_entry_creates_coordinator(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "token123"},
+        data={**SAVED_DATA, "access_token": "token123"},
     )
     entry.add_to_hass(hass)
 
@@ -87,7 +88,7 @@ async def test_setup_entry_succeeds_when_only_the_planning_fails(hass: HomeAssis
         domain=DOMAIN,
         unique_id="42",
         title="test_user",
-        data={**USER_INPUT, "access_token": "token123"},
+        data={**SAVED_DATA, "access_token": "token123"},
     )
     entry.add_to_hass(hass)
 
@@ -160,7 +161,7 @@ async def test_setup_entry_retries_when_the_member_data_fails(hass: HomeAssistan
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "token123"},
+        data={**SAVED_DATA, "access_token": "token123"},
     )
     entry.add_to_hass(hass)
 
@@ -179,7 +180,7 @@ async def test_setup_entry_passes_default_locale_to_client(hass: HomeAssistant) 
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "token123"},
+        data={**SAVED_DATA, "access_token": "token123"},
     )
     entry.add_to_hass(hass)
 
@@ -199,7 +200,7 @@ async def test_setup_entry_passes_configured_locale_to_client(hass: HomeAssistan
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "token123"},
+        data={**SAVED_DATA, "access_token": "token123"},
         options={CONF_LOCALE: "en"},
     )
     entry.add_to_hass(hass)
@@ -224,7 +225,7 @@ async def test_remove_entry_deletes_every_cached_store(hass: HomeAssistant, hass
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "token123"},
+        data={**SAVED_DATA, "access_token": "token123"},
     )
     entry.add_to_hass(hass)
 
@@ -254,7 +255,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="42",
-        data={**USER_INPUT, "access_token": "token123"},
+        data={**SAVED_DATA, "access_token": "token123"},
     )
     entry.add_to_hass(hass)
 

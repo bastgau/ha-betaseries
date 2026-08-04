@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret", "access_token": "token123"}
+SAVED_DATA = {CONF_API_KEY: "test-api-key", "access_token": "token123"}
 
 
 def _member_data(*, episodes_to_watch: int, movies_to_watch: int) -> MemberData:

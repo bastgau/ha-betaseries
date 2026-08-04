@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret", "access_token": "token123"}
+SAVED_DATA = {CONF_API_KEY: "test-api-key", "access_token": "token123"}
 
 MEMBER_DATA = MemberData(
     identity=MemberIdentity(id="42", login="test_user"),

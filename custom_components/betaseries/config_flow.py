@@ -286,7 +286,6 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data = {
             CONF_API_KEY: self.api_key,
-            CONF_CLIENT_SECRET: self.client_secret,
             "access_token": self.access_token,
         }
 
