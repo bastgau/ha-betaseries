@@ -57,24 +57,10 @@ jobs:
             requirements-lint.txt
             requirements-test-integration.txt
 
-      # Resolved at run time, not pinned in the requirements file: the question
-      # this workflow answers is "does this commit hold up against the Home
-      # Assistant people are running today". PyPI's info.version is the latest
-      # *stable*, so the 2026.8.0b* betas are excluded by construction - which
-      # matters, since pip honours an exact pin to a pre-release.
-      - name: "Resolve the Home Assistant release in production"
-        id: "ha"
-        run: |
-          version=$(curl -sSf https://pypi.org/pypi/homeassistant/json |
-            python -c "import json,sys; print(json.load(sys.stdin)['info']['version'])")
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "::notice::Checking against Home Assistant $version"
-
       - name: "Install the lint toolchain"
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-lint.txt ${{ matrix.extra_requirements }} \
-            "homeassistant==${{ steps.ha.outputs.version }}"
+          pip install -r requirements-lint.txt -r requirements.txt ${{ matrix.extra_requirements }}
 
       # Every check runs even if an earlier one failed: one push should report
       # every problem at once, rather than making the author fix them one round
