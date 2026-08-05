@@ -3,7 +3,23 @@ name: "Test"
 
 on:
   push:
+    paths:
+      - "custom_components/betaseries/**/*.py"
+      - "tests/**/*.py"
+      - "requirements.txt"
+      - "requirements-test-*.txt"
+      - "pyproject.toml"
+      - ".coveragerc*"
+      - ".github/workflows/test.yml"
   pull_request:
+    paths:
+      - "custom_components/betaseries/**/*.py"
+      - "tests/**/*.py"
+      - "requirements.txt"
+      - "requirements-test-*.txt"
+      - "pyproject.toml"
+      - ".coveragerc*"
+      - ".github/workflows/test.yml"
 
 permissions: {}
 
