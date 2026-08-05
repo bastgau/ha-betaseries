@@ -2,11 +2,11 @@
 name: Validate for HACS
 
 on:
-  push:
   pull_request:
 
 jobs:
   validate-hacs:
+    if: github.actor != 'dependabot[bot]'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v7"
