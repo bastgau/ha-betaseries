@@ -191,6 +191,24 @@ These actions let you mark episodes/seasons as watched or rate episodes/seasons/
 
 `episode_id`/`show_id` match the attributes already exposed by the sensors above (e.g. `episode_id` on **Previous/Next episode airing**), so a value copied from a dashboard card works as-is.
 
+## Troubleshooting
+
+### Setup stuck on "waiting for confirmation" in the Android companion app
+
+Adding the integration from the **Home Assistant Android companion app** can get stuck on the
+device-code confirmation screen even after validating the code on betaseries.com - sometimes
+resurfacing an "authentication process timed out" popup that loops back to the same screen.
+Restarting the flow only issues a new device code from scratch instead of resuming.
+
+This has also been reproduced with Home Assistant's own **Tado** integration, which uses the same
+device-code mechanism, so it is not specific to BetaSeries. The config flow advances its "waiting"
+step through a push event over the app's WebSocket connection; confirming the code requires
+leaving the app (browser or BetaSeries app), which can background it and drop that connection.
+If the event fires while disconnected, it is lost, with no automatic retry on returning to the app.
+
+**Workaround**: set up the integration from a web browser (desktop or mobile) instead of the
+Android companion app. The companion app works normally afterward, once the config entry exists.
+
 ## Support & Contributions
 
 If you encounter any issues or wish to contribute to improving this integration, feel free to open an issue or a pull request on the GitHub repository.

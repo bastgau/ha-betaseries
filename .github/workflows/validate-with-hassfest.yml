@@ -2,11 +2,16 @@
 name: Validate with hassfest
 
 on:
-  push:
   pull_request:
+    branches:
+      - "main"
+    paths:
+      - "custom_components/betaseries/manifest.json"
+      - ".github/workflows/validate-with-hassfest.yml"
 
 jobs:
   validate-hassfest:
+    if: github.actor != 'dependabot[bot]'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v7"
