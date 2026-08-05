@@ -3,6 +3,12 @@ name: Validate for HACS
 
 on:
   pull_request:
+    branches:
+      - "main"
+    paths:
+      - "hacs.json"
+      - "custom_components/betaseries/manifest.json"
+      - ".github/workflows/validate-for-hacs.yml"
 
 jobs:
   validate-hacs:
