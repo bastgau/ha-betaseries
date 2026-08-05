@@ -80,7 +80,7 @@ jobs:
       # every problem at once, rather than making the author fix them one round
       # trip at a time. The job still fails if any of them did.
       - name: "Lint with Ruff"
-        if: "!cancelled()"
+        if: "success()"
         run: ruff check --output-format=github ${{ matrix.paths }}
 
       - name: "Format with Ruff"
