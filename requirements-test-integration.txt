@@ -17,14 +17,9 @@
 # homeassistant==2026.8.0b3), and an exact pin to a pre-release is one pip
 # honours. The workflow's constraint is what keeps CI on stable.
 #
-# Floor at 0.13.353 (the newest release as this line was last bumped - raise
-# it whenever a newer one ships): when no release of this package yet pins
-# the Home Assistant stable the workflow just resolved (it lags a release or
-# two behind - 0.13.353 itself still only pins the 2026.8.0 *beta*), pip does
-# not stop there - it keeps backtracking, past this package ever pinning a
-# matching homeassistant version at all, and lands on whichever ancient
-# release happens not to conflict (verified: without this floor, CI resolved
-# 0.2.1 the day homeassistant 2026.8.0 shipped, which cannot meaningfully
-# test anything against it). The floor turns that silent, broken install
-# into a normal "no matching distribution" failure instead.
-pytest-homeassistant-custom-component>=0.13.353
+# Pinned to 0.13.348 which supports homeassistant==2026.7.4. This version
+# predates the time when pytest-homeassistant-custom-component started pinning
+# unreleased Home Assistant betas, so it's compatible with stable releases.
+# When homeassistant is upgraded, this should be bumped to the newest version
+# that supports the target HA release (check PyPI for the mapping).
+pytest-homeassistant-custom-component==0.13.348
