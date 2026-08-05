@@ -224,8 +224,11 @@ async def test_sensor_reports_the_totals_and_lists_the_shows(hass: HomeAssistant
     assert shows[0]["episodes"] == [
         {
             "id": "3905073",
+            "season": 2,
+            "number": 1,
             "code": "S02E01",
             "title": "Urlaub",
+            "description": "A thrilling episode summary.",
             "air_date": "2026-05-29",
             "platforms": ["Netflix"],
             "resource_url": "https://www.betaseries.com/episode/3905073",
