@@ -25,6 +25,7 @@ from .const import (
     ATTR_SEASON,
     ATTR_SHOW_ID,
     DOMAIN,
+    SERVICE_DELETE_TOKEN,
     SERVICE_MARK_EPISODE_UNWATCHED,
     SERVICE_MARK_EPISODE_WATCHED,
     SERVICE_MARK_SEASON_UNWATCHED,
@@ -80,6 +81,12 @@ _SHOW_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_SHOW_ID): TextSelector(),
+    }
+)
+
+_CONFIG_ENTRY_ONLY_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
     }
 )
 
@@ -341,6 +348,33 @@ async def _unrate_show(call: ServiceCall) -> None:
         _raise_for_client_error(err)
 
 
+async def _delete_token(call: ServiceCall) -> None:
+    """Destroy the account's active access token, then trigger reauthentication.
+
+    Irreversible (see Client.delete_token) - there is no corresponding
+    "create_token" service, since obtaining a new one always requires the
+    config flow (device flow or login/password, CLAUDE.md §3), not just an
+    API call. The immediate refresh below is what actually surfaces the
+    reauth prompt right away: MemberCoordinator's own AuthError handling
+    raises ConfigEntryAuthFailed, which DataUpdateCoordinator turns into a
+    reauth flow without propagating back here, so this call still succeeds.
+
+    Args:
+        call (ServiceCall): The service call data.
+
+    Returns:
+        None
+
+    """
+    entry = _get_entry(call.hass, call)
+    try:
+        await entry.runtime_data.member.client.delete_token()
+    except Error as err:
+        _raise_for_client_error(err)
+    else:
+        await entry.runtime_data.member.async_request_refresh()
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the BetaSeries services, once per Home Assistant run.
@@ -371,3 +405,4 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_UNRATE_SEASON, _unrate_season, schema=_SEASON_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_RATE_SHOW, _rate_show, schema=_RATE_SHOW_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_UNRATE_SHOW, _unrate_show, schema=_SHOW_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_TOKEN, _delete_token, schema=_CONFIG_ENTRY_ONLY_SCHEMA)

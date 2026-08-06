@@ -31,6 +31,7 @@ from .const import (
     ERROR_CODE_NOT_WATCHED,
     INVALID_CREDENTIALS_ERROR_CODES,
     MEMBERS_BADGES_ENDPOINT,
+    MEMBERS_DESTROY_ENDPOINT,
     MEMBERS_INFOS_ENDPOINT,
     PLANNING_MEMBER_ENDPOINT,
     REQUEST_TIMEOUT_SECONDS,
@@ -92,7 +93,7 @@ def _to_int(value: Any, default: int = 0) -> int:
         return default
 
 
-class Client:
+class Client:  # pylint: disable=too-many-public-methods
     """Fetch authenticated BetaSeries member data.
 
     More endpoints (services) will be added as later milestones (v3) grow
@@ -679,10 +680,6 @@ class Client:
     async def mark_season_watched(self, show_id: str, season: int) -> None:
         """Mark every episode of a season as watched (POST /seasons/watched).
 
-        Only one show/season per call - unlike the episode-level actions,
-        this endpoint does not accept a bulk list (verified via Bruno,
-        bruno/Seasons/watched.bru).
-
         Args:
             show_id (str): BetaSeries show id.
             season (int): Season number.
@@ -767,6 +764,15 @@ class Client:
 
         """
         await self._delete(SHOWS_NOTE_ENDPOINT, "unrate show", {"id": show_id})
+
+    async def delete_token(self) -> None:
+        """Destroy the active access token (POST /members/destroy).
+
+        Returns:
+            None
+
+        """
+        await self._post(MEMBERS_DESTROY_ENDPOINT, "delete token", {})
 
     @staticmethod
     def _parse_badge(badge: dict[str, Any]) -> Badge:

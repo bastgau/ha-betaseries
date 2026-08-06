@@ -86,6 +86,7 @@ def _client_mock() -> AsyncMock:
         ("unrate_season", {"show_id": "38605", "season": 2}, "unrate_season", ("38605", 2)),
         ("rate_show", {"show_id": "38605", "note": 4}, "rate_show", ("38605", 4)),
         ("unrate_show", {"show_id": "38605"}, "unrate_show", ("38605",)),
+        ("delete_token", {}, "delete_token", ()),
     ],
 )
 async def test_service_calls_the_matching_client_method(
@@ -155,6 +156,19 @@ async def test_rating_services_do_not_refresh_any_coordinator(
     assert mock_client.fetch_watch_list.await_count == watch_list_calls_before
 
 
+async def test_delete_token_refreshes_member_but_not_watch_list(hass: HomeAssistant) -> None:
+    """Refresh MemberCoordinator only: it is what surfaces the reauth prompt, watch_list has no auth of its own."""
+    mock_client = _client_mock()
+    entry = await _async_setup(hass, mock_client)
+    fetch_calls_before = mock_client.fetch_member_data.await_count
+    watch_list_calls_before = mock_client.fetch_watch_list.await_count
+
+    await hass.services.async_call(DOMAIN, "delete_token", {"config_entry": entry.entry_id}, blocking=True)
+
+    assert mock_client.fetch_member_data.await_count > fetch_calls_before
+    assert mock_client.fetch_watch_list.await_count == watch_list_calls_before
+
+
 @pytest.mark.parametrize(
     ("service", "data", "method"),
     [
@@ -168,6 +182,7 @@ async def test_rating_services_do_not_refresh_any_coordinator(
         ("unrate_season", {"show_id": "38605", "season": 2}, "unrate_season"),
         ("rate_show", {"show_id": "38605", "note": 4}, "rate_show"),
         ("unrate_show", {"show_id": "38605"}, "unrate_show"),
+        ("delete_token", {}, "delete_token"),
     ],
 )
 async def test_each_service_surfaces_a_client_error(

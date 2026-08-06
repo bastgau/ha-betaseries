@@ -396,6 +396,16 @@
           "description": "L'identifiant de la série BetaSeries."
         }
       }
+    },
+    "delete_token": {
+      "name": "Supprimer le token d'accès",
+      "description": "Détruit le token d'accès actif du compte. Irréversible - l'entrée nécessitera une réauthentification par la suite.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        }
+      }
     }
   },
   "exceptions": {
