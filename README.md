@@ -18,7 +18,7 @@ This integration connects Home Assistant to your [BetaSeries](https://www.betase
 ## Requirements
 
 - Home Assistant **2026.7.0** or newer.
-- A personal **BetaSeries API application** (`client_id` and `client_secret`) created at <https://www.betaseries.com/api/>
+- A personal **BetaSeries API application** (`client_id` and `client_secret`) created at <https://www.betaseries.com/api/>. The `client_secret` is only required for the device code authentication method below; the login/password method only needs the `client_id`.
 
 > [!WARNING]
 > Your `client_id` and `client_secret` are personal credentials. Never publish or share them in GitHub repositories, forums, screenshots, logs, or configuration examples.
@@ -54,12 +54,17 @@ Before configuring the integration, create your own API application on BetaSerie
 
 ## Configuration
 
-During setup:
+During setup, choose one of two authentication methods:
 
-1. Enter your BetaSeries `client_id` and `client_secret`.
-2. A device code is displayed.
-3. Visit BetaSeries and validate the code.
-4. Return to Home Assistant to complete authentication.
+- **Device code (recommended)**:
+  1. Enter your BetaSeries `client_id` and `client_secret`.
+  2. A device code is displayed.
+  3. Visit BetaSeries and validate the code.
+  4. Return to Home Assistant to complete authentication.
+- **Login and password**: enter your BetaSeries `client_id`, plus your BetaSeries account login and password. This is a single step, no code to validate - offered because the device code flow can get stuck in some mobile app setups (e.g. Android) waiting for the browser to hand control back to Home Assistant.
+
+  > [!WARNING]
+  > Unlike the device code, BetaSeries never revokes the token returned by this method - not even if you later change your account password. Prefer the device code method unless it doesn't work for you.
 
 From the integration options, you can adjust afterwards:
 
@@ -208,6 +213,9 @@ If the event fires while disconnected, it is lost, with no automatic retry on re
 
 **Workaround**: set up the integration from a web browser (desktop or mobile) instead of the
 Android companion app. The companion app works normally afterward, once the config entry exists.
+Alternatively, pick the **login and password** authentication method during setup: it has no
+"waiting for confirmation" step to get stuck on, at the cost of a token BetaSeries never revokes
+(see [Configuration](#configuration)).
 
 ## Support & Contributions
 
