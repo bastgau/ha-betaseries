@@ -5,19 +5,19 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/members/auth?login={{login}}&password={{password}}
-  body: none
+  url: {{baseUrl}}/members/auth
+  body: formUrlEncoded
   auth: inherit
-}
-
-params:query {
-  login: {{login}}
-  password: {{password}}
 }
 
 headers {
   X-BetaSeries-Key: {{apiKey}}
   X-BetaSeries-Version: 3.0
+}
+
+body:form-urlencoded {
+  login: {{login}}
+  password: {{password}}
 }
 
 script:post-response {
