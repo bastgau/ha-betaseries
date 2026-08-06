@@ -26,8 +26,8 @@ import re
 import sys
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SCAN_DIR = REPO_ROOT / "bruno"
-
+DEFAULT_SCAN_DIR = REPO_ROOT / "custom_components" / "betaseries" / "betaseries" / "bruno"
+print(DEFAULT_SCAN_DIR)
 # Response headers that are non-reproducible, internal, or leak
 # credential fragments. Never pertinent to a versioned API example.
 NOISY_HEADERS = {

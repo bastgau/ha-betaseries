@@ -654,6 +654,20 @@ amis/blocage, favoris, masquer épisode/saison, marquer téléchargé, et tout c
 d'usage fort identifié : ajouter une série à la liste via une phrase Assist, ex.
 _« Ajoute Severance à ma liste BetaSeries »_).
 
+### `delete_token` - hors périmètre Show/Episode/Season
+
+Onzième service, à part des dix ci-dessus : il ne cible ni série, ni épisode, ni saison, mais le
+compte lui-même. `POST /members/destroy` (vérifié via Bruno, `bruno/Members/token-destroy.bru`) -
+détruit le token d'accès actif, sans paramètre. Champ `config_entry` seul (`ConfigEntrySelector`,
+même pattern que les dix autres).
+
+**Irréversible** : pas de `create_token` correspondant - obtenir un nouveau token repasse
+obligatoirement par le config flow (device code ou login/mot de passe), il n'y a pas de geste API
+équivalent. Après un appel réussi, refresh de `MemberCoordinator` uniquement (pas
+`WatchListCoordinator`, qui n'a pas d'authentification propre) - ce refresh échoue aussitôt avec le
+token qui vient d'être détruit, ce qui déclenche immédiatement le reauth plutôt que d'attendre le
+prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme déjà en place, voir §3).
+
 ## 9. Arbitrages - tous tranchés ✅
 
 1. **Enabled par défaut** : tous les sensors sont `enabled` par défaut (pas de noyau restreint).
