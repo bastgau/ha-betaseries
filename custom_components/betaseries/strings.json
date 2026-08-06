@@ -60,7 +60,8 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "progress": {
       "wait_for_device": "To authenticate, open the following URL and log in to BetaSeries:\n{url}\n\nThen enter this code if it is not filled in automatically:\n\n```{code}```"

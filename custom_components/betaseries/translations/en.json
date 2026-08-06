@@ -60,7 +60,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication"
     },
     "progress": {
       "wait_for_device": "To authenticate, open the following URL and log in to BetaSeries:\n{url}\n\nThen enter this code if it is not filled in automatically:\n\n```{code}```"
