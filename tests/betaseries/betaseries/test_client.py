@@ -1462,3 +1462,24 @@ async def test_unrate_show_failure(status: int) -> None:
 
     with pytest.raises(Error):
         await client.unrate_show("38605")
+
+
+async def test_delete_token_sends_no_fields() -> None:
+    """POST /members/destroy with no body fields - the token itself is only in the Authorization header."""
+    session = FakeSession(post_responses=[FakeResponse(200, {"errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.delete_token()
+
+    _args, kwargs = session.post_calls[0]
+    assert kwargs["data"] == {}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_delete_token_failure(status: int) -> None:
+    """Raise Error when destroying the token fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.delete_token()

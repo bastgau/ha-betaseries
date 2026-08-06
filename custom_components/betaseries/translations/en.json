@@ -31,7 +31,7 @@
       },
       "password_credentials": {
         "title": "Connect to BetaSeries",
-        "description": "Enter the API key from your personal BetaSeries API application (create one at {betaserie_api_url}), and your BetaSeries account login and password. Warning: unlike the device code, this returns a token BetaSeries never revokes - not even if you later change your account password.",
+        "description": "Enter the API key from your personal BetaSeries API application (create one at {betaserie_api_url}), and your BetaSeries account login and password.",
         "data": {
           "api_key": "API key",
           "username": "Login",
@@ -394,6 +394,16 @@
         "show_id": {
           "name": "Show ID",
           "description": "The BetaSeries show id."
+        }
+      }
+    },
+    "delete_token": {
+      "name": "Delete access token",
+      "description": "Destroys the account's active access token. Irreversible - the entry will need reauthentication afterward.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
         }
       }
     }
