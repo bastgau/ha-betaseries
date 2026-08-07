@@ -5,6 +5,11 @@ from __future__ import annotations
 BASE_URL = "https://api.betaseries.com"
 OAUTH_DEVICE_ENDPOINT = "/oauth/device"
 OAUTH_TOKEN_ENDPOINT = "/oauth/access_token"  # noqa: S105 (endpoint path, not a secret)
+# Login/password alternative to the device flow (see CLAUDE.md §3): returns a
+# bearer token directly, no polling, but that token is never revoked - not
+# even by a password change - so this is offered as a deliberate trade-off,
+# not a replacement.
+MEMBERS_AUTH_ENDPOINT = "/members/auth"
 MEMBERS_INFOS_ENDPOINT = "/members/infos"
 PLANNING_MEMBER_ENDPOINT = "/planning/member"
 EPISODES_LIST_ENDPOINT = "/episodes/list"

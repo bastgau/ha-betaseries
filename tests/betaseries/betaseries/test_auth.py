@@ -197,6 +197,47 @@ async def test_poll_for_token_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
         await auth.poll_for_token("device-code", expires_in=0, interval=5)
 
 
+async def test_authenticate_with_password_success() -> None:
+    """Return the token and MemberIdentity built from the JSON payload on HTTP 200."""
+    session = FakeSession(
+        post_responses=[
+            FakeResponse(
+                200,
+                {
+                    "user": {"id": 42, "login": "test_user", "xp": 5980, "in_account": False},
+                    "token": "token123",
+                    "hash": "abc",
+                    "errors": [],
+                },
+            )
+        ]
+    )
+    auth = Auth(session, API_KEY)  # type: ignore[arg-type]
+
+    token, identity = await auth.authenticate_with_password("test_user", "hunter2")
+
+    assert token == "token123"
+    assert identity.id == "42"
+    assert identity.login == "test_user"
+    # login/password are sent as query params (verified via Bruno,
+    # bruno/Members/auth.bru), not as a form body - and the password is sent
+    # as its MD5 hash, not in cleartext (verified against the real API).
+    assert session.post_calls[0][1]["params"] == {
+        "login": "test_user",
+        "password": "2ab96390c7dbe3439de74d0c9b0b1767",
+    }
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+async def test_authenticate_with_password_failure(status: int) -> None:
+    """Raise AuthError when the login/password request fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    auth = Auth(session, API_KEY)  # type: ignore[arg-type]
+
+    with pytest.raises(AuthError):
+        await auth.authenticate_with_password("test_user", "wrong-password")
+
+
 async def test_fetch_member_identity_success() -> None:
     """Return a MemberIdentity built from the JSON payload on HTTP 200."""
     session = FakeSession(get_responses=[FakeResponse(200, {"member": {"id": 42, "login": "test_user"}})])
@@ -225,13 +266,14 @@ _TRANSPORT_CALLS: list[tuple[str, Callable[[Auth], Coroutine[Any, Any, object]]]
     ("post_responses", lambda auth: auth.request_device_code()),
     ("post_responses", lambda auth: auth.poll_for_token("device-code", 1800, 0)),
     ("get_responses", lambda auth: auth.fetch_member_identity("token123")),
+    ("post_responses", lambda auth: auth.authenticate_with_password("test_user", "hunter2")),
 ]
 
 
 @pytest.mark.parametrize(
     ("queue_kwarg", "call"),
     _TRANSPORT_CALLS,
-    ids=["request_device_code", "poll_for_token", "fetch_member_identity"],
+    ids=["request_device_code", "poll_for_token", "fetch_member_identity", "authenticate_with_password"],
 )
 @pytest.mark.parametrize(
     "transport_error",

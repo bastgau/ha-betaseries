@@ -1,12 +1,18 @@
-"""Config flow for the BetaSeries integration (OAuth device flow).
+"""Config flow for the BetaSeries integration (device flow, or login/password).
 
-Modeled after homeassistant.components.tado.config_flow, with two
-differences documented in CLAUDE.md §3:
+Modeled after homeassistant.components.tado.config_flow, with differences
+documented in CLAUDE.md §3:
 - BetaSeries requires an initial form (api_key + client_secret) before the
   device code can be requested, unlike Tado which uses baked-in credentials.
 - The expires_in guard rail is implemented in the betaseries sub-package
   (Auth), not here, since there is no underlying library to do it
   for us.
+- A first "user" menu step lets the user pick between the device flow and a
+  login/password alternative (Auth.authenticate_with_password) - added
+  because the device flow can get stuck on some Android setups waiting for
+  the browser to hand control back to the Home Assistant app. Both paths
+  converge on _async_create_or_update_entry() once an access token and
+  member identity are known.
 """
 
 from __future__ import annotations
@@ -21,7 +27,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -40,6 +46,7 @@ from .betaseries import (
     AuthError as BetaSeriesAuthError,
     AuthTimeoutError as BetaSeriesAuthTimeoutError,
     DeviceCodeData,
+    MemberIdentity,
 )
 from .const import (
     API_URL,
@@ -84,25 +91,60 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
 
-def _user_data_schema(default_locale: str) -> vol.Schema:
-    """Build the credentials + locale form schema for the "user" step.
+def _locale_schema_entry(default_locale: str) -> dict[vol.Marker, Any]:
+    """Build the locale field shared by every credentials form.
 
     Args:
         default_locale (str): Locale pre-selected in the form (DEFAULT_LOCALE, or the entry's current option during reauth).
 
     Returns:
-        vol.Schema: The "user" step's form schema.
+        dict[vol.Marker, Any]: A single-entry schema fragment, meant to be spread into a vol.Schema dict.
+
+    """
+    return {
+        vol.Required(CONF_LOCALE, default=default_locale): SelectSelector(
+            SelectSelectorConfig(
+                options=SUPPORTED_LOCALES, mode=SelectSelectorMode.DROPDOWN, translation_key=CONF_LOCALE
+            )
+        )
+    }
+
+
+def _device_data_schema(default_locale: str) -> vol.Schema:
+    """Build the api_key + client_secret + locale form schema for the "device_credentials" step.
+
+    Args:
+        default_locale (str): Locale pre-selected in the form (DEFAULT_LOCALE, or the entry's current option during reauth).
+
+    Returns:
+        vol.Schema: The "device_credentials" step's form schema.
 
     """
     return vol.Schema(
         {
             vol.Required(CONF_API_KEY): str,
             vol.Required(CONF_CLIENT_SECRET): str,
-            vol.Required(CONF_LOCALE, default=default_locale): SelectSelector(
-                SelectSelectorConfig(
-                    options=SUPPORTED_LOCALES, mode=SelectSelectorMode.DROPDOWN, translation_key=CONF_LOCALE
-                )
-            ),
+            **_locale_schema_entry(default_locale),
+        }
+    )
+
+
+def _password_data_schema(default_locale: str) -> vol.Schema:
+    """Build the api_key + login + password + locale form schema for the "password_credentials" step.
+
+    Args:
+        default_locale (str): Locale pre-selected in the form (DEFAULT_LOCALE, or the entry's current option during reauth).
+
+    Returns:
+        vol.Schema: The "password_credentials" step's form schema.
+
+    """
+    return vol.Schema(
+        {
+            vol.Required(CONF_API_KEY): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            **_locale_schema_entry(default_locale),
         }
     )
 
@@ -173,7 +215,40 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         return BetaSeriesOptionsFlow()
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_user(  # pylint: disable=unused-argument
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick between the device flow and login/password.
+
+        Two independent trade-offs, both documented in CLAUDE.md §3: the
+        device flow's client_secret can only be rotated by asking BetaSeries
+        support to delete and recreate the API application, and it can get
+        stuck on some Android setups. The login/password alternative returns
+        a token BetaSeries never revokes, not even on a password change. This
+        step only offers the choice; it is made deliberately by the user, not
+        assumed here.
+
+        Args:
+            user_input (dict[str, Any] | None): Unused; this step never shows a form.
+
+        Returns:
+            ConfigFlowResult: The authentication method menu.
+
+        """
+        return self.async_show_menu(step_id="user", menu_options=["device_credentials", "password_credentials"])
+
+    def _default_locale(self) -> str:
+        """Return the locale to pre-select on a credentials form.
+
+        Returns:
+            str: The reauthenticated entry's current locale option, or DEFAULT_LOCALE for a new entry.
+
+        """
+        if self.source == SOURCE_REAUTH:
+            return self._get_reauth_entry().options.get(CONF_LOCALE, DEFAULT_LOCALE)
+        return DEFAULT_LOCALE
+
+    async def async_step_device_credentials(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Collect the BetaSeries API credentials before starting the device flow.
 
         Args:
@@ -183,8 +258,6 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             ConfigFlowResult: The next flow step.
 
         """
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             self.api_key = user_input[CONF_API_KEY]
             self.client_secret = user_input[CONF_CLIENT_SECRET]
@@ -193,22 +266,89 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 self.device_code_data = await self.auth.request_device_code()
             except BetaSeriesAuthError:
-                errors["base"] = "cannot_connect"
-            else:
-                return await self.async_step_device_code()
-
-        default_locale = DEFAULT_LOCALE
-        if self.source == SOURCE_REAUTH:
-            default_locale = self._get_reauth_entry().options.get(CONF_LOCALE, DEFAULT_LOCALE)
+                return await self.async_step_device_credentials_error()
+            return await self.async_step_device_code()
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=_user_data_schema(default_locale),
-            errors=errors,
+            step_id="device_credentials",
+            data_schema=_device_data_schema(self._default_locale()),
             description_placeholders={
                 "betaserie_api_url": API_URL,
             },
         )
+
+    async def async_step_device_credentials_error(  # pylint: disable=unused-argument
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Offer to retry the device credentials or switch method, after a rejected api_key/client_secret.
+
+        A real menu rather than redisplaying the credentials form with an
+        inline error: a stuck/abandoned flow reopened later (e.g. via reauth,
+        which resumes an in-progress flow instead of starting fresh) would
+        otherwise strand the user on that same form with no way back to the
+        method choice - this menu is always the answer either way.
+
+        Args:
+            user_input (dict[str, Any] | None): Unused; this step never shows a form, only a menu.
+
+        Returns:
+            ConfigFlowResult: The retry/switch-method choice.
+
+        """
+        return self.async_show_menu(step_id="device_credentials_error", menu_options=["device_credentials", "user"])
+
+    async def async_step_password_credentials(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Collect the BetaSeries API key and account login/password, and authenticate directly.
+
+        Unlike the device flow this is a single blocking request: no code to
+        validate on the BetaSeries website, no polling. See CLAUDE.md §3 for
+        the trade-off this carries (the returned token is never revoked, not
+        even by a password change) - already surfaced to the user on the
+        "user" menu step, not repeated as a warning here.
+
+        Args:
+            user_input (dict[str, Any] | None): Form data, or None to show the form.
+
+        Returns:
+            ConfigFlowResult: The created/updated entry, or the credentials form.
+
+        """
+        if user_input is not None:
+            self.api_key = user_input[CONF_API_KEY]
+            self.locale = user_input[CONF_LOCALE]
+            auth = BetaSeriesAuth(async_get_clientsession(self.hass), self.api_key)
+            try:
+                self.access_token, identity = await auth.authenticate_with_password(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+            except BetaSeriesAuthError:
+                return await self.async_step_password_credentials_error()
+            return await self._async_create_or_update_entry(identity)
+
+        return self.async_show_form(
+            step_id="password_credentials",
+            data_schema=_password_data_schema(self._default_locale()),
+            description_placeholders={
+                "betaserie_api_url": API_URL,
+            },
+        )
+
+    async def async_step_password_credentials_error(  # pylint: disable=unused-argument
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Offer to retry the login/password or switch method, after rejected credentials.
+
+        See async_step_device_credentials_error's docstring - same reasoning,
+        mirrored for the login/password path.
+
+        Args:
+            user_input (dict[str, Any] | None): Unused; this step never shows a form, only a menu.
+
+        Returns:
+            ConfigFlowResult: The retry/switch-method choice.
+
+        """
+        return self.async_show_menu(step_id="password_credentials_error", menu_options=["password_credentials", "user"])
 
     async def async_step_device_code(  # pylint: disable=unused-argument
         self, user_input: dict[str, Any] | None = None
@@ -222,11 +362,11 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             ConfigFlowResult: The progress screen, or the next step once done.
 
         Raises:
-            RuntimeError: If reached before async_step_user set up the auth client.
+            RuntimeError: If reached before async_step_device_credentials set up the auth client.
 
         """
         if self.auth is None or self.device_code_data is None:
-            # Cannot happen: this step is only reached from async_step_user,
+            # Cannot happen: this step is only reached from async_step_device_credentials,
             # which always sets both before returning here.
             raise RuntimeError  # pragma: no cover
 
@@ -264,6 +404,10 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Fetch the member identity and create (or update) the config entry.
 
+        Only reached from the device flow: the login/password path already
+        gets the member identity in its own response and goes straight to
+        _async_create_or_update_entry() instead (see async_step_password_credentials).
+
         Args:
             user_input (dict[str, Any] | None): Unused; this step never shows a form.
 
@@ -283,6 +427,29 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             identity = await self.auth.fetch_member_identity(self.access_token)
         except BetaSeriesAuthError:
             return self.async_abort(reason="cannot_connect")
+
+        return await self._async_create_or_update_entry(identity)
+
+    async def _async_create_or_update_entry(self, identity: MemberIdentity) -> ConfigFlowResult:
+        """Create the entry (or update it during reauth) from a known access token and member identity.
+
+        Shared by both authentication paths once each has its own token and
+        identity: the device flow via async_step_finish_login, the
+        login/password flow directly from async_step_password_credentials.
+
+        Args:
+            identity (MemberIdentity): The authenticated member's id and login.
+
+        Returns:
+            ConfigFlowResult: The created/updated entry, or an abort result (unique id conflict).
+
+        Raises:
+            RuntimeError: If reached before an access token was obtained.
+
+        """
+        if self.access_token is None:
+            # Cannot happen: both callers set it before calling this method.
+            raise RuntimeError  # pragma: no cover
 
         data = {
             CONF_API_KEY: self.api_key,
@@ -309,11 +476,18 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Let the user retry after the device code expired.
 
         HA's FlowManager.async_configure loops on SHOW_PROGRESS_DONE, re-passing
-        the *original* user_input from async_step_user (never None, since our
-        flow has a real credentials form). So user_input can't be used here to
-        tell "just arrived from progress" apart from "form submitted" -- unlike
-        Tado, whose device flow has no credentials form and so never hits this.
-        self.login_task is used instead: it is only non-None on the first visit.
+        the *original* user_input from async_step_device_credentials (never
+        None, since our flow has a real credentials form). So user_input can't
+        be used here to tell "just arrived from progress" apart from "form
+        submitted" -- unlike Tado, whose device flow has no credentials form
+        and so never hits this. self.login_task is used instead: it is only
+        non-None on the first visit.
+
+        Retrying re-shows the method menu rather than jumping straight back
+        into the device credentials form: a timeout here is exactly the
+        symptom of the Android issue this whole menu step exists for, so the
+        user gets a chance to switch to login/password instead of retrying
+        the same thing.
 
         Args:
             user_input (dict[str, Any] | None): Unused; see note above.

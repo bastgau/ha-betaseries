@@ -3,6 +3,14 @@
     "step": {
       "user": {
         "title": "Connect to BetaSeries",
+        "description": "Choose how to authenticate with BetaSeries.",
+        "menu_options": {
+          "device_credentials": "Device code (recommended)",
+          "password_credentials": "Login and password"
+        }
+      },
+      "device_credentials": {
+        "title": "Connect to BetaSeries",
         "description": "Enter the API key and client secret from your personal BetaSeries API application (create one at {betaserie_api_url}).",
         "data": {
           "api_key": "API key",
@@ -11,6 +19,35 @@
         },
         "data_description": {
           "locale": "Language BetaSeries responses (genres, descriptions, error messages) are returned in. Changeable later in the integration's options. Note: BetaSeries currently ignores this setting and replies in your BetaSeries account's own language, so changing it may have no visible effect."
+        }
+      },
+      "device_credentials_error": {
+        "title": "Could not connect",
+        "description": "Something went wrong while authenticating with BetaSeries. Try again, or choose a different authentication method.",
+        "menu_options": {
+          "device_credentials": "Try again",
+          "user": "Choose a different method"
+        }
+      },
+      "password_credentials": {
+        "title": "Connect to BetaSeries",
+        "description": "Enter the API key from your personal BetaSeries API application (create one at {betaserie_api_url}), and your BetaSeries account login and password. Warning: unlike the device code, this returns a token BetaSeries never revokes - not even if you later change your account password.",
+        "data": {
+          "api_key": "API key",
+          "username": "Login",
+          "password": "Password",
+          "locale": "Preferred language"
+        },
+        "data_description": {
+          "locale": "Language BetaSeries responses (genres, descriptions, error messages) are returned in. Changeable later in the integration's options. Note: BetaSeries currently ignores this setting and replies in your BetaSeries account's own language, so changing it may have no visible effect."
+        }
+      },
+      "password_credentials_error": {
+        "title": "Could not connect",
+        "description": "Something went wrong while authenticating with BetaSeries. Try again, or choose a different authentication method.",
+        "menu_options": {
+          "password_credentials": "Try again",
+          "user": "Choose a different method"
         }
       },
       "timeout": {
@@ -23,7 +60,8 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "progress": {
       "wait_for_device": "To authenticate, open the following URL and log in to BetaSeries:\n{url}\n\nThen enter this code if it is not filled in automatically:\n\n```{code}```"
