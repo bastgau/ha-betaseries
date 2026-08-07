@@ -63,8 +63,8 @@ During setup, choose one of two authentication methods:
   4. Return to Home Assistant to complete authentication.
 - **Login and password**: enter your BetaSeries `client_id`, plus your BetaSeries account login and password. This is a single step, no code to validate - offered because the device code flow can get stuck in some mobile app setups (e.g. Android) waiting for the browser to hand control back to Home Assistant.
 
-  > [!WARNING]
-  > Unlike the device code, BetaSeries never revokes the token returned by this method - not even if you later change your account password. Prefer the device code method unless it doesn't work for you.
+> [!WARNING]
+> Unlike the device code, BetaSeries never revokes the token returned by this method - not even if you later change your account password. Prefer the device code method unless it doesn't work for you.
 
 From the integration options, you can adjust afterwards:
 
