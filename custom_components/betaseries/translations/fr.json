@@ -3,6 +3,14 @@
     "step": {
       "user": {
         "title": "Connexion à BetaSeries",
+        "description": "Choisissez comment vous authentifier auprès de BetaSeries.",
+        "menu_options": {
+          "device_credentials": "Code d'appareil (recommandé)",
+          "password_credentials": "Identifiant et mot de passe"
+        }
+      },
+      "device_credentials": {
+        "title": "Connexion à BetaSeries",
         "description": "Renseignez la clé API et le secret client de votre application API BetaSeries personnelle (à créer sur {betaserie_api_url}).",
         "data": {
           "api_key": "Clé API",
@@ -11,6 +19,35 @@
         },
         "data_description": {
           "locale": "Langue dans laquelle BetaSeries renvoie ses réponses (genres, descriptions, messages d'erreur). Modifiable plus tard dans les options de l'intégration. Remarque : BetaSeries ignore actuellement ce réglage et répond dans la langue de votre compte BetaSeries ; le modifier peut n'avoir aucun effet visible."
+        }
+      },
+      "device_credentials_error": {
+        "title": "Connexion impossible",
+        "description": "Quelque chose s'est mal passé lors de l'authentification à BetaSeries. Réessayez, ou choisissez une autre méthode d'authentification.",
+        "menu_options": {
+          "device_credentials": "Réessayer",
+          "user": "Choisir une autre méthode"
+        }
+      },
+      "password_credentials": {
+        "title": "Connexion à BetaSeries",
+        "description": "Renseignez la clé API de votre application API BetaSeries personnelle (à créer sur {betaserie_api_url}), ainsi que l'identifiant et le mot de passe de votre compte BetaSeries. Attention : contrairement au code d'appareil, ce mode renvoie un jeton que BetaSeries ne révoque jamais - même après un changement de mot de passe de votre compte.",
+        "data": {
+          "api_key": "Clé API",
+          "username": "Identifiant",
+          "password": "Mot de passe",
+          "locale": "Langue préférée"
+        },
+        "data_description": {
+          "locale": "Langue dans laquelle BetaSeries renvoie ses réponses (genres, descriptions, messages d'erreur). Modifiable plus tard dans les options de l'intégration. Remarque : BetaSeries ignore actuellement ce réglage et répond dans la langue de votre compte BetaSeries ; le modifier peut n'avoir aucun effet visible."
+        }
+      },
+      "password_credentials_error": {
+        "title": "Connexion impossible",
+        "description": "Quelque chose s'est mal passé lors de l'authentification à BetaSeries. Réessayez, ou choisissez une autre méthode d'authentification.",
+        "menu_options": {
+          "password_credentials": "Réessayer",
+          "user": "Choisir une autre méthode"
         }
       },
       "timeout": {
@@ -23,7 +60,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Échec de la connexion"
+      "cannot_connect": "Échec de la connexion",
+      "invalid_auth": "Authentification invalide"
     },
     "progress": {
       "wait_for_device": "Pour vous authentifier, ouvrez l'URL suivante et connectez-vous à BetaSeries :\n{url}\n\nSaisissez ensuite ce code s'il n'est pas déjà pré-rempli :\n\n```{code}```"
@@ -356,6 +394,16 @@
         "show_id": {
           "name": "Identifiant de série",
           "description": "L'identifiant de la série BetaSeries."
+        }
+      }
+    },
+    "delete_token": {
+      "name": "Supprimer le token d'accès",
+      "description": "Détruit le token d'accès actif du compte. Irréversible - l'entrée nécessitera une réauthentification par la suite.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
         }
       }
     }

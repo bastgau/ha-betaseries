@@ -584,7 +584,10 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
             "season": episode.season,
             "number": episode.number,
             "title": episode.title,
+            "description": episode.description,
             "show_title": episode.show.title,
+            "show_resource_url": episode.show.resource_url,
+            "show_description": episode.show.description,
             "platforms": list(episode.platforms),
             "resource_url": episode.resource_url,
         }
@@ -712,8 +715,11 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
                     "episodes": [
                         {
                             "id": episode.id,
+                            "season": episode.season,
+                            "number": episode.number,
                             "code": episode.code,
                             "title": episode.title,
+                            "description": episode.description,
                             "air_date": episode.air_date.isoformat(),
                             "platforms": list(episode.platforms),
                             "resource_url": episode.resource_url,
@@ -840,6 +846,7 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
             "season": episode.season,
             "number": episode.number,
             "title": episode.title,
+            "description": episode.description,
             "show_title": show.title,
             "air_date": episode.air_date.isoformat(),
             "episode_remaining": show.remaining,

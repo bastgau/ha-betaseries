@@ -8,6 +8,7 @@ HTTP library is used underneath (see the sub-package README).
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import time
 
 import aiohttp
@@ -16,6 +17,7 @@ from .const import (
     API_VERSION,
     BASE_URL,
     ERROR_CODE_PENDING,
+    MEMBERS_AUTH_ENDPOINT,
     MEMBERS_INFOS_ENDPOINT,
     OAUTH_DEVICE_ENDPOINT,
     OAUTH_TOKEN_ENDPOINT,
@@ -44,17 +46,17 @@ class Auth:
     Attributes:
         _session (aiohttp.ClientSession): Injected HTTP session.
         _api_key (str): BetaSeries API key (client_id).
-        _client_secret (str): BetaSeries API client secret.
+        _client_secret (str): BetaSeries API client secret, unused by authenticate_with_password.
 
     """
 
-    def __init__(self, session: aiohttp.ClientSession, api_key: str, client_secret: str) -> None:
+    def __init__(self, session: aiohttp.ClientSession, api_key: str, client_secret: str = "") -> None:
         """Initialize the auth client with an injected aiohttp session.
 
         Args:
             session (aiohttp.ClientSession): Injected HTTP session.
             api_key (str): BetaSeries API key (client_id).
-            client_secret (str): BetaSeries API client secret.
+            client_secret (str): BetaSeries API client secret. Only request_device_code/poll_for_token need it - omit it when only authenticate_with_password will be used.
 
         """
         self._session = session
@@ -194,3 +196,43 @@ class Auth:
 
         member = payload["member"]
         return MemberIdentity(id=str(member["id"]), login=member["login"])
+
+    async def authenticate_with_password(self, login: str, password: str) -> tuple[str, MemberIdentity]:
+        """Authenticate with a BetaSeries login/password (POST /members/auth).
+
+        Alternative to the device flow: a single blocking request instead of
+        polling, offered because the device flow can get stuck on some
+        Android setups waiting for the browser to hand control back to the
+        Home Assistant app. See CLAUDE.md §3 for the trade-off this carries
+        (the returned token is never revoked, not even by a password change).
+        The response already carries the member identity, so callers don't
+        need a follow-up fetch_member_identity() call.
+
+        Args:
+            login (str): BetaSeries account login.
+            password (str): BetaSeries account password, in cleartext - this method hashes it.
+
+        Returns:
+            tuple[str, MemberIdentity]: The access token and the authenticated member's identity.
+
+        Raises:
+            AuthError: If the credentials are rejected, or BetaSeries cannot be reached at all.
+
+        """
+        try:
+            async with self._session.post(
+                f"{BASE_URL}{MEMBERS_AUTH_ENDPOINT}",
+                headers=self._headers,
+                params={"login": login, "password": hashlib.md5(password.encode()).hexdigest()},  # noqa: S324
+                timeout=_TIMEOUT,
+            ) as response:
+                if response.status != 200:
+                    msg = f"Failed to authenticate with login/password (HTTP {response.status})"
+                    raise AuthError(msg)
+                payload = await response.json()
+        except _TRANSPORT_ERRORS as err:
+            msg = f"Could not reach BetaSeries to authenticate with login/password: {err}"
+            raise AuthError(msg) from err
+
+        user = payload["user"]
+        return payload["token"], MemberIdentity(id=str(user["id"]), login=user["login"])

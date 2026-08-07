@@ -16,4 +16,10 @@
 # latest release of this package tracks them (verified: 0.13.351 requires
 # homeassistant==2026.8.0b3), and an exact pin to a pre-release is one pip
 # honours. The workflow's constraint is what keeps CI on stable.
-pytest-homeassistant-custom-component
+#
+# Pinned to 0.13.348 which supports homeassistant==2026.7.4. This version
+# predates the time when pytest-homeassistant-custom-component started pinning
+# unreleased Home Assistant betas, so it's compatible with stable releases.
+# When homeassistant is upgraded, this should be bumped to the newest version
+# that supports the target HA release (check PyPI for the mapping).
+pytest-homeassistant-custom-component==0.13.348

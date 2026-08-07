@@ -12,10 +12,10 @@ NC='\033[0m' # No Color
 
 PROJECT=$PROJECT_NAME
 
-echo -e "\n${YELLOW}> Install requirements.txt for HA Integration:${NC}\n"
+echo -e "\n${YELLOW}> Install requirements for HA Integration:${NC}\n"
 
 cd "$(dirname "$0")/.."
-python3 -m pip install --requirement requirements.txt
+python3 -m pip install --requirement requirements.txt --requirement .devcontainer/requirements-default-config.txt
 
 if [ $? -ne 0 ]; then
     echo -e "\n${BLUE}[pip]${NC} ${RED}✗ Pip failed to install dependencies.${NC}\n"

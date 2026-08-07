@@ -67,3 +67,6 @@ unrate_show:
   fields:
     config_entry: *config_entry
     show_id: *show_id
+delete_token:
+  fields:
+    config_entry: *config_entry

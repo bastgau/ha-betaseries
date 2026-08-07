@@ -38,7 +38,7 @@ Custom component HACS pour un compte membre BetaSeries.
 - `calendar` : calendrier des sorties.
 - `button` : trois boutons de purge de cache, désactivés par défaut.
 - `diagnostics` : agrégats uniquement, jamais un titre de série (voir `diagnostics.py`).
-- Auth par device flow, reauth, OptionsFlow.
+- Auth par device flow ou login/mot de passe (choix au premier écran, voir §3), reauth, OptionsFlow.
 - **v3** : 10 services (marquer/démarquer vu épisode/saison, noter/dénoter épisode/saison/série) -
   périmètre restreint à Show/Episode/Season (arbitrage #6), routes testées via Bruno avant
   implémentation. Voir §8.
@@ -117,7 +117,7 @@ chemins, jamais en retrancher un).
   `tests` du lint est passé en local tout en étant rouge en CI (ni `pytest` ni
   `pytest_homeassistant_custom_component` dans `requirements-lint.txt`).
 
-## 3. Authentification - device flow ✅
+## 3. Authentification - device flow, ou login/mot de passe ✅
 
 Gabarit : intégration **Tado** (`homeassistant/components/tado/config_flow.py`).
 Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste mince.
@@ -203,23 +203,36 @@ Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste minc
   (`strings.json`/`translations/{en,fr}.json`, clé `config.abort.unique_id_mismatch`) ajoutée pour
   ce cas - absente au départ (`_abort_if_unique_id_mismatch()` utilise ce nom de raison par défaut,
   mais rien ne le traduisait, HA aurait affiché la clé brute).
-- **Mode d'auth alternatif via login/mot de passe - écarté (aucune révocation possible)** :
-  BetaSeries accepte un header `Authorization: Basic base64(login:mot_de_passe)` (retour support
-  2026-07-28, vérifié fonctionnel sur `/members/year` via `bruno/Members/year.bru`), et
-  `POST /members/auth?login=...&password=...` (`bruno/Members/auth.bru`) renvoie un `token`
-  vérifié utilisable en `Authorization: Bearer` sur les endpoints authentifiés comme un
-  access_token OAuth classique (testé en enchaînant `auth.bru` → `infos.bru` avec ce token).
-  Ce mode avait été envisagé pour contourner l'irritant de rotation du `client_secret` (voir
-  ci-dessus : suppression d'app non self-service, passe par le support BetaSeries) - en ne
-  stockant que le `token` obtenu (jamais le mot de passe lui-même), le risque de sécurité aurait
-  été comparable au device flow actuel.
-  **Écarté après test empirique** (vérifié par l'utilisateur) : le `token` renvoyé par
-  `/members/auth` est **stable** (identique à chaque appel, pas régénéré) et **n'est pas révoqué
-  par un changement de mot de passe du compte**. Un token compromis via ce mode resterait donc
-  utilisable indéfiniment, sans aucun moyen de rotation - pire que le device flow sur exactement
-  le point qu'on cherchait à améliorer (où recréer l'app, même lent via le support, finit par
-  invalider l'ancien `client_secret`/`access_token`). Le device flow OAuth reste donc la seule
-  méthode retenue pour le config flow HA ; aucun changement prévu dans `betaseries/auth.py`/`config_flow.py`.
+- **Mode d'auth alternatif via login/mot de passe - implémenté le 2026-08-06, malgré le risque déjà
+  identifié** : `POST /members/auth?login=...&password=...` (`bruno/Members/auth.bru`, vérifié -
+  renvoie `{"user": {...}, "token": "...", "hash": "...", "errors": []}`) donne un `token` utilisable
+  en `Authorization: Bearer` sur les endpoints authentifiés comme un access_token OAuth classique
+  (testé en enchaînant `auth.bru` → `infos.bru` avec ce token). Un premier examen (2026-08-05) avait
+  écarté ce mode : le token est **stable** (jamais régénéré) et **n'est pas révoqué par un
+  changement de mot de passe du compte** - un token compromis resterait donc utilisable
+  indéfiniment, sans moyen de rotation.
+  **Repris et implémenté le lendemain** (issue #9 - device flow bloqué dans l'appli mobile Android,
+  voir le `## Troubleshooting` du README) après un contre-argument de l'utilisateur : la rotation du
+  `client_secret` du device flow n'est **pas non plus** self-service (suppression/recréation de
+  l'app via le support BetaSeries, voir ci-dessus) - la différence entre les deux modes n'est donc
+  pas « révocable / pas révocable » mais « pas de geste de rotation rapide, dans les deux cas, sous
+  des formes différentes ». Décision produit de l'utilisateur, pas un fait technique qui aurait
+  changé : le token `/members/auth` reste non révoqué par un changement de mot de passe, ce point
+  n'a pas été retesté ni infirmé.
+  **Implémentation** : `Auth.authenticate_with_password(login, password)` (`betaseries/auth.py`) -
+  seule méthode de `Auth` qui n'a pas besoin de `client_secret` (paramètre optionnel du
+  constructeur, `""` par défaut). Contrairement au device flow, une seule requête bloquante, pas de
+  polling - et la réponse porte déjà `user.id`/`user.login`, donc pas de `fetch_member_identity`
+  supplémentaire. `config_flow.py` ajoute une première étape `user` en `async_show_menu` (deux
+  options : `device_credentials` - l'ancien formulaire api_key/client_secret/locale, renommé - et
+  `password_credentials` - api_key/login/password/locale) ; les deux convergent vers
+  `_async_create_or_update_entry()` une fois access_token + identité connus. Le menu réapparaît
+  aussi bien en reauth qu'après un timeout de device code (plutôt que de retourner directement au
+  formulaire device) : un timeout est justement le symptôme qui motive ce second mode, donc autant
+  laisser l'utilisateur basculer dessus à ce moment-là plutôt que de ne lui proposer que de
+  réessayer la même chose. Rien n'est persisté de plus qu'avant dans `entry.data` (`api_key` +
+  `access_token` uniquement, quel que soit le mode - ni `client_secret` ni login/mot de passe ne
+  sont stockés).
 
 ### Prérequis utilisateur ✅
 
@@ -538,7 +551,7 @@ custom_components/betaseries/
 ├── const.py            # options, defauts/bornes, cles + versions de Store
 ├── betaseries/         # <- client bundlé, un paquet (pas `api.py`), voir son README
 ├── coordinator.py      # Member + Planning + WatchList, _CacheStore, helper shows/display
-├── config_flow.py      # device flow (gabarit Tado) + step timeout + reauth + OptionsFlow
+├── config_flow.py      # menu device/password + device flow (gabarit Tado) + timeout + reauth + OptionsFlow
 ├── entity.py           # base entity + DeviceInfo
 ├── sensor.py           # 21 sensors (table §5)
 ├── binary_sensor.py    # 2 binary sensors
@@ -641,6 +654,20 @@ amis/blocage, favoris, masquer épisode/saison, marquer téléchargé, et tout c
 d'usage fort identifié : ajouter une série à la liste via une phrase Assist, ex.
 _« Ajoute Severance à ma liste BetaSeries »_).
 
+### `delete_token` - hors périmètre Show/Episode/Season
+
+Onzième service, à part des dix ci-dessus : il ne cible ni série, ni épisode, ni saison, mais le
+compte lui-même. `POST /members/destroy` (vérifié via Bruno, `bruno/Members/token-destroy.bru`) -
+détruit le token d'accès actif, sans paramètre. Champ `config_entry` seul (`ConfigEntrySelector`,
+même pattern que les dix autres).
+
+**Irréversible** : pas de `create_token` correspondant - obtenir un nouveau token repasse
+obligatoirement par le config flow (device code ou login/mot de passe), il n'y a pas de geste API
+équivalent. Après un appel réussi, refresh de `MemberCoordinator` uniquement (pas
+`WatchListCoordinator`, qui n'a pas d'authentification propre) - ce refresh échoue aussitôt avec le
+token qui vient d'être détruit, ce qui déclenche immédiatement le reauth plutôt que d'attendre le
+prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme déjà en place, voir §3).
+
 ## 9. Arbitrages - tous tranchés ✅
 
 1. **Enabled par défaut** : tous les sensors sont `enabled` par défaut (pas de noyau restreint).
@@ -662,10 +689,17 @@ _« Ajoute Severance à ma liste BetaSeries »_).
    actionnable (v2bis, §5).
 9. **Locale (langue des réponses)** : uniquement `fr`/`en` proposés (`SelectSelector`, pas de champ
    texte libre) - les seules langues où le contenu BetaSeries est fiablement localisé. Collectée à
-   l'ajout du compte (étape `user` du config flow, y compris pendant une reauth - même formulaire
-   partagé) puis stockée en **option** (`entry.options`, pas `entry.data`), éditable ensuite via
-   OptionsFlow comme les intervalles/fenêtre de mois. Défaut `fr`, alignée sur le défaut de l'API
-   elle-même (voir §3).
+   l'ajout du compte (étape `device_credentials` ou `password_credentials` du config flow selon le
+   mode choisi au menu `user`, y compris pendant une reauth - mêmes formulaires partagés) puis
+   stockée en **option** (`entry.options`, pas `entry.data`), éditable ensuite via OptionsFlow comme
+   les intervalles/fenêtre de mois. Défaut `fr`, alignée sur le défaut de l'API elle-même (voir §3).
+10. **Deux méthodes d'authentification, choix explicite de l'utilisateur** (2026-08-06) : le device
+    flow reste la méthode par défaut/recommandée (menu `user`, premier item), mais le mode
+    login/mot de passe (`Auth.authenticate_with_password`, voir §3) est offert comme alternative
+    plutôt qu'écarté silencieusement - la rotation du `client_secret` n'étant elle-même pas
+    self-service, le compromis n'est pas clair-cut. Le menu et le formulaire `password_credentials`
+    portent chacun un avertissement (`strings.json`/`translations/{en,fr}.json`) sur le token non
+    révoqué, pour que le choix reste informé plutôt qu'implicite.
 
 ## 10. Références
 

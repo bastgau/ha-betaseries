@@ -134,6 +134,7 @@ SERVICE_RATE_SEASON = "rate_season"
 SERVICE_UNRATE_SEASON = "unrate_season"
 SERVICE_RATE_SHOW = "rate_show"
 SERVICE_UNRATE_SHOW = "unrate_show"
+SERVICE_DELETE_TOKEN = "delete_token"  # noqa: S105
 
 # Service field names. ATTR_CONFIG_ENTRY targets the BetaSeries account
 # (ConfigEntrySelector, see services.py); episode_id/show_id mirror the

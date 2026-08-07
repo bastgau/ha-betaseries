@@ -1,23 +1,26 @@
 """Tests tying the config flow's translation keys to the files that carry them.
 
-Nothing else does. A flow hands Home Assistant a *key* - `errors["base"] =
-"cannot_connect"` - and the frontend resolves it against
-`component.betaseries.config.error.<key>`. If that entry is missing the flow
-still behaves correctly, every other test still passes, and the user is the
-one who finds out: the form comes back with nothing useful where the reason
-should be.
+Nothing else does. A key present in one language and absent from another (or
+missing from strings.json's own step/menu definitions) surfaces as an
+untranslated string for some users only, or a raw key shown verbatim - the
+kind of gap that no amount of exercising the flow in tests will reveal.
 
-That is exactly how config.error went missing here in the first place. The
-device flow was modelled on `tado`, which has no credentials form and so never
-shows a form error and never needed the section; the credentials form this
-integration adds on top does (see CLAUDE.md §3).
+The device and password credentials forms used to hand Home Assistant an
+`errors["base"] = "..."` key on a rejected api_key/client_secret or
+login/password. That mechanism is gone: both now redirect to a small
+"retry or choose a different method" menu instead (see
+async_step_device_credentials_error/async_step_password_credentials_error in
+config_flow.py) - a stuck/abandoned flow resumed later (e.g. via reauth) must
+not strand the user on a bare form with no way back. Nothing in config_flow.py
+raises an `errors[...]` key anymore, so there is nothing left here to scan for
+that shape specifically; test_translations_match_the_reference_keys below
+still catches a menu/step definition missing from one language.
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-import re
 from typing import Any, cast
 
 import pytest
@@ -29,9 +32,6 @@ TRANSLATION_FILES = (
     INTEGRATION_PATH / "translations" / "en.json",
     INTEGRATION_PATH / "translations" / "fr.json",
 )
-
-# Matches `errors["base"] = "cannot_connect"` and any sibling the flow grows.
-_ERROR_ASSIGNMENT = re.compile(r"""errors\[["'](?P<field>\w+)["']\]\s*=\s*["'](?P<key>\w+)["']""")
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -47,26 +47,6 @@ def _key_paths(node: object, prefix: str = "") -> set[str]:
     # decoded JSON objects, so the keys are strings and the values anything.
     mapping = cast("dict[str, object]", node)
     return {path for key, value in mapping.items() for path in _key_paths(value, f"{prefix}.{key}" if prefix else key)}
-
-
-def test_every_config_flow_error_key_is_translated() -> None:
-    """Give every error the flow can raise a string in every language.
-
-    Scans config_flow.py rather than listing the keys here, so a new
-    `errors[...] = "..."` is covered the day it is written instead of the day
-    someone remembers this test exists.
-    """
-    source = (INTEGRATION_PATH / "config_flow.py").read_text(encoding="utf-8")
-    raised = {match["key"] for match in _ERROR_ASSIGNMENT.finditer(source)}
-
-    # Guards the regex itself: if it silently stops matching, the loop below
-    # would pass over an empty set and assert nothing at all.
-    assert raised, "no errors[...] assignment found - has config_flow.py changed shape?"
-
-    for path in TRANSLATION_FILES:
-        translated = _load(path).get("config", {}).get("error", {})
-        missing = raised - translated.keys()
-        assert not missing, f"{path.name} is missing config.error entries: {sorted(missing)}"
 
 
 @pytest.mark.parametrize("path", TRANSLATION_FILES[1:], ids=lambda path: path.name)
