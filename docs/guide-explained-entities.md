@@ -117,7 +117,6 @@ On/off indicators for whether you have any episode or movie left to watch.
 | Episodes available | On when at least one episode is left to watch | yes     |
 | Movies available   | On when at least one movie is not yet watched | yes     |
 
-> [!NOTE]
 > **Reports a backlog, not an arrival** - stays on permanently if you keep one. To trigger on a new episode, use **Next episode airing** or the **Planning calendar** instead.
 
 </details>
@@ -223,7 +222,6 @@ data:
   config_entry: <config_entry_id>
 ```
 
-> [!NOTE]
 > Revokes the integration's own credentials, irreversibly - getting a new token always requires redoing the config flow. Triggers a reauthentication prompt right away.
 
 </details>
