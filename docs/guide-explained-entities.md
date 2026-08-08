@@ -88,7 +88,9 @@ about an air date, not a watch status.
       "deep_link": "https://www.betaseries.com/episode/3905073",
       "summary": "A tech CEO watches her life turned into a streaming show overnight.",
       "rating": 3.89,
-      "studio": "Netflix"
+      "studio": "Netflix",
+      "genres": ["Science Fiction", "Drama"],
+      "trailer": "https://www.youtube.com/watch?v=ZDdijwdg7s8"
     }
   ]
 }
@@ -156,6 +158,8 @@ attribute: one item per show that has a next unseen episode, shaped for the thir
       "summary": "A tech CEO watches her life turned into a streaming show overnight.",
       "rating": 3.89,
       "studio": "Netflix",
+      "genres": ["Science Fiction", "Drama"],
+      "trailer": "https://www.youtube.com/watch?v=ZDdijwdg7s8",
       "flag": true
     }
   ]
@@ -166,7 +170,9 @@ attribute: one item per show that has a next unseen episode, shaped for the thir
 > ... / `icon`) - never a media item. `studio` carries the streaming platforms, sorted
 > alphabetically and joined with " / ", rather than an actual TV network - the card has no
 > dedicated key for that. `rating` is left out (`null`) for a show you have not rated, rather than
-> shown as a fake zero-star rating.
+> shown as a fake zero-star rating. `trailer` is only ever a `youtube.com` link, or `null` - the
+> only trailer host BetaSeries has been observed sending in practice; any other host is left out
+> rather than guessed.
 
 #### - Suggestion of the day
 
@@ -204,6 +210,8 @@ attribute: today's suggested episode, shaped for the third-party
       "summary": "A tech CEO watches her life turned into a streaming show overnight.",
       "rating": 3.89,
       "studio": "Netflix",
+      "genres": ["Science Fiction", "Drama"],
+      "trailer": "https://www.youtube.com/watch?v=ZDdijwdg7s8",
       "flag": true
     }
   ]
@@ -252,7 +260,9 @@ this is about air dates, not watch status.
       "deep_link": "https://www.betaseries.com/episode/3905073",
       "summary": "A tech CEO watches her life turned into a streaming show overnight.",
       "rating": 3.89,
-      "studio": "Apple TV / Netflix"
+      "studio": "Apple TV / Netflix",
+      "genres": ["Science Fiction", "Drama"],
+      "trailer": "https://www.youtube.com/watch?v=ZDdijwdg7s8"
     }
   ]
 }

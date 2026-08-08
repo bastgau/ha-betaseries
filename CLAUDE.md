@@ -425,6 +425,11 @@ Attribut `shows` : les N premières séries avec leurs prochains épisodes (born
 l'endpoint et **ignorent ces bornes**. `shows` est **non enregistré au recorder** (~8,5 kB ; le
 recorder jette _tous_ les attributs d'une entité au-delà de 16 kB).
 
+**Attribut `data` (opt-in, 2026-08-08)** ✅ : sur `Shows to catch up on`, `Calendar event count`,
+`Previous/Next episode airing` et `Suggestion of the day`, derrière l'option `upcoming_media_card`
+(`entry.options`, défaut `False`) - voir §6/§9 pour le détail. Une seule option pour les cinq
+sensors, pas une par sensor.
+
 ⚠️ `/episodes/list` trie les séries **alphabétiquement** et tronque à `shows_limit` : l'attribut
 montre donc toujours les mêmes séries en A–D (10 sur 38 par défaut). Le paramètre `order`
 (`account` | `smart`) est peut-être la réponse - **non testé**.
@@ -519,12 +524,25 @@ premier épisode du planning - trié par date, remontant des mois en arrière - 
     défaut → le capteur `Shows to catch up on`. Séparé du planning à dessein : le planning est borné
     par sa fenêtre de mois, donc une série dont le dernier épisode non vu est ancien en sortirait ;
     et cet endpoint porte le `remaining` par série et les totaux globaux, que le planning n'a pas.
-- **Artwork + note** : helper partagé `_async_get_show_details()`, un appel groupé
-  `GET /shows/display?id=...` pour les séries encore inconnues du cache, par coordinator.
+- **Artwork + note + trailer + genres** : helper partagé `_async_get_show_details()`, un appel
+  groupé `GET /shows/display?id=...` pour les séries encore inconnues du cache, par coordinator.
+  Retourne 4 dicts (`images, ratings, trailers, genres`), tous indexés par `show_id`, tous
+  persistés dans le même cache par-show (`_IMAGES_KEY` sert toujours de marqueur « entrée écrite
+  par cette version du cache » - une entrée qui ne l'a pas est retraitée comme manquante,
+  ré-fetchée, sans bump de `*_STORE_VERSION`).
   - ⚠️ **L'appel est dans le `try`** des deux coordinators, et le helper **relaie les `AuthError`**
     au lieu de les absorber comme les autres `Error`. `AuthError` héritant d'`Error`, tout absorber
     faisait passer un token rejeté pour un simple souci d'artwork : le refresh se déclarait réussi
     et le reauth n'était jamais demandé (bug corrigé le 2026-08-01).
+  - **`trailers`** (2026-08-08) ✅ : `ShowAdditionalInformation.trailer_url`, déjà une URL HTTPS
+    jouable ou `None` - reconstruite **côté client** (`betaseries/client.py`, `_trailer_url()`),
+    pas dans `coordinator.py`. L'API renvoie deux champs bruts, `next_trailer` (id vidéo nu) et
+    `next_trailer_host` (plateforme) ; seul le host `"youtube"` est confirmé en pratique
+    (`bruno/Shows/display.bru`) - tout autre host, ou absence de trailer, donne `None` plutôt
+    qu'une URL devinée pour un host jamais vérifié. `ShowAdditionalInformation` n'expose donc
+    **jamais** les deux champs bruts séparément, contrairement à ce qu'un premier essai avait fait.
+  - **`genres`** (2026-08-08) ✅ : `ShowAdditionalInformation.genres` (déjà localisés par l'API),
+    tuple vide si absent - aucune transformation, contrairement au trailer.
 - Arbitrage #4 : les **trois** intervalles, la fenêtre de mois et les bornes de la watch list sont
   réglables via OptionsFlow (défauts 15/60/30 min, 2/2 mois, 10 séries × 2 épisodes).
 - `entity.py` : base entity, `DeviceInfo` unique (« BetaSeries - {login} »),
@@ -700,6 +718,29 @@ prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme d�
     self-service, le compromis n'est pas clair-cut. Le menu et le formulaire `password_credentials`
     portent chacun un avertissement (`strings.json`/`translations/{en,fr}.json`) sur le token non
     révoqué, pour que le choix reste informé plutôt qu'implicite.
+11. **`data` pour `upcoming-media-card`, opt-in** (2026-08-08) : intégration tierce avec la card
+    Lovelace [`custom-cards/upcoming-media-card`](https://github.com/custom-cards/upcoming-media-card),
+    dont le contrat de données a été vérifié dans son propre source (pas sa doc) - nom d'attribut
+    `data` figé en dur, élément 0 = objet gabarit (`title_default`/`line1_default`.../`icon`),
+    chaque item exige `airdate` ou la card le saute silencieusement. Décisions :
+    - **Une option unique** (`upcoming_media_card`, `entry.options`, défaut `False`, section Watch
+      list de l'OptionsFlow) active `data` sur les **cinq** sensors concernés à la fois -
+      `Shows to catch up on`, `Calendar event count`, `Previous/Next episode airing`,
+      `Suggestion of the day`. Pas d'option par sensor : coût de construction/mémoire jugé trop
+      faible pour justifier cinq interrupteurs.
+    - **Une ligne = une série** (pas un épisode) sur les sensors qui en listent plusieurs -
+      grain déjà annoncé par l'état de `Shows to catch up on` (`total_shows`), et qui limite
+      l'exposition du biais alphabétique de `/episodes/list` (voir plus haut) à 10 lignes plutôt
+      qu'à 20+ épisodes tous en A-D.
+    - **`flag`** distingue le sens : `True` constant sur les sensors qui listent du non-vu (watch
+      list, suggestion), **absent** sur les sensors qui listent des dates de sortie
+      (`Previous/Next episode airing`, `Calendar event count`) - ce dernier groupe n'a d'ailleurs
+      plus `seen` disponible pour les mois servis du cache (§4), un `flag` y serait faux la moitié
+      du temps.
+    - **`studio` détourné** pour porter les plateformes de streaming (`platforms`, triées
+      alphabétiquement, jointes par `" / "`) - la card n'a pas de clé dédiée pour ça, et cette
+      info existe déjà (`/planning/member`'s `platform_links`).
+    - `runtime`, `release`, `price` : jamais mappés, aucune donnée BetaSeries correspondante.
 
 ## 10. Références
 

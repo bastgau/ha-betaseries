@@ -112,7 +112,7 @@ def _show_with_images(poster: str | None) -> Show:
             rating="",
             notes_mean=0,
             notes_total=0,
-            next_trailer=None,
+            trailer_url=None,
             resource_url="https://www.betaseries.com/serie/achtsam-morden",
             images=ShowImages(show=None, banner=None, box=None, poster=poster, clearlogo=None),
         ),
@@ -338,6 +338,9 @@ async def test_data_attribute_shapes_the_list_for_upcoming_media_card(hass: Home
         # notes_mean=0 in the fixture: no rating, so no fake zero-star rating.
         "rating": None,
         "studio": "Netflix",
+        # No genres/trailer in the fixture: neither key is fabricated.
+        "genres": None,
+        "trailer": None,
         "flag": True,
     }
 
@@ -368,7 +371,7 @@ async def test_data_attribute_reports_the_rating_and_sorted_platforms(hass: Home
             rating="",
             notes_mean=3.89,
             notes_total=120,
-            next_trailer=None,
+            trailer_url=None,
             resource_url="https://www.betaseries.com/serie/achtsam-morden",
             images=ShowImages(show=None, banner=None, box=None, poster=None, clearlogo=None),
         ),
@@ -399,6 +402,97 @@ async def test_data_attribute_reports_the_rating_and_sorted_platforms(hass: Home
     item = state.attributes["data"][1]
     assert item["rating"] == 3.89
     assert item["studio"] == "Apple TV / Disney+ / Netflix"
+
+
+async def test_data_attribute_reports_genres_and_a_youtube_trailer(hass: HomeAssistant) -> None:
+    """Surface genres and a trailer URL, both cached alongside the artwork.
+
+    The client itself builds trailer_url from the raw next_trailer/
+    next_trailer_host pair (see Client._trailer_url and its own tests) -
+    this only checks that the coordinator/sensor pass it through unchanged.
+    """
+    show = Show(
+        id="38605",
+        title="Achtsam Morden",
+        additional_information=ShowAdditionalInformation(
+            original_title="Achtsam Morden",
+            imdb_id=None,
+            themoviedb_id=None,
+            genres=("Comedy", "Crime"),
+            showrunners=(),
+            aliases=(),
+            seasons=2,
+            followers=0,
+            network="Netflix",
+            country=None,
+            original_language=None,
+            length=30,
+            rating="",
+            notes_mean=0,
+            notes_total=0,
+            trailer_url="https://www.youtube.com/watch?v=ZDdijwdg7s8",
+            resource_url="https://www.betaseries.com/serie/achtsam-morden",
+            images=ShowImages(show=None, banner=None, box=None, poster=None, clearlogo=None),
+        ),
+    )
+
+    await _setup(
+        hass,
+        WATCH_LIST_RESPONSE,
+        CollectionShow({"38605": show}),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
+    assert state is not None
+    item = state.attributes["data"][1]
+    assert item["genres"] == ["Comedy", "Crime"]
+    assert item["trailer"] == "https://www.youtube.com/watch?v=ZDdijwdg7s8"
+
+
+async def test_data_attribute_leaves_out_a_trailer_from_an_unconfirmed_host(hass: HomeAssistant) -> None:
+    """Never guess a trailer URL for a host other than the one confirmed in practice.
+
+    The client itself is what refuses to build a URL for a host other than
+    "youtube" (see Client._trailer_url) - this only checks that a show with
+    no usable trailer_url still ends up with `trailer: None` rather than
+    something crashing along the way.
+    """
+    show = Show(
+        id="38605",
+        title="Achtsam Morden",
+        additional_information=ShowAdditionalInformation(
+            original_title="Achtsam Morden",
+            imdb_id=None,
+            themoviedb_id=None,
+            genres=(),
+            showrunners=(),
+            aliases=(),
+            seasons=2,
+            followers=0,
+            network="Netflix",
+            country=None,
+            original_language=None,
+            length=30,
+            rating="",
+            notes_mean=0,
+            notes_total=0,
+            trailer_url=None,
+            resource_url="https://www.betaseries.com/serie/achtsam-morden",
+            images=ShowImages(show=None, banner=None, box=None, poster=None, clearlogo=None),
+        ),
+    )
+
+    await _setup(
+        hass,
+        WATCH_LIST_RESPONSE,
+        CollectionShow({"38605": show}),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
+    assert state is not None
+    assert state.attributes["data"][1]["trailer"] is None
 
 
 async def test_data_attribute_skips_a_show_with_no_listed_episode(hass: HomeAssistant) -> None:

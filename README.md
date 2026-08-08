@@ -134,8 +134,10 @@ title: To catch up on
 image_style: fanart
 ```
 
-Only the `$title`, `$episode`, `$number`, `$date`, `$day`, `$time`, `$rating`, `$studio` and
-`$empty` placeholders resolve to something in `line1_text` / `line2_text` / etc.
+Only the `$title`, `$episode`, `$number`, `$date`, `$day`, `$time`, `$rating`, `$studio`,
+`$genres` and `$empty` placeholders resolve to something in `line1_text` / `line2_text` / etc.
+Trailer links (`enable_trailers` in the card's own config) resolve too, but only for a YouTube
+trailer - BetaSeries returns other hosts as well, and only YouTube's URL is reconstructed.
 
 See **[Entities & Services](docs/guide-explained-entities.md)** for the exact shape of the `data`
 attribute each sensor exposes once the option is on.
