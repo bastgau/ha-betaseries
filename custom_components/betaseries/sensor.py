@@ -639,6 +639,9 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
                 "studio": " / ".join(sorted(episode.platforms)) or None,
                 "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
                 "trailer": self.coordinator.data.trailers.get(episode.show.id),
+                # Not read by the card itself (no matching $keyword) - carried
+                # so a dashboard card can target betaseries.mark_episode_watched.
+                "episode_id": episode.id,
             },
         ]
 
@@ -735,6 +738,7 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
                     "studio": " / ".join(sorted(episode.platforms)) or None,
                     "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
                     "trailer": self.coordinator.data.trailers.get(episode.show.id),
+                    "episode_id": episode.id,
                 }
             )
         return items
@@ -912,6 +916,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
                     "studio": " / ".join(sorted(next_episode.platforms)) or None,
                     "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
                     "trailer": self.coordinator.data.trailers.get(show.id),
+                    "episode_id": next_episode.id,
                     "flag": True,
                 }
             )
@@ -1075,6 +1080,7 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
                 "studio": " / ".join(sorted(episode.platforms)) or None,
                 "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
                 "trailer": self.coordinator.data.trailers.get(show.id),
+                "episode_id": episode.id,
                 "flag": True,
             },
         ]
