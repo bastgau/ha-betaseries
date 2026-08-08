@@ -634,7 +634,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
                 "poster": images.get("poster"),
                 "fanart": images.get("show") or images.get("banner"),
                 "deep_link": episode.resource_url,
-                "summary": episode.description or episode.show.description,
+                "summary": _truncate_summary(episode.description or episode.show.description),
                 "rating": rating,
                 "studio": " / ".join(sorted(episode.platforms)) or None,
                 "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
@@ -730,7 +730,7 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
                     "poster": images.get("poster"),
                     "fanart": images.get("show") or images.get("banner"),
                     "deep_link": episode.resource_url,
-                    "summary": episode.description or episode.show.description,
+                    "summary": _truncate_summary(episode.description or episode.show.description),
                     "rating": rating,
                     "studio": " / ".join(sorted(episode.platforms)) or None,
                     "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
@@ -907,7 +907,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
                     "poster": images.get("poster"),
                     "fanart": images.get("show") or images.get("banner"),
                     "deep_link": next_episode.resource_url,
-                    "summary": next_episode.description,
+                    "summary": _truncate_summary(next_episode.description),
                     "rating": rating,
                     "studio": " / ".join(sorted(next_episode.platforms)) or None,
                     "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
@@ -1070,7 +1070,7 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
                 "poster": images.get("poster"),
                 "fanart": images.get("show") or images.get("banner"),
                 "deep_link": episode.resource_url,
-                "summary": episode.description,
+                "summary": _truncate_summary(episode.description),
                 "rating": rating,
                 "studio": " / ".join(sorted(episode.platforms)) or None,
                 "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
@@ -1099,3 +1099,26 @@ def _watch_list_show_images(data: WatchListData, show: WatchListShow) -> dict[st
     if images:
         return images
     return {"poster": show.poster} if show.poster else {}
+
+
+# Long enough for 2-3 sentences of context in the card's tooltip, short enough
+# to stay readable on a phone. The card itself does not truncate `summary` -
+# it only wraps the tooltip at 300px CSS width - so a long BetaSeries summary
+# would otherwise render in full.
+_SUMMARY_MAX_LENGTH = 200
+
+
+def _truncate_summary(summary: str | None) -> str | None:
+    """Shorten a summary to _SUMMARY_MAX_LENGTH, breaking on a word boundary.
+
+    Args:
+        summary (str | None): The full summary to shorten, or None if there is none.
+
+    Returns:
+        str | None: None unchanged; the summary unchanged if already short enough; otherwise cut at the last space before the limit and suffixed with "…".
+
+    """
+    if summary is None or len(summary) <= _SUMMARY_MAX_LENGTH:
+        return summary
+    cut = summary[:_SUMMARY_MAX_LENGTH].rsplit(" ", 1)[0]
+    return f"{cut}…"
