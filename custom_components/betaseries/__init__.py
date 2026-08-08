@@ -5,11 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 
 from .betaseries import Client
-from .const import CACHE_STORES, CONF_LOCALE, DEFAULT_LOCALE
+from .const import CACHE_STORES, CONF_LOCALE, DEFAULT_LOCALE, DOMAIN
 from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 from .services import async_setup_services
 
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from .coordinator import BetaSeriesConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)  # pylint: disable=invalid-name  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
 
 async def async_setup(  # pylint: disable=unused-argument
