@@ -359,6 +359,7 @@ async def test_sensor_data_attribute_shapes_the_single_suggestion(
         "studio": "Netflix",
         "genres": None,
         "trailer": None,
+        "episode_id": "7001",
         "flag": True,
     }
 

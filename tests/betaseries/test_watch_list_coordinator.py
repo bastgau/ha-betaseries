@@ -341,6 +341,7 @@ async def test_data_attribute_shapes_the_list_for_upcoming_media_card(hass: Home
         # No genres/trailer in the fixture: neither key is fabricated.
         "genres": None,
         "trailer": None,
+        "episode_id": "3905073",
         "flag": True,
     }
 

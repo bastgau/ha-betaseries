@@ -330,6 +330,7 @@ async def test_previous_episode_airing_data_attribute_shapes_the_single_episode(
         "studio": "Apple TV / Netflix",
         "genres": None,
         "trailer": None,
+        "episode_id": "1001",
     }
 
 
@@ -791,6 +792,7 @@ async def test_calendar_event_count_data_attribute_lists_only_upcoming_episodes(
         "studio": "Apple TV / Netflix",
         "genres": None,
         "trailer": None,
+        "episode_id": "1001",
     }
 
 
