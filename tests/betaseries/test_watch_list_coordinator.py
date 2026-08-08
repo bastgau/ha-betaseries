@@ -22,6 +22,7 @@ from custom_components.betaseries.const import (
     CONF_EPISODES_LIMIT,
     CONF_EPISODES_SCAN_INTERVAL,
     CONF_SHOWS_LIMIT,
+    CONF_UPCOMING_MEDIA_CARD,
     DOMAIN,
 )
 from custom_components.betaseries.coordinator import WatchListCoordinator
@@ -179,10 +180,13 @@ async def test_show_images_failure_does_not_fail_the_refresh(hass: HomeAssistant
 
 
 async def _setup(
-    hass: HomeAssistant, watch_list: tuple[CollectionWatchListShow, int, int], shows: CollectionShow
+    hass: HomeAssistant,
+    watch_list: tuple[CollectionWatchListShow, int, int],
+    shows: CollectionShow,
+    options: dict[str, object] | None = None,
 ) -> MockConfigEntry:
     """Set up an entry whose watch list and show artwork are mocked."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT, options=options or {})
     entry.add_to_hass(hass)
 
     mock_client = client_mock()
@@ -280,3 +284,125 @@ async def test_sensor_is_unavailable_when_the_watch_list_failed(hass: HomeAssist
     entity = hass.data["entity_components"]["sensor"].get_entity("sensor.betaseries_test_user_shows_to_catch_up_on")
     assert entity is not None
     assert entity.extra_state_attributes == {"total_shows": 0, "total_episodes": 0, "shows": []}
+
+
+async def test_data_attribute_is_absent_by_default(hass: HomeAssistant) -> None:
+    """Leave the upcoming-media-card `data` attribute out unless the option is turned on."""
+    await _setup(
+        hass,
+        WATCH_LIST_RESPONSE,
+        CollectionShow({"38605": _show_with_images("https://pictures.betaseries.com/poster.jpg")}),
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
+    assert state is not None
+    assert "data" not in state.attributes
+
+
+async def test_data_attribute_shapes_the_list_for_upcoming_media_card(hass: HomeAssistant) -> None:
+    """Expose one item per show, in the shape custom-cards/upcoming-media-card expects.
+
+    Verified against the card's own source: element 0 is a template object
+    (never a media item), and airdate is the only key it requires per item.
+    """
+    await _setup(
+        hass,
+        WATCH_LIST_RESPONSE,
+        CollectionShow({"38605": _show_with_images("https://pictures.betaseries.com/poster.jpg")}),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
+    assert state is not None
+    data = state.attributes["data"]
+
+    assert data[0] == {
+        "title_default": "$title",
+        "line1_default": "$episode",
+        "line2_default": "$number",
+        "line3_default": "$date",
+        "line4_default": "$empty",
+        "icon": "mdi:television-classic",
+    }
+    assert len(data) == 2
+    assert data[1] == {
+        "airdate": "2026-05-29",
+        "title": "Achtsam Morden",
+        "episode": "Urlaub",
+        "number": "S02E01",
+        "poster": "https://pictures.betaseries.com/poster.jpg",
+        "fanart": None,
+        "deep_link": "https://www.betaseries.com/episode/3905073",
+        "summary": "A thrilling episode summary.",
+        "flag": True,
+    }
+
+
+async def test_data_attribute_skips_a_show_with_no_listed_episode(hass: HomeAssistant) -> None:
+    """Leave a show out of `data` rather than emit an item with no airdate.
+
+    `remaining` ignores the configured episodes_limit, so a show can be
+    listed with zero episodes attached. The card silently drops any item
+    without "airdate" (verified in its source), so producing one would only
+    be a dead entry - skip it in Python instead.
+    """
+    empty_watch_list = CollectionWatchListShow(
+        (
+            WatchListShow(
+                id="38605",
+                title="Achtsam Morden",
+                remaining=8,
+                poster="https://pictures.betaseries.com/list-poster.jpg",
+                episodes=CollectionEpisode(()),
+            ),
+        )
+    )
+    await _setup(
+        hass,
+        (empty_watch_list, 37, 726),
+        CollectionShow({}),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
+    assert state is not None
+    assert state.attributes["data"] == [
+        {
+            "title_default": "$title",
+            "line1_default": "$episode",
+            "line2_default": "$number",
+            "line3_default": "$date",
+            "line4_default": "$empty",
+            "icon": "mdi:television-classic",
+        }
+    ]
+
+
+async def test_data_attribute_is_absent_when_the_watch_list_failed(hass: HomeAssistant) -> None:
+    """Leave `data` out, not crash, when the watch list has never successfully refreshed.
+
+    coordinator.data is unset before any refresh has succeeded (see
+    DataUpdateCoordinator), same gap the `shows`/totals fallback above
+    guards against - the option check must not read it either.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="test_user",
+        data=USER_INPUT,
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = CollectionEpisode(())
+    mock_client.fetch_watch_list.side_effect = Error("watch list is down")
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity = hass.data["entity_components"]["sensor"].get_entity("sensor.betaseries_test_user_shows_to_catch_up_on")
+    assert entity is not None
+    assert "data" not in entity.extra_state_attributes

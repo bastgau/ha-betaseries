@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD
 from .entity import BetaSeriesEntity
 
 if TYPE_CHECKING:
@@ -669,7 +670,10 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
     #
     # This only governs what is written to the database: cards, templates and
     # automations still read the full attribute from the live state.
-    _unrecorded_attributes = frozenset({"shows"})
+    #
+    # "data" joins it for the same reason, once the upcoming_media_card option
+    # turns it on: it is the same list again, reshaped for a third-party card.
+    _unrecorded_attributes = frozenset({"shows", "data"})
 
     coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
@@ -702,34 +706,40 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
 
         """
         if not self.coordinator.last_update_success:
-            return {"total_shows": 0, "total_episodes": 0, "shows": []}
-        return {
-            "total_shows": self.coordinator.data.total_shows,
-            "total_episodes": self.coordinator.data.total_episodes,
-            "shows": [
-                {
-                    "show_id": show.id,
-                    "show_title": show.title,
-                    "show_images": self._show_images(show),
-                    "episode_remaining": show.remaining,
-                    "episodes": [
-                        {
-                            "id": episode.id,
-                            "season": episode.season,
-                            "number": episode.number,
-                            "code": episode.code,
-                            "title": episode.title,
-                            "description": episode.description,
-                            "air_date": episode.air_date.isoformat(),
-                            "platforms": list(episode.platforms),
-                            "resource_url": episode.resource_url,
-                        }
-                        for episode in show.episodes
-                    ],
-                }
-                for show in self.coordinator.data.shows
-            ],
-        }
+            attributes: dict[str, Any] = {"total_shows": 0, "total_episodes": 0, "shows": []}
+        else:
+            attributes = {
+                "total_shows": self.coordinator.data.total_shows,
+                "total_episodes": self.coordinator.data.total_episodes,
+                "shows": [
+                    {
+                        "show_id": show.id,
+                        "show_title": show.title,
+                        "show_images": self._show_images(show),
+                        "episode_remaining": show.remaining,
+                        "episodes": [
+                            {
+                                "id": episode.id,
+                                "season": episode.season,
+                                "number": episode.number,
+                                "code": episode.code,
+                                "title": episode.title,
+                                "description": episode.description,
+                                "air_date": episode.air_date.isoformat(),
+                                "platforms": list(episode.platforms),
+                                "resource_url": episode.resource_url,
+                            }
+                            for episode in show.episodes
+                        ],
+                    }
+                    for show in self.coordinator.data.shows
+                ],
+            }
+        if self.coordinator.last_update_success and self.coordinator.config_entry.options.get(
+            CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD
+        ):
+            attributes["data"] = self._upcoming_media_card_data()
+        return attributes
 
     def _show_images(self, show: WatchListShow) -> dict[str, str]:
         """Return a show's artwork.
@@ -742,6 +752,51 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
 
         """
         return _watch_list_show_images(self.coordinator.data, show)
+
+    def _upcoming_media_card_data(self) -> list[dict[str, Any]]:
+        """Return the watch list shaped for custom-cards/upcoming-media-card.
+
+        The card's own contract (verified against its source, not its docs):
+        element 0 is a template object (title_default/line1_default.../icon,
+        never a media item), and every item from index 1 on must carry
+        "airdate" or the card silently skips it (see upcoming-media-card.js,
+        `if (!item("airdate")) continue;`). A show with no unseen episode
+        listed - possible, `remaining` ignores the configured episodes_limit -
+        has no episode to draw an airdate from, so it is left out rather than
+        emitted without one.
+
+        Returns:
+            list[dict[str, Any]]: The template object followed by one item per show that has a next episode to show.
+
+        """
+        template: dict[str, Any] = {
+            "title_default": "$title",
+            "line1_default": "$episode",
+            "line2_default": "$number",
+            "line3_default": "$date",
+            "line4_default": "$empty",
+            "icon": "mdi:television-classic",
+        }
+        items: list[dict[str, Any]] = [template]
+        for show in self.coordinator.data.shows:
+            next_episode = next(iter(show.episodes), None)
+            if next_episode is None:
+                continue
+            images = self._show_images(show)
+            items.append(
+                {
+                    "airdate": next_episode.air_date.isoformat(),
+                    "title": show.title,
+                    "episode": next_episode.title,
+                    "number": next_episode.code,
+                    "poster": images.get("poster"),
+                    "fanart": images.get("show") or images.get("banner"),
+                    "deep_link": next_episode.resource_url,
+                    "summary": next_episode.description,
+                    "flag": True,
+                }
+            )
+        return items
 
 
 class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
