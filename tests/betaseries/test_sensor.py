@@ -17,7 +17,12 @@ from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.betaseries.show_additional_information import ShowAdditionalInformation
 from custom_components.betaseries.betaseries.show_images import ShowImages
-from custom_components.betaseries.const import CONF_PLANNING_MONTHS_AHEAD, CONF_PLANNING_MONTHS_BEHIND, DOMAIN
+from custom_components.betaseries.const import (
+    CONF_PLANNING_MONTHS_AHEAD,
+    CONF_PLANNING_MONTHS_BEHIND,
+    CONF_UPCOMING_MEDIA_CARD,
+    DOMAIN,
+)
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -164,7 +169,10 @@ def _rated_shows(ratings: dict[str, float]) -> CollectionShow:
 
 
 async def _setup_with_planning(
-    hass: HomeAssistant, episodes: tuple[Episode, ...], shows: CollectionShow | None = None
+    hass: HomeAssistant,
+    episodes: tuple[Episode, ...],
+    shows: CollectionShow | None = None,
+    options: dict[str, object] | None = None,
 ) -> MockConfigEntry:
     """Set up an entry whose first planning month returns the given episodes."""
     entry = MockConfigEntry(
@@ -172,7 +180,7 @@ async def _setup_with_planning(
         unique_id="42",
         title="test_user",
         data=USER_INPUT,
-        options={CONF_PLANNING_MONTHS_BEHIND: 0},
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, **(options or {})},
     )
     entry.add_to_hass(hass)
 
@@ -591,6 +599,104 @@ async def test_calendar_event_count_is_zero_when_planning_is_empty(hass: HomeAss
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "0"
+
+
+async def test_calendar_event_count_data_attribute_is_absent_by_default(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Leave the upcoming-media-card `data` attribute out unless the option is turned on."""
+    freezer.move_to("2026-08-15")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="test_user",
+        data=USER_INPUT,
+        options={CONF_PLANNING_MONTHS_BEHIND: 0},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = CollectionEpisode((_episode("1001", date(2026, 8, 20), seen=False),))
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "sensor.betaseries_test_user_calendar_event_count"
+        er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert "data" not in state.attributes
+
+
+async def test_calendar_event_count_data_attribute_lists_only_upcoming_episodes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Shape upcoming episodes for custom-cards/upcoming-media-card, excluding already-aired ones.
+
+    Same contract as the watch list's own `data` (verified against the
+    card's source), applied to release dates: an episode airing before today
+    is left out, since this is a "what's coming out" list, not a backlog -
+    unlike the watch list, no "flag" key is sent (see the sensor's docstring).
+    """
+    freezer.move_to("2026-08-15")
+    past_episode = _episode("1000", date(2026, 8, 10), seen=False, code="S03E03", number=3)
+    upcoming_episode = _episode("1001", date(2026, 8, 20), seen=False, code="S03E04", number=4)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="test_user",
+        data=USER_INPUT,
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0, CONF_UPCOMING_MEDIA_CARD: True},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = CollectionEpisode((past_episode, upcoming_episode))
+    mock_client.fetch_shows.return_value = _rated_shows({"55": 3.89})
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "sensor.betaseries_test_user_calendar_event_count"
+        er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    data = state.attributes["data"]
+
+    assert data[0] == {
+        "title_default": "$title",
+        "line1_default": "$episode",
+        "line2_default": "$number",
+        "line3_default": "$date",
+        "line4_default": "$empty",
+        "icon": "mdi:calendar-star",
+    }
+    assert len(data) == 2
+    assert data[1] == {
+        "airdate": "2026-08-20",
+        "title": "Example Show",
+        "episode": "The One With The Tests",
+        "number": "S03E04",
+        "poster": None,
+        "fanart": None,
+        "deep_link": "https://www.betaseries.com/episode/1001",
+        "summary": "A thrilling episode summary.",
+        "rating": 3.89,
+        "studio": "Apple TV / Netflix",
+    }
 
 
 async def test_badges_sensor_exposes_all_raw_fields_as_attributes(hass: HomeAssistant) -> None:
