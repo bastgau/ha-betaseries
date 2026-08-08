@@ -278,6 +278,59 @@ async def test_previous_episode_airing_exposes_actionable_attributes(hass: HomeA
     assert state.attributes["resource_url"] == "https://www.betaseries.com/episode/1001"
 
 
+async def test_previous_episode_airing_data_attribute_is_absent_by_default(hass: HomeAssistant) -> None:
+    """Leave the upcoming-media-card `data` attribute out unless the option is turned on."""
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    await _setup_with_planning(hass, (_episode("1001", yesterday, seen=False),))
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    assert "data" not in state.attributes
+
+
+async def test_previous_episode_airing_data_attribute_shapes_the_single_episode(hass: HomeAssistant) -> None:
+    """Expose the sensor's one episode as a single-item upcoming-media-card `data` list.
+
+    Same contract as the other two `data` shapes on this integration (verified
+    against the card's source): element 0 is a template object, never a media
+    item - here followed by exactly one episode, since this sensor only ever
+    points at one.
+    """
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    await _setup_with_planning(
+        hass,
+        (_episode("1001", yesterday, seen=False),),
+        shows=_rated_shows({"55": 3.89}),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    data = state.attributes["data"]
+
+    assert data[0] == {
+        "title_default": "$title",
+        "line1_default": "$episode",
+        "line2_default": "$number",
+        "line3_default": "$date",
+        "line4_default": "$empty",
+        "icon": "mdi:calendar-star",
+    }
+    assert len(data) == 2
+    assert data[1] == {
+        "airdate": yesterday.isoformat(),
+        "title": "Example Show",
+        "episode": "The One With The Tests",
+        "number": "S03E04",
+        "poster": None,
+        "fanart": None,
+        "deep_link": "https://www.betaseries.com/episode/1001",
+        "summary": "A thrilling episode summary.",
+        "rating": 3.89,
+        "studio": "Apple TV / Netflix",
+    }
+
+
 async def test_previous_episode_airing_is_unknown_before_anything_has_aired(hass: HomeAssistant) -> None:
     """Report an unknown state, with no attributes, when nothing has aired yet."""
     await _setup_with_planning(hass, (_episode("500", dt_util.now().date() + timedelta(days=3), seen=False),))
