@@ -16,6 +16,7 @@ on:
       - "requirements-lint.txt"
       - "pyproject.toml"
       - ".github/workflows/lint.yml"
+  workflow_dispatch:
 
 permissions: {}
 
