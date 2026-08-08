@@ -17,7 +17,12 @@ from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.betaseries.show_additional_information import ShowAdditionalInformation
 from custom_components.betaseries.betaseries.show_images import ShowImages
-from custom_components.betaseries.const import CONF_PLANNING_MONTHS_AHEAD, CONF_PLANNING_MONTHS_BEHIND, DOMAIN
+from custom_components.betaseries.const import (
+    CONF_PLANNING_MONTHS_AHEAD,
+    CONF_PLANNING_MONTHS_BEHIND,
+    CONF_UPCOMING_MEDIA_CARD,
+    DOMAIN,
+)
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -153,7 +158,7 @@ def _rated_shows(ratings: dict[str, float]) -> CollectionShow:
                     rating="",
                     notes_mean=rating,
                     notes_total=1,
-                    next_trailer=None,
+                    trailer_url=None,
                     resource_url=f"https://www.betaseries.com/serie/show-{show_id}",
                     images=ShowImages(show=None, banner=None, box=None, poster=None, clearlogo=None),
                 ),
@@ -164,7 +169,10 @@ def _rated_shows(ratings: dict[str, float]) -> CollectionShow:
 
 
 async def _setup_with_planning(
-    hass: HomeAssistant, episodes: tuple[Episode, ...], shows: CollectionShow | None = None
+    hass: HomeAssistant,
+    episodes: tuple[Episode, ...],
+    shows: CollectionShow | None = None,
+    options: dict[str, object] | None = None,
 ) -> MockConfigEntry:
     """Set up an entry whose first planning month returns the given episodes."""
     entry = MockConfigEntry(
@@ -172,7 +180,7 @@ async def _setup_with_planning(
         unique_id="42",
         title="test_user",
         data=USER_INPUT,
-        options={CONF_PLANNING_MONTHS_BEHIND: 0},
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, **(options or {})},
     )
     entry.add_to_hass(hass)
 
@@ -268,6 +276,100 @@ async def test_previous_episode_airing_exposes_actionable_attributes(hass: HomeA
     assert state.attributes["show_title"] == "Example Show"
     assert state.attributes["platforms"] == ["Netflix", "Apple TV"]
     assert state.attributes["resource_url"] == "https://www.betaseries.com/episode/1001"
+
+
+async def test_previous_episode_airing_data_attribute_is_absent_by_default(hass: HomeAssistant) -> None:
+    """Leave the upcoming-media-card `data` attribute out unless the option is turned on."""
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    await _setup_with_planning(hass, (_episode("1001", yesterday, seen=False),))
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    assert "data" not in state.attributes
+
+
+async def test_previous_episode_airing_data_attribute_shapes_the_single_episode(hass: HomeAssistant) -> None:
+    """Expose the sensor's one episode as a single-item upcoming-media-card `data` list.
+
+    Same contract as the other two `data` shapes on this integration (verified
+    against the card's source): element 0 is a template object, never a media
+    item - here followed by exactly one episode, since this sensor only ever
+    points at one.
+    """
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    await _setup_with_planning(
+        hass,
+        (_episode("1001", yesterday, seen=False),),
+        shows=_rated_shows({"55": 3.89}),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    data = state.attributes["data"]
+
+    assert data[0] == {
+        "title_default": "$title",
+        "line1_default": "$episode",
+        "line2_default": "$number",
+        "line3_default": "$date",
+        "line4_default": "$empty",
+        "icon": "mdi:calendar-star",
+    }
+    assert len(data) == 2
+    assert data[1] == {
+        "airdate": yesterday.isoformat(),
+        "title": "Example Show",
+        "episode": "The One With The Tests",
+        "number": "S03E04",
+        "poster": None,
+        "fanart": None,
+        "deep_link": "https://www.betaseries.com/episode/1001",
+        "summary": "A thrilling episode summary.",
+        "rating": 3.89,
+        "studio": "Apple TV / Netflix",
+        "genres": None,
+        "trailer": None,
+        "episode_id": "1001",
+    }
+
+
+async def test_previous_episode_airing_data_attribute_truncates_a_long_summary(hass: HomeAssistant) -> None:
+    """Cut `summary` at a word boundary, rather than send the full BetaSeries text.
+
+    The card itself does not truncate: it only wraps the tooltip at a fixed
+    CSS width, so a long summary would render in full otherwise.
+    """
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    long_summary = (
+        "A tech CEO watches her life turned into a streaming show overnight "
+        "after her AI double starts spiraling out of control and blackmailing "
+        "her into increasingly reckless demands live on air, forcing her to "
+        "confront choices she made years before the cameras ever started rolling."
+    )
+    episode = Episode(
+        id="1001",
+        season=3,
+        number=4,
+        code="S03E04",
+        title="The One With The Tests",
+        description=long_summary,
+        air_date=yesterday,
+        seen=False,
+        platforms=("Netflix", "Apple TV"),
+        resource_url="https://www.betaseries.com/episode/1001",
+        show=Show(id="55", title="Example Show"),
+    )
+    await _setup_with_planning(hass, (episode,), options={CONF_UPCOMING_MEDIA_CARD: True})
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    summary = state.attributes["data"][1]["summary"]
+
+    assert len(summary) <= 201  # 200 chars plus the "…" suffix
+    assert summary.endswith("…")
+    assert not summary[:-1].endswith(" ")  # cut on a word boundary, not mid-word
+    assert long_summary.startswith(summary[:-1])
 
 
 async def test_previous_episode_airing_is_unknown_before_anything_has_aired(hass: HomeAssistant) -> None:
@@ -593,6 +695,107 @@ async def test_calendar_event_count_is_zero_when_planning_is_empty(hass: HomeAss
     assert state.state == "0"
 
 
+async def test_calendar_event_count_data_attribute_is_absent_by_default(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Leave the upcoming-media-card `data` attribute out unless the option is turned on."""
+    freezer.move_to("2026-08-15")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="test_user",
+        data=USER_INPUT,
+        options={CONF_PLANNING_MONTHS_BEHIND: 0},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = CollectionEpisode((_episode("1001", date(2026, 8, 20), seen=False),))
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "sensor.betaseries_test_user_calendar_event_count"
+        er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert "data" not in state.attributes
+
+
+async def test_calendar_event_count_data_attribute_lists_only_upcoming_episodes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Shape upcoming episodes for custom-cards/upcoming-media-card, excluding already-aired ones.
+
+    Same contract as the watch list's own `data` (verified against the
+    card's source), applied to release dates: an episode airing before today
+    is left out, since this is a "what's coming out" list, not a backlog -
+    unlike the watch list, no "flag" key is sent (see the sensor's docstring).
+    """
+    freezer.move_to("2026-08-15")
+    past_episode = _episode("1000", date(2026, 8, 10), seen=False, code="S03E03", number=3)
+    upcoming_episode = _episode("1001", date(2026, 8, 20), seen=False, code="S03E04", number=4)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        title="test_user",
+        data=USER_INPUT,
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0, CONF_UPCOMING_MEDIA_CARD: True},
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_planning.return_value = CollectionEpisode((past_episode, upcoming_episode))
+    mock_client.fetch_shows.return_value = _rated_shows({"55": 3.89})
+
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "sensor.betaseries_test_user_calendar_event_count"
+        er.async_get(hass).async_update_entity(entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    data = state.attributes["data"]
+
+    assert data[0] == {
+        "title_default": "$title",
+        "line1_default": "$episode",
+        "line2_default": "$number",
+        "line3_default": "$date",
+        "line4_default": "$empty",
+        "icon": "mdi:calendar-star",
+    }
+    assert len(data) == 2
+    assert data[1] == {
+        "airdate": "2026-08-20",
+        "title": "Example Show",
+        "episode": "The One With The Tests",
+        "number": "S03E04",
+        "poster": None,
+        "fanart": None,
+        "deep_link": "https://www.betaseries.com/episode/1001",
+        "summary": "A thrilling episode summary.",
+        "rating": 3.89,
+        "studio": "Apple TV / Netflix",
+        "genres": None,
+        "trailer": None,
+        "episode_id": "1001",
+    }
+
+
 async def test_badges_sensor_exposes_all_raw_fields_as_attributes(hass: HomeAssistant) -> None:
     """Expose every fetched badge's raw fields under the "badges" attribute."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
@@ -693,7 +896,7 @@ async def test_episode_sensors_expose_the_show_poster_as_entity_picture(hass: Ho
                     rating="",
                     notes_mean=0,
                     notes_total=0,
-                    next_trailer=None,
+                    trailer_url=None,
                     resource_url="https://www.betaseries.com/serie/example-show",
                     images=ShowImages(
                         show=None,

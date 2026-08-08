@@ -25,7 +25,7 @@ from custom_components.betaseries.betaseries.member_identity import MemberIdenti
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.betaseries.watch_list_show import WatchListShow
-from custom_components.betaseries.const import DOMAIN
+from custom_components.betaseries.const import CONF_UPCOMING_MEDIA_CARD, DOMAIN
 from custom_components.betaseries.coordinator import WatchListData
 from custom_components.betaseries.sensor import (
     _suggestion_of_the_day,  # pyright: ignore[reportPrivateUsage]
@@ -104,6 +104,9 @@ def _data(*shows: WatchListShow, images: dict[str, dict[str, str]] | None = None
         total_shows=len(shows),
         total_episodes=sum(len(show.episodes) for show in shows),
         images=images or {},
+        ratings={},
+        trailers={},
+        genres={},
     )
 
 
@@ -266,9 +269,11 @@ def test_a_show_with_no_listed_episode_is_not_suggested(freezer: FrozenDateTimeF
     assert pick[0].id == "70"
 
 
-async def _setup_with_watch_list(hass: HomeAssistant, *shows: WatchListShow) -> MockConfigEntry:
+async def _setup_with_watch_list(
+    hass: HomeAssistant, *shows: WatchListShow, options: dict[str, object] | None = None
+) -> MockConfigEntry:
     """Set up an entry whose watch list holds the given shows."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", title="test_user", data=USER_INPUT, options=options or {})
     entry.add_to_hass(hass)
 
     mock_client = client_mock()
@@ -299,6 +304,64 @@ async def test_sensor_exposes_the_suggestion(hass: HomeAssistant, freezer: Froze
     assert state.attributes["episode_id"] == "7001"
     assert state.attributes["code"] == "S02E03"
     assert state.attributes["episode_remaining"] == 5
+
+
+async def test_sensor_data_attribute_is_absent_by_default(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Leave the upcoming-media-card `data` attribute out unless the option is turned on."""
+    freezer.move_to("2026-08-02")
+    await _setup_with_watch_list(hass, _show("70", episodes=(_episode("7001", season=2, number=3, title="Urlaub"),)))
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert "data" not in state.attributes
+
+
+async def test_sensor_data_attribute_shapes_the_single_suggestion(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Expose today's suggestion as a single-item upcoming-media-card `data` list.
+
+    Same contract as the other `data` shapes on this integration (verified
+    against the card's source): element 0 is a template object, never a media
+    item - here followed by exactly one episode, since this sensor only ever
+    suggests one. `flag` is always true: the suggestion is always unwatched.
+    """
+    freezer.move_to("2026-08-02")
+    await _setup_with_watch_list(
+        hass,
+        _show("70", episodes=(_episode("7001", season=2, number=3, title="Urlaub"),)),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    data = state.attributes["data"]
+
+    assert data[0] == {
+        "title_default": "$title",
+        "line1_default": "$episode",
+        "line2_default": "$number",
+        "line3_default": "$date",
+        "line4_default": "$empty",
+        "icon": "mdi:television-classic",
+    }
+    assert len(data) == 2
+    assert data[1] == {
+        "airdate": "2026-07-01",
+        "title": "Show 70",
+        "episode": "Urlaub",
+        "number": "S02E03",
+        "poster": "https://pictures.betaseries.com/70.jpg",
+        "fanart": None,
+        "deep_link": "https://www.betaseries.com/episode/7001",
+        "summary": "",
+        "rating": None,
+        "studio": "Netflix",
+        "genres": None,
+        "trailer": None,
+        "episode_id": "7001",
+        "flag": True,
+    }
 
 
 async def test_sensor_drops_the_separator_without_an_episode_title(

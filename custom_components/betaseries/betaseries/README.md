@@ -130,7 +130,7 @@ Net effect: calling `fetch_shows()` then `fetch_episodes()` (or the reverse) on 
 - no episode is involved, so `fetch_episodes()` has nothing to do for this event type.
 
 `ShowAdditionalInformation` (genres, showrunners, aliases, seasons, followers, network,
-country, language, length, rating, notes, next_trailer, resource_url, `images: ShowImages`)
+country, language, length, rating, notes, trailer_url, resource_url, `images: ShowImages`)
 and `ShowImages` (show/banner/box/poster/clearlogo URLs, all hosted on the public
 `pictures.betaseries.com` CDN - no auth needed to load them) are plain data, only ever
 constructed by `Client.fetch_shows()`.
@@ -160,12 +160,18 @@ constructed by `Client.fetch_shows()`.
   (see [`docs/watch-history-calendar-exploration.md`](../../../docs/watch-history-calendar-exploration.md)).
   `SeasonWatchedEvent`'s `show_id`/`season` are parsed from the raw `ref` field
   (`"{show_id}.{season}"`) - `ref_id` is always `0` for this event type and carries no information.
-- **`Show.resource_url` is derived, not fetched.** Unlike every other URL/field in this client
-  (always read verbatim from the API's own response), it's computed from `slug` using
-  BetaSeries' own stable URL pattern (`https://www.betaseries.com/serie/{slug}`, verified via
-  `/shows/display`) - because the embedded `show` sub-object of `/planning/member` carries a
-  `slug` but never a ready-made `resource_url` for the show itself (only `Episode.resource_url`,
-  a different URL, is given directly).
+- **`Show.resource_url` is derived, not fetched.** Most URLs/fields in this client are read
+  verbatim from the API's own response; this one is computed from `slug` using BetaSeries' own
+  stable URL pattern (`https://www.betaseries.com/serie/{slug}`, verified via `/shows/display`) -
+  because the embedded `show` sub-object of `/planning/member` carries a `slug` but never a
+  ready-made `resource_url` for the show itself (only `Episode.resource_url`, a different URL,
+  is given directly).
+- **`ShowAdditionalInformation.trailer_url` is derived too, and deliberately incomplete.** The API
+  returns a trailer as two raw fields, `next_trailer` (a bare video id) and `next_trailer_host`
+  (the platform it belongs to) - `_trailer_url()` in `client.py` combines them into a playable
+  URL, but only when the host is `"youtube"`, the only one confirmed in practice (see
+  `bruno/Shows/display.bru`). Any other host, or no trailer at all, yields `None` rather than a
+  guessed URL template for a host that was never verified.
 - **Enrichment is always a separate request, never assumed.** Nothing pre-fetches
   `additional_information` or `episodes` "just in case" - callers ask for exactly what they
   need, when they need it.

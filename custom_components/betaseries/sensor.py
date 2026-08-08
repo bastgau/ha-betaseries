@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD
 from .entity import BetaSeriesEntity
 
 if TYPE_CHECKING:
@@ -488,8 +489,10 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
 
     # Artwork URLs are for rendering a card now, never for looking at history:
     # what mattered about a past state is which episode it pointed at, and the
-    # identifiers below carry that. See BetaSeriesWatchListSensor.
-    _unrecorded_attributes = frozenset({"show_images"})
+    # identifiers below carry that. See BetaSeriesWatchListSensor. "data" joins
+    # it for the same reason once upcoming_media_card is on: a reshaping of
+    # attributes already listed here, not new information worth recording.
+    _unrecorded_attributes = frozenset({"show_images", "data"})
 
     entity_description: BetaSeriesPlanningSensorEntityDescription  # pyright: ignore[reportIncompatibleVariableOverride]
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -572,7 +575,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
         episode = self._episode
         if episode is None:
             return None
-        return {
+        attributes: dict[str, Any] = {
             # Every artwork the show has (poster/banner/box/show/clearlogo),
             # so a card can pick a different one than entity_picture's poster -
             # a banner for a wide card, a clearlogo to overlay, ... Kinds the
@@ -591,6 +594,56 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
             "platforms": list(episode.platforms),
             "resource_url": episode.resource_url,
         }
+        if self.coordinator.config_entry.options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD):
+            attributes["data"] = self._upcoming_media_card_data(episode)
+        return attributes
+
+    def _upcoming_media_card_data(self, episode: Episode) -> list[dict[str, Any]]:
+        """Return this sensor's single episode shaped for custom-cards/upcoming-media-card.
+
+        Same contract as the other two `data` shapes on this integration (see
+        BetaSeriesWatchListSensor._upcoming_media_card_data for the card's own
+        rules) - here reduced to exactly one item, since this sensor only ever
+        points at one episode. No "flag": like the calendar's own `data`, this
+        is about an air date, not a watch status.
+
+        Args:
+            episode (Episode): The episode this sensor currently points at.
+
+        Returns:
+            list[dict[str, Any]]: The template object followed by the single episode item.
+
+        """
+        template: dict[str, Any] = {
+            "title_default": "$title",
+            "line1_default": "$episode",
+            "line2_default": "$number",
+            "line3_default": "$date",
+            "line4_default": "$empty",
+            "icon": "mdi:calendar-star",
+        }
+        images = self.coordinator.data.images.get(episode.show.id, {})
+        rating = self.coordinator.data.ratings.get(episode.show.id) or None
+        return [
+            template,
+            {
+                "airdate": episode.air_date.isoformat(),
+                "title": episode.show.title,
+                "episode": episode.title,
+                "number": episode.code,
+                "poster": images.get("poster"),
+                "fanart": images.get("show") or images.get("banner"),
+                "deep_link": episode.resource_url,
+                "summary": _truncate_summary(episode.description or episode.show.description),
+                "rating": rating,
+                "studio": " / ".join(sorted(episode.platforms)) or None,
+                "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
+                "trailer": self.coordinator.data.trailers.get(episode.show.id),
+                # Not read by the card itself (no matching $keyword) - carried
+                # so a dashboard card can target betaseries.mark_episode_watched.
+                "episode_id": episode.id,
+            },
+        ]
 
 
 class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -598,8 +651,15 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
 
     Attributes:
         coordinator (PlanningCoordinator): The coordinator providing the planning data.
+        _unrecorded_attributes (frozenset[str]): Attributes too bulky to write to the recorder.
 
     """
+
+    # "data" only exists once the upcoming_media_card option turns it on (see
+    # extra_state_attributes); kept out of the recorder for the same reason
+    # as BetaSeriesWatchListSensor's own "data" - it is a list rebuilt from
+    # scratch on every refresh, not a value with a history worth keeping.
+    _unrecorded_attributes = frozenset({"data"})
 
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
@@ -616,16 +676,72 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
         return len(self.coordinator.data.episodes)
 
     @property
-    def extra_state_attributes(self) -> dict[str, int]:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the event count broken down by month.
+    def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the event count broken down by month, and optionally the upcoming-media-card data.
 
         Returns:
-            dict[str, int]: Number of episodes per "YYYY-MM" month currently loaded.
+            dict[str, Any]: Number of episodes per "YYYY-MM" month currently loaded, plus `data` when the option is on.
 
         """
         if not self.coordinator.last_update_success:
             return {}
-        return _episode_counts_by_month(self.coordinator.data.episodes)
+        attributes: dict[str, Any] = _episode_counts_by_month(self.coordinator.data.episodes)
+        if self.coordinator.config_entry.options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD):
+            attributes["data"] = self._upcoming_media_card_data()
+        return attributes
+
+    def _upcoming_media_card_data(self) -> list[dict[str, Any]]:
+        """Return the upcoming episodes shaped for custom-cards/upcoming-media-card.
+
+        Same contract as BetaSeriesWatchListSensor._upcoming_media_card_data
+        (see its docstring for the card's own rules), applied here to release
+        dates rather than watch status: only episodes airing today or later
+        are listed - this is a "what's coming out" card, not a backlog, and
+        the window can reach months into the past (planning_months_behind).
+
+        No "flag": that key means "not yet watched" on the watch list, but
+        this list is about air dates, which `seen` has nothing to do with -
+        and the cached planning stops carrying `seen` for months served from
+        disk anyway (see PlanningCoordinator), so it would be wrong half the
+        time regardless.
+
+        Returns:
+            list[dict[str, Any]]: The template object followed by one item per upcoming episode.
+
+        """
+        template: dict[str, Any] = {
+            "title_default": "$title",
+            "line1_default": "$episode",
+            "line2_default": "$number",
+            "line3_default": "$date",
+            "line4_default": "$empty",
+            "icon": "mdi:calendar-star",
+        }
+        today = dt_util.now().date()
+        items: list[dict[str, Any]] = [template]
+        for episode in self.coordinator.data.episodes:
+            if episode.air_date < today:
+                continue
+            images = self.coordinator.data.images.get(episode.show.id, {})
+            rating = self.coordinator.data.ratings.get(episode.show.id) or None
+            items.append(
+                {
+                    "airdate": episode.air_date.isoformat(),
+                    "title": episode.show.title,
+                    "episode": episode.title,
+                    "number": episode.code,
+                    "poster": images.get("poster"),
+                    "fanart": images.get("show") or images.get("banner"),
+                    "deep_link": episode.resource_url,
+                    "summary": _truncate_summary(episode.description or episode.show.description),
+                    "rating": rating,
+                    "studio": " / ".join(sorted(episode.platforms)) or None,
+                    "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
+                    "trailer": self.coordinator.data.trailers.get(episode.show.id),
+                    "episode_id": episode.id,
+                }
+            )
+        return items
 
 
 class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -669,7 +785,10 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
     #
     # This only governs what is written to the database: cards, templates and
     # automations still read the full attribute from the live state.
-    _unrecorded_attributes = frozenset({"shows"})
+    #
+    # "data" joins it for the same reason, once the upcoming_media_card option
+    # turns it on: it is the same list again, reshaped for a third-party card.
+    _unrecorded_attributes = frozenset({"shows", "data"})
 
     coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
@@ -702,34 +821,40 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
 
         """
         if not self.coordinator.last_update_success:
-            return {"total_shows": 0, "total_episodes": 0, "shows": []}
-        return {
-            "total_shows": self.coordinator.data.total_shows,
-            "total_episodes": self.coordinator.data.total_episodes,
-            "shows": [
-                {
-                    "show_id": show.id,
-                    "show_title": show.title,
-                    "show_images": self._show_images(show),
-                    "episode_remaining": show.remaining,
-                    "episodes": [
-                        {
-                            "id": episode.id,
-                            "season": episode.season,
-                            "number": episode.number,
-                            "code": episode.code,
-                            "title": episode.title,
-                            "description": episode.description,
-                            "air_date": episode.air_date.isoformat(),
-                            "platforms": list(episode.platforms),
-                            "resource_url": episode.resource_url,
-                        }
-                        for episode in show.episodes
-                    ],
-                }
-                for show in self.coordinator.data.shows
-            ],
-        }
+            attributes: dict[str, Any] = {"total_shows": 0, "total_episodes": 0, "shows": []}
+        else:
+            attributes = {
+                "total_shows": self.coordinator.data.total_shows,
+                "total_episodes": self.coordinator.data.total_episodes,
+                "shows": [
+                    {
+                        "show_id": show.id,
+                        "show_title": show.title,
+                        "show_images": self._show_images(show),
+                        "episode_remaining": show.remaining,
+                        "episodes": [
+                            {
+                                "id": episode.id,
+                                "season": episode.season,
+                                "number": episode.number,
+                                "code": episode.code,
+                                "title": episode.title,
+                                "description": episode.description,
+                                "air_date": episode.air_date.isoformat(),
+                                "platforms": list(episode.platforms),
+                                "resource_url": episode.resource_url,
+                            }
+                            for episode in show.episodes
+                        ],
+                    }
+                    for show in self.coordinator.data.shows
+                ],
+            }
+        if self.coordinator.last_update_success and self.coordinator.config_entry.options.get(
+            CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD
+        ):
+            attributes["data"] = self._upcoming_media_card_data()
+        return attributes
 
     def _show_images(self, show: WatchListShow) -> dict[str, str]:
         """Return a show's artwork.
@@ -742,6 +867,60 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
 
         """
         return _watch_list_show_images(self.coordinator.data, show)
+
+    def _upcoming_media_card_data(self) -> list[dict[str, Any]]:
+        """Return the watch list shaped for custom-cards/upcoming-media-card.
+
+        The card's own contract (verified against its source, not its docs):
+        element 0 is a template object (title_default/line1_default.../icon,
+        never a media item), and every item from index 1 on must carry
+        "airdate" or the card silently skips it (see upcoming-media-card.js,
+        `if (!item("airdate")) continue;`). A show with no unseen episode
+        listed - possible, `remaining` ignores the configured episodes_limit -
+        has no episode to draw an airdate from, so it is left out rather than
+        emitted without one.
+
+        Returns:
+            list[dict[str, Any]]: The template object followed by one item per show that has a next episode to show.
+
+        """
+        template: dict[str, Any] = {
+            "title_default": "$title",
+            "line1_default": "$episode",
+            "line2_default": "$number",
+            "line3_default": "$date",
+            "line4_default": "$empty",
+            "icon": "mdi:television-classic",
+        }
+        items: list[dict[str, Any]] = [template]
+        for show in self.coordinator.data.shows:
+            next_episode = next(iter(show.episodes), None)
+            if next_episode is None:
+                continue
+            images = self._show_images(show)
+            # 0.0 means "no rating" (see WatchListData), not an actual zero
+            # score; sending it through would draw as a real rating instead
+            # of letting the card hide the line.
+            rating = self.coordinator.data.ratings.get(show.id) or None
+            items.append(
+                {
+                    "airdate": next_episode.air_date.isoformat(),
+                    "title": show.title,
+                    "episode": next_episode.title,
+                    "number": next_episode.code,
+                    "poster": images.get("poster"),
+                    "fanart": images.get("show") or images.get("banner"),
+                    "deep_link": next_episode.resource_url,
+                    "summary": _truncate_summary(next_episode.description),
+                    "rating": rating,
+                    "studio": " / ".join(sorted(next_episode.platforms)) or None,
+                    "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
+                    "trailer": self.coordinator.data.trailers.get(show.id),
+                    "episode_id": next_episode.id,
+                    "flag": True,
+                }
+            )
+        return items
 
 
 class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -765,7 +944,9 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
     """
 
     # Artwork URLs are for rendering a card now, never for looking at history.
-    _unrecorded_attributes = frozenset({"show_images"})
+    # "data" joins it for the same reason once upcoming_media_card is on: a
+    # reshaping of attributes already listed here, not new information.
+    _unrecorded_attributes = frozenset({"show_images", "data"})
 
     coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
@@ -838,7 +1019,7 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
         if pick is None:
             return None
         show, episode = pick
-        return {
+        attributes: dict[str, Any] = {
             "show_images": _watch_list_show_images(self.coordinator.data, show),
             "episode_id": episode.id,
             "show_id": show.id,
@@ -853,6 +1034,56 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
             "platforms": list(episode.platforms),
             "resource_url": episode.resource_url,
         }
+        if self.coordinator.config_entry.options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD):
+            attributes["data"] = self._upcoming_media_card_data(show, episode)
+        return attributes
+
+    def _upcoming_media_card_data(self, show: WatchListShow, episode: Episode) -> list[dict[str, Any]]:
+        """Return today's suggestion shaped for custom-cards/upcoming-media-card.
+
+        Same contract as the other `data` shapes on this integration (see
+        BetaSeriesWatchListSensor._upcoming_media_card_data for the card's own
+        rules) - here reduced to exactly one item, since this sensor only ever
+        points at one episode. `flag` is always `true`, like the watch list's
+        own `data`: the suggestion is always an unwatched episode.
+
+        Args:
+            show (WatchListShow): The suggested show.
+            episode (Episode): The episode to resume it at.
+
+        Returns:
+            list[dict[str, Any]]: The template object followed by the single suggested episode.
+
+        """
+        template: dict[str, Any] = {
+            "title_default": "$title",
+            "line1_default": "$episode",
+            "line2_default": "$number",
+            "line3_default": "$date",
+            "line4_default": "$empty",
+            "icon": "mdi:television-classic",
+        }
+        images = _watch_list_show_images(self.coordinator.data, show)
+        rating = self.coordinator.data.ratings.get(show.id) or None
+        return [
+            template,
+            {
+                "airdate": episode.air_date.isoformat(),
+                "title": show.title,
+                "episode": episode.title,
+                "number": episode.code,
+                "poster": images.get("poster"),
+                "fanart": images.get("show") or images.get("banner"),
+                "deep_link": episode.resource_url,
+                "summary": _truncate_summary(episode.description),
+                "rating": rating,
+                "studio": " / ".join(sorted(episode.platforms)) or None,
+                "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
+                "trailer": self.coordinator.data.trailers.get(show.id),
+                "episode_id": episode.id,
+                "flag": True,
+            },
+        ]
 
 
 def _watch_list_show_images(data: WatchListData, show: WatchListShow) -> dict[str, str]:
@@ -874,3 +1105,26 @@ def _watch_list_show_images(data: WatchListData, show: WatchListShow) -> dict[st
     if images:
         return images
     return {"poster": show.poster} if show.poster else {}
+
+
+# Long enough for 2-3 sentences of context in the card's tooltip, short enough
+# to stay readable on a phone. The card itself does not truncate `summary` -
+# it only wraps the tooltip at 300px CSS width - so a long BetaSeries summary
+# would otherwise render in full.
+_SUMMARY_MAX_LENGTH = 200
+
+
+def _truncate_summary(summary: str | None) -> str | None:
+    """Shorten a summary to _SUMMARY_MAX_LENGTH, breaking on a word boundary.
+
+    Args:
+        summary (str | None): The full summary to shorten, or None if there is none.
+
+    Returns:
+        str | None: None unchanged; the summary unchanged if already short enough; otherwise cut at the last space before the limit and suffixed with "…".
+
+    """
+    if summary is None or len(summary) <= _SUMMARY_MAX_LENGTH:
+        return summary
+    cut = summary[:_SUMMARY_MAX_LENGTH].rsplit(" ", 1)[0]
+    return f"{cut}…"

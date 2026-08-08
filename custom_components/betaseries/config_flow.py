@@ -32,6 +32,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    BooleanSelector,  # pyright: ignore[reportUnknownVariableType]
     NumberSelector,  # pyright: ignore[reportUnknownVariableType]
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -58,6 +59,7 @@ from .const import (
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
     CONF_SHOWS_LIMIT,
+    CONF_UPCOMING_MEDIA_CARD,
     DEFAULT_EPISODES_LIMIT,
     DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES,
     DEFAULT_LOCALE,
@@ -66,6 +68,7 @@ from .const import (
     DEFAULT_PLANNING_MONTHS_BEHIND,
     DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES,
     DEFAULT_SHOWS_LIMIT,
+    DEFAULT_UPCOMING_MEDIA_CARD,
     DOMAIN,
     MAX_EPISODES_LIMIT,
     MAX_EPISODES_SCAN_INTERVAL_MINUTES,
@@ -644,6 +647,10 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                                     min=MIN_EPISODES_LIMIT, max=MAX_EPISODES_LIMIT, mode=NumberSelectorMode.BOX
                                 )
                             ),
+                            vol.Required(
+                                CONF_UPCOMING_MEDIA_CARD,
+                                default=options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD),
+                            ): BooleanSelector(),
                         }
                     ),
                     {"collapsed": True},

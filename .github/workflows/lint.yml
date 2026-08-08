@@ -3,6 +3,8 @@ name: "Lint"
 
 on:
   push:
+    tags-ignore:
+      - "v*"
     paths:
       - "custom_components/betaseries/**/*.py"
       - "tests/**/*.py"

@@ -183,6 +183,8 @@ class _CacheStore[DataT: dict[str, Any]](Store[DataT]):
 # doubles as the marker that an entry was written by this version of the cache.
 _IMAGES_KEY = "images"
 _RATING_KEY = "rating"
+_TRAILER_KEY = "trailer"
+_GENRES_KEY = "genres"
 
 
 def _images_to_dict(images: ShowImages) -> dict[str, str]:
@@ -217,8 +219,8 @@ async def _async_get_show_details(
     store: Store[dict[str, Any]],
     show_ids: frozenset[str],
     title: str,
-) -> tuple[dict[str, dict[str, str]], dict[str, float]]:
-    """Return each show's image URLs and member rating, fetching only what isn't cached.
+) -> tuple[dict[str, dict[str, str]], dict[str, float], dict[str, str], dict[str, tuple[str, ...]]]:
+    """Return each show's image URLs, member rating, trailer URL and genres, fetching only what isn't cached.
 
     Shared by the coordinators that display shows: a show's images essentially
     never change, so cached ones are never refetched; shows no longer in the
@@ -226,10 +228,9 @@ async def _async_get_show_details(
     have no image at all are cached with an empty image mapping, which stops
     them being refetched on every refresh.
 
-    The rating rides along rather than costing a request of its own: it comes
-    from the very same GET /shows/display payload the images do. It is
-    therefore as stale as they are, which the only caller that reads it
-    (see sensor.py's previous episode) accepts by design.
+    The rating, trailer and genres ride along rather than costing a request of
+    their own: they come from the very same GET /shows/display payload the
+    images do. They are therefore as stale as the images are.
 
     Failures are swallowed on purpose: this is decoration and a tie-breaker,
     and the caller's own data refreshed fine by the time this runs - failing
@@ -242,13 +243,14 @@ async def _async_get_show_details(
         title (str): The config entry's title, for logging.
 
     Returns:
-        tuple[dict[str, dict[str, str]], dict[str, float]]: Image URLs per show id (without their unset entries), and the member rating per show id.
+        tuple[dict[str, dict[str, str]], dict[str, float], dict[str, str], dict[str, tuple[str, ...]]]: Image URLs, member rating, trailer URL and genres, each keyed by show id (unset entries left out).
 
     """
     stored: dict[str, Any] = await store.async_load() or {}
-    # Entries without an "images" key predate this cache holding the rating.
-    # Treating them as absent refetches them, rather than reading a shape that
-    # is no longer written (the store is a pure cache, so this costs one call).
+    # Entries without an "images" key predate this cache holding the rating,
+    # trailer and genres. Treating them as absent refetches them, rather than
+    # reading a shape that is no longer written (the store is a pure cache,
+    # so this costs one call).
     cached: dict[str, Any] = {
         show_id: stored[show_id] for show_id in show_ids if show_id in stored and _IMAGES_KEY in stored[show_id]
     }
@@ -274,6 +276,8 @@ async def _async_get_show_details(
                 cached[show_id] = {
                     _IMAGES_KEY: _images_to_dict(information.images) if information is not None else {},
                     _RATING_KEY: information.notes_mean if information is not None else 0.0,
+                    _TRAILER_KEY: information.trailer_url if information is not None else None,
+                    _GENRES_KEY: list(information.genres) if information is not None else [],
                 }
 
     if cached != stored:
@@ -281,11 +285,30 @@ async def _async_get_show_details(
         # their entries were dropped by the comprehension above.
         await store.async_save(cached)
 
+    return _split_show_details(cached)
+
+
+def _split_show_details(
+    cached: dict[str, Any],
+) -> tuple[dict[str, dict[str, str]], dict[str, float], dict[str, str], dict[str, tuple[str, ...]]]:
+    """Split one cached show-details entry per show id into its four parts.
+
+    Args:
+        cached (dict[str, Any]): One cache entry (see _async_get_show_details) per show id.
+
+    Returns:
+        tuple[dict[str, dict[str, str]], dict[str, float], dict[str, str], dict[str, tuple[str, ...]]]: Image URLs, member rating, trailer URL and genres, each keyed by show id (unset entries left out).
+
+    """
     images = {show_id: entry[_IMAGES_KEY] for show_id, entry in cached.items()}
     # A show BetaSeries has no rating for reports 0, which is also what a show
     # missing from the cache gets: "unrated" and "unknown" both sort last.
     ratings = {show_id: float(entry.get(_RATING_KEY) or 0.0) for show_id, entry in cached.items()}
-    return images, ratings
+    trailers = {
+        show_id: entry[_TRAILER_KEY] for show_id, entry in cached.items() if entry.get(_TRAILER_KEY) is not None
+    }
+    genres = {show_id: tuple(entry.get(_GENRES_KEY) or ()) for show_id, entry in cached.items()}
+    return images, ratings, trailers, genres
 
 
 def _badge_to_dict(badge: Badge) -> dict[str, Any]:
@@ -456,12 +479,16 @@ class PlanningData:
         episodes (CollectionEpisode): The member's episodes, sorted by air date.
         images (dict[str, dict[str, str]]): Image URLs per show id in the window, shows without artwork included as empty dicts.
         ratings (dict[str, float]): BetaSeries member rating per show id, 0.0 for a show that has none.
+        trailers (dict[str, str]): Trailer URL per show id, shows with no (youtube) trailer left out.
+        genres (dict[str, tuple[str, ...]]): Genres per show id, empty tuple for a show with none.
 
     """
 
     episodes: CollectionEpisode
     images: dict[str, dict[str, str]]
     ratings: dict[str, float]
+    trailers: dict[str, str]
+    genres: dict[str, tuple[str, ...]]
 
 
 @dataclass(frozen=True)
@@ -478,6 +505,9 @@ class WatchListData:
         total_shows (int): Shows with at least one unseen episode, ignoring the configured limits.
         total_episodes (int): Unseen episodes across every show, ignoring the configured limits.
         images (dict[str, dict[str, str]]): Image URLs per listed show id.
+        ratings (dict[str, float]): BetaSeries member rating per show id, 0.0 for a show that has none.
+        trailers (dict[str, str]): Trailer URL per show id, shows with no (youtube) trailer left out.
+        genres (dict[str, tuple[str, ...]]): Genres per show id, empty tuple for a show with none.
 
     """
 
@@ -485,6 +515,9 @@ class WatchListData:
     total_shows: int
     total_episodes: int
     images: dict[str, dict[str, str]]
+    ratings: dict[str, float]
+    trailers: dict[str, str]
+    genres: dict[str, tuple[str, ...]]
 
 
 class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
@@ -560,7 +593,7 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
             ]
             episodes = (episode for episodes in (*past_by_month.values(), *current_and_future) for episode in episodes)
             planning = CollectionEpisode(tuple(sorted(episodes, key=lambda episode: episode.air_date)))
-            images, ratings = await _async_get_show_details(
+            images, ratings, trailers, genres = await _async_get_show_details(
                 self.client, self.show_images_store, planning.show_ids, self.config_entry.title
             )
         except AuthError as err:
@@ -570,7 +603,7 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
             _LOGGER.debug("Fetching planning for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
-        return PlanningData(episodes=planning, images=images, ratings=ratings)
+        return PlanningData(episodes=planning, images=images, ratings=ratings, trailers=trailers, genres=genres)
 
     async def async_clear_planning_cache(self) -> None:
         """Force a full refetch of every month, including cached past ones, then refresh now.
@@ -775,9 +808,11 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
             watch_list, total_shows, total_episodes = await self.client.fetch_watch_list(
                 shows_limit, episodes_limit, exclude_characters=True
             )
-            # The rating is cached alongside the images by the shared helper; no
-            # entity of this coordinator reads it, so it is dropped here.
-            images, _ = await _async_get_show_details(
+            # The rating/trailer/genres are cached alongside the images by the
+            # shared helper - no extra request. Read by the upcoming_media_card
+            # `data` shape (see sensor.py); no other entity of this coordinator
+            # uses them.
+            images, ratings, trailers, genres = await _async_get_show_details(
                 self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
             )
         except AuthError as err:
@@ -787,7 +822,15 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
             _LOGGER.debug("Fetching watch list for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
-        return WatchListData(shows=watch_list, total_shows=total_shows, total_episodes=total_episodes, images=images)
+        return WatchListData(
+            shows=watch_list,
+            total_shows=total_shows,
+            total_episodes=total_episodes,
+            images=images,
+            ratings=ratings,
+            trailers=trailers,
+            genres=genres,
+        )
 
     async def async_clear_watch_list_cache(self) -> None:
         """Force a full refetch of the watch list, artwork included, then refresh now.

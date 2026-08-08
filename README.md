@@ -71,6 +71,7 @@ From the integration options, you can adjust afterwards:
 - The member stats / planning polling intervals.
 - How many past and future months of episodes the calendar and sensors load (2 months each way by default; up to 24 months back, 2 months ahead).
 - How many shows, and how many episodes per show, the "Shows to catch up on" sensor lists (10 shows x 2 episodes by default).
+- Whether the "Shows to catch up on" and "Calendar event count" sensors expose a `data` attribute for the [upcoming-media-card](https://github.com/custom-cards/upcoming-media-card) Lovelace card (off by default). See [Lovelace cards](#lovelace-cards) below.
 - The preferred language for BetaSeries responses (French or English).
 
 > [!NOTE]
@@ -115,6 +116,31 @@ logger:
 
 > [!WARNING]
 > Debug logs may contain authentication and account information. Review logs carefully before sharing them publicly.
+
+## Lovelace cards
+
+### upcoming-media-card
+
+The **Shows to catch up on**, **Calendar event count**, **Previous/Next episode airing** and
+**Suggestion of the day** sensors can feed the third-party
+[upcoming-media-card](https://github.com/custom-cards/upcoming-media-card) Lovelace card directly,
+behind the `upcoming_media_card` integration option (Watch list section, off by default). Turning
+it on enables it on all five sensors at once - there is a single option, not one per sensor.
+
+```yaml
+type: custom:upcoming-media-card
+entity: sensor.betaseries_shows_to_catch_up_on
+title: To catch up on
+image_style: fanart
+```
+
+Only the `$title`, `$episode`, `$number`, `$date`, `$day`, `$time`, `$rating`, `$studio`,
+`$genres` and `$empty` placeholders resolve to something in `line1_text` / `line2_text` / etc.
+Trailer links (`enable_trailers` in the card's own config) resolve too, but only for a YouTube
+trailer - BetaSeries returns other hosts as well, and only YouTube's URL is reconstructed.
+
+See **[Entities & Services](docs/guide-explained-entities.md)** for the exact shape of the `data`
+attribute each sensor exposes once the option is on.
 
 ## Troubleshooting
 

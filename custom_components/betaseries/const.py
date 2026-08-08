@@ -44,6 +44,13 @@ MAX_SHOWS_LIMIT = 50
 MIN_EPISODES_LIMIT = 1
 MAX_EPISODES_LIMIT = 10
 
+# Whether the watch list sensor also exposes a `data` attribute shaped for
+# third-party media cards (e.g. custom-cards/upcoming-media-card). Off by
+# default: building it costs one extra pass over the listed shows and ~8 kB
+# on the entity's state, for users who never installed such a card.
+CONF_UPCOMING_MEDIA_CARD = "upcoming_media_card"
+DEFAULT_UPCOMING_MEDIA_CARD = False
+
 # Number of months fetched per planning refresh, both directions around the
 # current month (see CLAUDE.md §4/§6). Configurable via OptionsFlow like the
 # scan intervals above. Past months are fetched once and cached (see
