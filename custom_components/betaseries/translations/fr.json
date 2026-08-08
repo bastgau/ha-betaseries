@@ -111,7 +111,7 @@
               "upcoming_media_card": "Exposer les données de la liste à voir pour la carte upcoming-media-card"
             },
             "data_description": {
-              "upcoming_media_card": "Ajoute un attribut `data` au format attendu par la carte Lovelace tierce custom-cards/upcoming-media-card. Désactivé par défaut : sa construction coûte un passage supplémentaire sur la liste et ajoute quelques kilooctets à l'état de cette entité pour qui n'a pas installé cette carte."
+              "upcoming_media_card": "Ajoute un attribut `data` au format attendu par la carte Lovelace tierce custom-cards/upcoming-media-card (désactivé par défaut)."
             }
           }
         }

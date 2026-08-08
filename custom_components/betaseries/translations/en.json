@@ -111,7 +111,7 @@
               "upcoming_media_card": "Expose watch list data for the upcoming-media-card"
             },
             "data_description": {
-              "upcoming_media_card": "Adds a `data` attribute shaped for the custom-cards/upcoming-media-card Lovelace card. Off by default, since building it costs an extra pass over the list and adds a few kilobytes to this entity's state for anyone who has not installed that card."
+              "upcoming_media_card": "Adds a `data` attribute shaped for the custom-cards/upcoming-media-card Lovelace card (off by default)."
             }
           }
         }
