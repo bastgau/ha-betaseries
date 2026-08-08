@@ -599,8 +599,15 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
 
     Attributes:
         coordinator (PlanningCoordinator): The coordinator providing the planning data.
+        _unrecorded_attributes (frozenset[str]): Attributes too bulky to write to the recorder.
 
     """
+
+    # "data" only exists once the upcoming_media_card option turns it on (see
+    # extra_state_attributes); kept out of the recorder for the same reason
+    # as BetaSeriesWatchListSensor's own "data" - it is a list rebuilt from
+    # scratch on every refresh, not a value with a history worth keeping.
+    _unrecorded_attributes = frozenset({"data"})
 
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
@@ -617,16 +624,69 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
         return len(self.coordinator.data.episodes)
 
     @property
-    def extra_state_attributes(self) -> dict[str, int]:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the event count broken down by month.
+    def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the event count broken down by month, and optionally the upcoming-media-card data.
 
         Returns:
-            dict[str, int]: Number of episodes per "YYYY-MM" month currently loaded.
+            dict[str, Any]: Number of episodes per "YYYY-MM" month currently loaded, plus `data` when the option is on.
 
         """
         if not self.coordinator.last_update_success:
             return {}
-        return _episode_counts_by_month(self.coordinator.data.episodes)
+        attributes: dict[str, Any] = _episode_counts_by_month(self.coordinator.data.episodes)
+        if self.coordinator.config_entry.options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD):
+            attributes["data"] = self._upcoming_media_card_data()
+        return attributes
+
+    def _upcoming_media_card_data(self) -> list[dict[str, Any]]:
+        """Return the upcoming episodes shaped for custom-cards/upcoming-media-card.
+
+        Same contract as BetaSeriesWatchListSensor._upcoming_media_card_data
+        (see its docstring for the card's own rules), applied here to release
+        dates rather than watch status: only episodes airing today or later
+        are listed - this is a "what's coming out" card, not a backlog, and
+        the window can reach months into the past (planning_months_behind).
+
+        No "flag": that key means "not yet watched" on the watch list, but
+        this list is about air dates, which `seen` has nothing to do with -
+        and the cached planning stops carrying `seen` for months served from
+        disk anyway (see PlanningCoordinator), so it would be wrong half the
+        time regardless.
+
+        Returns:
+            list[dict[str, Any]]: The template object followed by one item per upcoming episode.
+
+        """
+        template: dict[str, Any] = {
+            "title_default": "$title",
+            "line1_default": "$episode",
+            "line2_default": "$number",
+            "line3_default": "$date",
+            "line4_default": "$empty",
+            "icon": "mdi:calendar-star",
+        }
+        today = dt_util.now().date()
+        items: list[dict[str, Any]] = [template]
+        for episode in self.coordinator.data.episodes:
+            if episode.air_date < today:
+                continue
+            images = self.coordinator.data.images.get(episode.show.id, {})
+            rating = self.coordinator.data.ratings.get(episode.show.id) or None
+            items.append(
+                {
+                    "airdate": episode.air_date.isoformat(),
+                    "title": episode.show.title,
+                    "episode": episode.title,
+                    "number": episode.code,
+                    "poster": images.get("poster"),
+                    "fanart": images.get("show") or images.get("banner"),
+                    "deep_link": episode.resource_url,
+                    "summary": episode.description or episode.show.description,
+                    "rating": rating,
+                    "studio": " / ".join(sorted(episode.platforms)) or None,
+                }
+            )
+        return items
 
 
 class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
