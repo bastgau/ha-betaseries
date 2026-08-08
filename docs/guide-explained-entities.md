@@ -61,6 +61,39 @@ Your BetaSeries account statistics (episodes/movies watched, progress, badges...
 
 > The poster (`show_images`) is also set as the entity picture, so both sensors render as-is in a `picture-entity` card. How far back "previous" can see is bounded by the calendar's own window (2 months by default).
 
+With the `upcoming_media_card` integration option turned on (see
+[Lovelace cards](../README.md#lovelace-cards) in the README), each sensor also carries a `data`
+attribute: the single episode it points at, shaped for the third-party
+[upcoming-media-card](https://github.com/custom-cards/upcoming-media-card). No `flag`: this is
+about an air date, not a watch status.
+
+```json
+{
+  "data": [
+    {
+      "title_default": "$title",
+      "line1_default": "$episode",
+      "line2_default": "$number",
+      "line3_default": "$date",
+      "line4_default": "$empty",
+      "icon": "mdi:calendar-star"
+    },
+    {
+      "airdate": "2026-05-29",
+      "title": "Black Mirror",
+      "episode": "Joan Is Awful",
+      "number": "S06E01",
+      "poster": "https://pictures.betaseries.com/...",
+      "fanart": null,
+      "deep_link": "https://www.betaseries.com/episode/3905073",
+      "summary": "A tech CEO watches her life turned into a streaming show overnight.",
+      "rating": 3.89,
+      "studio": "Netflix"
+    }
+  ]
+}
+```
+
 #### - Shows to catch up on
 
 **Name:** sensor.betaseries_shows_to_catch_up_on
@@ -142,6 +175,40 @@ attribute: one item per show that has a next unseen episode, shaped for the thir
 **Attributes:** Same as the airing sensors above, plus `episode_remaining`.
 
 > A show is what gets drawn; the episode is always the oldest one you have not seen of it. The pick changes once a day, and in between only when you act on it: watch the suggested episode and it moves to the next one of that show, or to another show once you have finished it.
+
+With the `upcoming_media_card` integration option turned on (see
+[Lovelace cards](../README.md#lovelace-cards) in the README), this sensor also carries a `data`
+attribute: today's suggested episode, shaped for the third-party
+[upcoming-media-card](https://github.com/custom-cards/upcoming-media-card). `flag` is always
+`true`: the suggestion is always an unwatched episode.
+
+```json
+{
+  "data": [
+    {
+      "title_default": "$title",
+      "line1_default": "$episode",
+      "line2_default": "$number",
+      "line3_default": "$date",
+      "line4_default": "$empty",
+      "icon": "mdi:television-classic"
+    },
+    {
+      "airdate": "2026-05-29",
+      "title": "Black Mirror",
+      "episode": "Joan Is Awful",
+      "number": "S06E01",
+      "poster": "https://pictures.betaseries.com/...",
+      "fanart": null,
+      "deep_link": "https://www.betaseries.com/episode/3905073",
+      "summary": "A tech CEO watches her life turned into a streaming show overnight.",
+      "rating": 3.89,
+      "studio": "Netflix",
+      "flag": true
+    }
+  ]
+}
+```
 
 #### - Calendar event count
 

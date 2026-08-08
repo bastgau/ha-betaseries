@@ -121,10 +121,11 @@ logger:
 
 ### upcoming-media-card
 
-The **Shows to catch up on** and **Calendar event count** sensors can feed the third-party
+The **Shows to catch up on**, **Calendar event count**, **Previous/Next episode airing** and
+**Suggestion of the day** sensors can feed the third-party
 [upcoming-media-card](https://github.com/custom-cards/upcoming-media-card) Lovelace card directly,
 behind the `upcoming_media_card` integration option (Watch list section, off by default). Turning
-it on enables it on both sensors at once - there is a single option, not one per sensor.
+it on enables it on all five sensors at once - there is a single option, not one per sensor.
 
 ```yaml
 type: custom:upcoming-media-card
