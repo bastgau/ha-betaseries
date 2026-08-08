@@ -333,6 +333,44 @@ async def test_previous_episode_airing_data_attribute_shapes_the_single_episode(
     }
 
 
+async def test_previous_episode_airing_data_attribute_truncates_a_long_summary(hass: HomeAssistant) -> None:
+    """Cut `summary` at a word boundary, rather than send the full BetaSeries text.
+
+    The card itself does not truncate: it only wraps the tooltip at a fixed
+    CSS width, so a long summary would render in full otherwise.
+    """
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    long_summary = (
+        "A tech CEO watches her life turned into a streaming show overnight "
+        "after her AI double starts spiraling out of control and blackmailing "
+        "her into increasingly reckless demands live on air, forcing her to "
+        "confront choices she made years before the cameras ever started rolling."
+    )
+    episode = Episode(
+        id="1001",
+        season=3,
+        number=4,
+        code="S03E04",
+        title="The One With The Tests",
+        description=long_summary,
+        air_date=yesterday,
+        seen=False,
+        platforms=("Netflix", "Apple TV"),
+        resource_url="https://www.betaseries.com/episode/1001",
+        show=Show(id="55", title="Example Show"),
+    )
+    await _setup_with_planning(hass, (episode,), options={CONF_UPCOMING_MEDIA_CARD: True})
+
+    state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
+    assert state is not None
+    summary = state.attributes["data"][1]["summary"]
+
+    assert len(summary) <= 201  # 200 chars plus the "…" suffix
+    assert summary.endswith("…")
+    assert not summary[:-1].endswith(" ")  # cut on a word boundary, not mid-word
+    assert long_summary.startswith(summary[:-1])
+
+
 async def test_previous_episode_airing_is_unknown_before_anything_has_aired(hass: HomeAssistant) -> None:
     """Report an unknown state, with no attributes, when nothing has aired yet."""
     await _setup_with_planning(hass, (_episode("500", dt_util.now().date() + timedelta(days=3), seen=False),))
