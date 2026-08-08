@@ -107,7 +107,11 @@
             "data": {
               "episodes_scan_interval": "Intervalle de rafraîchissement de la liste à voir en minutes (5–120)",
               "shows_limit": "Séries listées dans la liste à voir (1–50)",
-              "episodes_limit": "Épisodes listés par série (1–10)"
+              "episodes_limit": "Épisodes listés par série (1–10)",
+              "upcoming_media_card": "Exposer les données de la liste à voir pour la carte upcoming-media-card"
+            },
+            "data_description": {
+              "upcoming_media_card": "Ajoute un attribut `data` au format attendu par la carte Lovelace tierce custom-cards/upcoming-media-card. Désactivé par défaut : sa construction coûte un passage supplémentaire sur la liste et ajoute quelques kilooctets à l'état de cette entité pour qui n'a pas installé cette carte."
             }
           }
         }

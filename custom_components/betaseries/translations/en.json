@@ -107,7 +107,11 @@
             "data": {
               "episodes_scan_interval": "Watch list refresh interval in minutes (5–120)",
               "shows_limit": "Shows listed in the watch list (1–50)",
-              "episodes_limit": "Episodes listed per show (1–10)"
+              "episodes_limit": "Episodes listed per show (1–10)",
+              "upcoming_media_card": "Expose watch list data for the upcoming-media-card"
+            },
+            "data_description": {
+              "upcoming_media_card": "Adds a `data` attribute shaped for the custom-cards/upcoming-media-card Lovelace card. Off by default, since building it costs an extra pass over the list and adds a few kilobytes to this entity's state for anyone who has not installed that card."
             }
           }
         }
