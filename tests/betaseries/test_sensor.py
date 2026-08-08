@@ -158,7 +158,7 @@ def _rated_shows(ratings: dict[str, float]) -> CollectionShow:
                     rating="",
                     notes_mean=rating,
                     notes_total=1,
-                    next_trailer=None,
+                    trailer_url=None,
                     resource_url=f"https://www.betaseries.com/serie/show-{show_id}",
                     images=ShowImages(show=None, banner=None, box=None, poster=None, clearlogo=None),
                 ),
@@ -328,6 +328,8 @@ async def test_previous_episode_airing_data_attribute_shapes_the_single_episode(
         "summary": "A thrilling episode summary.",
         "rating": 3.89,
         "studio": "Apple TV / Netflix",
+        "genres": None,
+        "trailer": None,
     }
 
 
@@ -749,6 +751,8 @@ async def test_calendar_event_count_data_attribute_lists_only_upcoming_episodes(
         "summary": "A thrilling episode summary.",
         "rating": 3.89,
         "studio": "Apple TV / Netflix",
+        "genres": None,
+        "trailer": None,
     }
 
 
@@ -852,7 +856,7 @@ async def test_episode_sensors_expose_the_show_poster_as_entity_picture(hass: Ho
                     rating="",
                     notes_mean=0,
                     notes_total=0,
-                    next_trailer=None,
+                    trailer_url=None,
                     resource_url="https://www.betaseries.com/serie/example-show",
                     images=ShowImages(
                         show=None,

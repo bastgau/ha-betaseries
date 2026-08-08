@@ -637,6 +637,8 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
                 "summary": episode.description or episode.show.description,
                 "rating": rating,
                 "studio": " / ".join(sorted(episode.platforms)) or None,
+                "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
+                "trailer": self.coordinator.data.trailers.get(episode.show.id),
             },
         ]
 
@@ -731,6 +733,8 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
                     "summary": episode.description or episode.show.description,
                     "rating": rating,
                     "studio": " / ".join(sorted(episode.platforms)) or None,
+                    "genres": list(self.coordinator.data.genres.get(episode.show.id, ())) or None,
+                    "trailer": self.coordinator.data.trailers.get(episode.show.id),
                 }
             )
         return items
@@ -906,6 +910,8 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
                     "summary": next_episode.description,
                     "rating": rating,
                     "studio": " / ".join(sorted(next_episode.platforms)) or None,
+                    "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
+                    "trailer": self.coordinator.data.trailers.get(show.id),
                     "flag": True,
                 }
             )
@@ -1067,6 +1073,8 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
                 "summary": episode.description,
                 "rating": rating,
                 "studio": " / ".join(sorted(episode.platforms)) or None,
+                "genres": list(self.coordinator.data.genres.get(show.id, ())) or None,
+                "trailer": self.coordinator.data.trailers.get(show.id),
                 "flag": True,
             },
         ]

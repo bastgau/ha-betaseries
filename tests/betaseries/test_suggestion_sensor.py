@@ -105,6 +105,8 @@ def _data(*shows: WatchListShow, images: dict[str, dict[str, str]] | None = None
         total_episodes=sum(len(show.episodes) for show in shows),
         images=images or {},
         ratings={},
+        trailers={},
+        genres={},
     )
 
 
@@ -355,6 +357,8 @@ async def test_sensor_data_attribute_shapes_the_single_suggestion(
         "summary": "",
         "rating": None,
         "studio": "Netflix",
+        "genres": None,
+        "trailer": None,
         "flag": True,
     }
 

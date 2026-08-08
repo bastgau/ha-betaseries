@@ -454,7 +454,7 @@ def _show_with_poster(show_id: str, poster: str | None, rating: float = 0.0) -> 
             rating="",
             notes_mean=rating,
             notes_total=0,
-            next_trailer=None,
+            trailer_url=None,
             resource_url="https://www.betaseries.com/serie/example-show",
             images=ShowImages(show=None, banner=None, box=None, poster=poster, clearlogo=None),
         ),
