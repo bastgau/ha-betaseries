@@ -6,6 +6,7 @@ using aioresponses.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import date, datetime
 from typing import Any
 
@@ -484,6 +485,7 @@ SHOW_SINGLE_PAYLOAD: dict[str, Any] = {
         "rating": "",
         "notes": {"total": 164, "mean": 3.89024, "user": 0},
         "next_trailer": "ZDdijwdg7s8",
+        "next_trailer_host": "youtube",
         "resource_url": "https://www.betaseries.com/serie/achtsam-morden",
         "images": {
             "show": "https://pictures.betaseries.com/fonds/show/38605_a.jpg",
@@ -516,6 +518,7 @@ SHOW_MULTIPLE_PAYLOAD: dict[str, Any] = {
             "rating": "",
             "notes": {"total": 0, "mean": 0, "user": 0},
             "next_trailer": None,
+            "next_trailer_host": None,
             "resource_url": "https://www.betaseries.com/serie/das-streben-nach-gluck",
             "images": {"show": None, "banner": None, "box": None, "poster": None},
         },
@@ -559,7 +562,7 @@ async def test_fetch_shows_single_id_success() -> None:
     assert info.rating == ""
     assert info.notes_mean == 3.89024
     assert info.notes_total == 164
-    assert info.next_trailer == "ZDdijwdg7s8"
+    assert info.trailer_url == "https://www.youtube.com/watch?v=ZDdijwdg7s8"
     assert info.resource_url == "https://www.betaseries.com/serie/achtsam-morden"
     assert info.images.poster == "https://pictures.betaseries.com/fonds/poster/a.jpg"
 
@@ -594,9 +597,29 @@ async def test_fetch_shows_normalizes_empty_and_zero_ids() -> None:
     assert info.additional_information.showrunners == ()
     assert info.additional_information.country is None
     assert info.additional_information.original_language is None
-    assert info.additional_information.next_trailer is None
+    assert info.additional_information.trailer_url is None
     assert info.additional_information.seasons == 0
     assert info.additional_information.followers == 0
+
+
+async def test_fetch_shows_never_builds_a_trailer_url_for_an_unconfirmed_host() -> None:
+    """Leave trailer_url unset for any host other than "youtube".
+
+    next_trailer is a bare video id, meaningless without knowing which
+    platform it belongs to. Only "youtube" is confirmed in practice (see
+    bruno/Shows/display.bru) - any other host must not produce a guessed URL.
+    """
+    payload = deepcopy(SHOW_SINGLE_PAYLOAD)
+    payload["show"]["next_trailer_host"] = "vimeo"
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    result = await client.fetch_shows(["38605"])
+
+    info = result.for_show("38605")
+    assert info is not None
+    assert info.additional_information is not None
+    assert info.additional_information.trailer_url is None
 
 
 async def test_fetch_shows_tolerates_missing_optional_fields() -> None:

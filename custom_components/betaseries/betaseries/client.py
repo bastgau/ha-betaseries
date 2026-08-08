@@ -93,6 +93,29 @@ def _to_int(value: Any, default: int = 0) -> int:
         return default
 
 
+# The only trailer host verified in practice (see bruno/Shows/display.bru):
+# next_trailer is a bare video id, meaningless without knowing which platform
+# it belongs to. Other hosts are possible but unconfirmed, so no URL is built
+# for them rather than guessing a template.
+_YOUTUBE_TRAILER_HOST = "youtube"
+
+
+def _trailer_url(next_trailer: Any, next_trailer_host: Any) -> str | None:
+    """Build a playable trailer URL, only for a confirmed host.
+
+    Args:
+        next_trailer (Any): The raw "next_trailer" payload value (a bare video id, or falsy).
+        next_trailer_host (Any): The raw "next_trailer_host" payload value.
+
+    Returns:
+        str | None: The trailer's URL, or None if there is none or its host is not one this can build a URL for.
+
+    """
+    if next_trailer and next_trailer_host == _YOUTUBE_TRAILER_HOST:
+        return f"https://www.youtube.com/watch?v={next_trailer}"
+    return None
+
+
 class Client:  # pylint: disable=too-many-public-methods
     """Fetch authenticated BetaSeries member data.
 
@@ -881,7 +904,7 @@ class Client:  # pylint: disable=too-many-public-methods
             rating=show.get("rating") or "",
             notes_mean=notes.get("mean") or 0,
             notes_total=notes.get("total") or 0,
-            next_trailer=show.get("next_trailer"),
+            trailer_url=_trailer_url(show.get("next_trailer"), show.get("next_trailer_host")),
             resource_url=show.get("resource_url") or "",
             images=Client._parse_show_images(show.get("images") or {}),
         )

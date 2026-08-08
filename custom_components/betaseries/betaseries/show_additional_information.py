@@ -32,7 +32,7 @@ class ShowAdditionalInformation:  # pylint: disable=too-many-instance-attributes
         rating (str): Content rating.
         notes_mean (float): Average member rating.
         notes_total (int): Number of member ratings.
-        next_trailer (str | None): Video id of the latest trailer.
+        trailer_url (str | None): Playable URL of the latest trailer, None if there is none or its host is not one this client can build a URL for.
         resource_url (str): Link to the show's BetaSeries page.
         images (ShowImages): The show's images.
 
@@ -53,6 +53,6 @@ class ShowAdditionalInformation:  # pylint: disable=too-many-instance-attributes
     rating: str
     notes_mean: float
     notes_total: int
-    next_trailer: str | None
+    trailer_url: str | None
     resource_url: str
     images: ShowImages
