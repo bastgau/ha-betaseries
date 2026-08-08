@@ -5,9 +5,12 @@ on:
   pull_request:
     branches:
       - "main"
-    paths:
-      - "custom_components/betaseries/manifest.json"
-      - ".github/workflows/validate-with-hassfest.yml"
+  push:
+    branches:
+      - "main"
+  release:
+    types:
+      - "published"
 
 jobs:
   validate-hassfest:
