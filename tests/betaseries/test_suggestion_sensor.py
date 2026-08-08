@@ -104,6 +104,7 @@ def _data(*shows: WatchListShow, images: dict[str, dict[str, str]] | None = None
         total_shows=len(shows),
         total_episodes=sum(len(show.episodes) for show in shows),
         images=images or {},
+        ratings={},
     )
 
 

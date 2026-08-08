@@ -783,6 +783,10 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
             if next_episode is None:
                 continue
             images = self._show_images(show)
+            # 0.0 means "no rating" (see WatchListData), not an actual zero
+            # score; sending it through would draw as a real rating instead
+            # of letting the card hide the line.
+            rating = self.coordinator.data.ratings.get(show.id) or None
             items.append(
                 {
                     "airdate": next_episode.air_date.isoformat(),
@@ -793,6 +797,8 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
                     "fanart": images.get("show") or images.get("banner"),
                     "deep_link": next_episode.resource_url,
                     "summary": next_episode.description,
+                    "rating": rating,
+                    "studio": " / ".join(sorted(next_episode.platforms)) or None,
                     "flag": True,
                 }
             )

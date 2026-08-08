@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import patch
@@ -334,8 +335,70 @@ async def test_data_attribute_shapes_the_list_for_upcoming_media_card(hass: Home
         "fanart": None,
         "deep_link": "https://www.betaseries.com/episode/3905073",
         "summary": "A thrilling episode summary.",
+        # notes_mean=0 in the fixture: no rating, so no fake zero-star rating.
+        "rating": None,
+        "studio": "Netflix",
         "flag": True,
     }
+
+
+async def test_data_attribute_reports_the_rating_and_sorted_platforms(hass: HomeAssistant) -> None:
+    """Surface the cached member rating and platforms sorted alphabetically into `studio`.
+
+    Both ride along data already fetched for other purposes: the rating from
+    the same GET /shows/display call that brings the artwork, the platforms
+    from the episode itself (see /planning/member's platform_links).
+    """
+    show = Show(
+        id="38605",
+        title="Achtsam Morden",
+        additional_information=ShowAdditionalInformation(
+            original_title="Achtsam Morden",
+            imdb_id=None,
+            themoviedb_id=None,
+            genres=(),
+            showrunners=(),
+            aliases=(),
+            seasons=2,
+            followers=0,
+            network="Netflix",
+            country=None,
+            original_language=None,
+            length=30,
+            rating="",
+            notes_mean=3.89,
+            notes_total=120,
+            next_trailer=None,
+            resource_url="https://www.betaseries.com/serie/achtsam-morden",
+            images=ShowImages(show=None, banner=None, box=None, poster=None, clearlogo=None),
+        ),
+    )
+    watch_list = CollectionWatchListShow(
+        (
+            WatchListShow(
+                id="38605",
+                title="Achtsam Morden",
+                remaining=8,
+                poster=None,
+                episodes=CollectionEpisode(
+                    (replace(EPISODE, platforms=("Netflix", "Apple TV", "Disney+")),),
+                ),
+            ),
+        )
+    )
+
+    await _setup(
+        hass,
+        (watch_list, 1, 1),
+        CollectionShow({"38605": show}),
+        options={CONF_UPCOMING_MEDIA_CARD: True},
+    )
+
+    state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
+    assert state is not None
+    item = state.attributes["data"][1]
+    assert item["rating"] == 3.89
+    assert item["studio"] == "Apple TV / Disney+ / Netflix"
 
 
 async def test_data_attribute_skips_a_show_with_no_listed_episode(hass: HomeAssistant) -> None:
