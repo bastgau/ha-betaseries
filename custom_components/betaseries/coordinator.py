@@ -478,6 +478,7 @@ class WatchListData:
         total_shows (int): Shows with at least one unseen episode, ignoring the configured limits.
         total_episodes (int): Unseen episodes across every show, ignoring the configured limits.
         images (dict[str, dict[str, str]]): Image URLs per listed show id.
+        ratings (dict[str, float]): BetaSeries member rating per show id, 0.0 for a show that has none.
 
     """
 
@@ -485,6 +486,7 @@ class WatchListData:
     total_shows: int
     total_episodes: int
     images: dict[str, dict[str, str]]
+    ratings: dict[str, float]
 
 
 class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
@@ -775,9 +777,10 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
             watch_list, total_shows, total_episodes = await self.client.fetch_watch_list(
                 shows_limit, episodes_limit, exclude_characters=True
             )
-            # The rating is cached alongside the images by the shared helper; no
-            # entity of this coordinator reads it, so it is dropped here.
-            images, _ = await _async_get_show_details(
+            # The rating is cached alongside the images by the shared helper -
+            # no extra request. Read by the upcoming_media_card `data` shape
+            # (see sensor.py); no other entity of this coordinator uses it.
+            images, ratings = await _async_get_show_details(
                 self.client, self.show_images_store, watch_list.show_ids, self.config_entry.title
             )
         except AuthError as err:
@@ -787,7 +790,9 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
             _LOGGER.debug("Fetching watch list for %s failed (%s)", self.config_entry.title, _cause(err))
             raise UpdateFailed(str(err)) from err
 
-        return WatchListData(shows=watch_list, total_shows=total_shows, total_episodes=total_episodes, images=images)
+        return WatchListData(
+            shows=watch_list, total_shows=total_shows, total_episodes=total_episodes, images=images, ratings=ratings
+        )
 
     async def async_clear_watch_list_cache(self) -> None:
         """Force a full refetch of the watch list, artwork included, then refresh now.
