@@ -5,10 +5,13 @@ on:
   pull_request:
     branches:
       - "main"
-    paths:
-      - "hacs.json"
-      - "custom_components/betaseries/manifest.json"
-      - ".github/workflows/validate-for-hacs.yml"
+  push:
+    branches:
+      - "main"
+  release:
+    types:
+      - "published"
+  workflow_dispatch:
 
 jobs:
   validate-hacs:
