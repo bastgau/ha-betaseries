@@ -32,7 +32,7 @@ jobs:
         shell: "bash"
         run: |
           cd "${{ github.workspace }}/custom_components/${{ env.INTEGRATION_DOMAIN }}"
-          zip ${{ env.INTEGRATION_DOMAIN }}.zip -r ./
+          zip ${{ env.INTEGRATION_DOMAIN }}.zip -r ./ -x "*.md" -x "*.bru"
 
       - name: "Upload the ZIP file to the release"
         uses: softprops/action-gh-release@v2.2.1
