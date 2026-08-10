@@ -57,6 +57,43 @@ const UMC_EDITOR_SCHEMA = [
     selector: { number: { min: 1, max: 50, mode: "box" } }
   },
   {
+    // The options this fork adds, kept together and folded away so the editor
+    // still opens on the upstream settings.
+    type: "expandable",
+    title: "BetaSeries",
+    schema: [
+      {
+        name: "overflow_fit",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "viewport", label: "Fit viewport height" },
+              { value: "content", label: "Grow with content" }
+            ]
+          }
+        }
+      },
+      {
+        name: "device_betaseries",
+        selector: { device: { integration: "betaseries" } }
+      },
+      {
+        name: "watched_button_style",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "dark", label: "Dark disc" },
+              { value: "ring", label: "White ring" },
+              { value: "light", label: "Light disc" }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
     type: "expandable",
     title: "Appearance",
     schema: [
@@ -212,7 +249,10 @@ const UMC_EDITOR_SCHEMA = [
 const UMC_EDITOR_LABELS = {
   entity: "Entity", title: "Card Title", image_style: "Image Style",
   max: "Maximum Items", clock: "Clock Format", overflow: "Overflow Columns",
-  max_columns: "Maximum Columns", collapse: "Collapse After",
+  max_columns: "Maximum Columns", overflow_fit: "Overflow Height",
+  device_betaseries: "BetaSeries Device (mark as watched)",
+  watched_button_style: "Watched Button Style",
+  collapse: "Collapse After",
   date: "Date Format", corner_radius: "Corner Radius",
   title_size: "Title Size", line_size: "Line Size",
   title_color: "Title Color", line1_color: "Line 1 Color",
@@ -307,7 +347,8 @@ class UpcomingMediaCardEditor extends HTMLElement {
     const KEY_ORDER = [
       'type', 'entity', 'title', 'image_style',
       'max', 'clock',
-      'overflow', 'max_columns',
+      'overflow', 'max_columns', 'overflow_fit',
+      'device_betaseries', 'watched_button_style',
       'collapse',
       'date', 'corner_radius', 'title_size', 'line_size',
       'title_color', 'line1_color', 'line2_color', 'line3_color', 'line4_color',
@@ -333,6 +374,8 @@ class UpcomingMediaCardEditor extends HTMLElement {
       hide_unflagged: false,
       corner_radius: 12,
       overflow: false,
+      overflow_fit: 'viewport',
+      watched_button_style: 'dark',
       sort_ascending: false,
       clock: 12,
       box_shadows: true,
@@ -1794,6 +1837,9 @@ class UpcomingMediaCard extends HTMLElement {
         } else {
           clickableAreaDiv.style.cursor = 'default';
         }
+        if (this.config.device_betaseries && item("episode_id")) {
+          this._addWatchedButton(containerDiv, item("episode_id"));
+        }
         if (count <= this.collapse) {
           this.content.appendChild(containerDiv);
         } else {
@@ -1859,6 +1905,9 @@ class UpcomingMediaCard extends HTMLElement {
         } else {
           clickableAreaDivFanart.style.cursor = 'default';
         }
+        if (this.config.device_betaseries && item("episode_id")) {
+          this._addWatchedButton(fanartContainerDiv, item("episode_id"));
+        }
         let gapWrapperDiv = document.createElement('div');
         gapWrapperDiv.className = `${service}_gap_wrapper_${view}`;
         this.content.appendChild(gapWrapperDiv);
@@ -1891,8 +1940,14 @@ class UpcomingMediaCard extends HTMLElement {
 
     // START: Overflow columns feature
     if (overflowActive) {
-      this.content.style.height = Math.max(200, window.innerHeight - 120) + 'px';
-      this.content.style.overflowY = 'hidden';
+      if (this.config.overflow_fit === 'content') {
+        // No provisional viewport clamp: the layout is column-driven, not height-driven.
+        this.content.style.height = '';
+        this.content.style.overflowY = '';
+      } else {
+        this.content.style.height = Math.max(200, window.innerHeight - 120) + 'px';
+        this.content.style.overflowY = 'hidden';
+      }
       this._applyOverflow();
     } else {
       this._clearOverflow();
@@ -2163,6 +2218,165 @@ class UpcomingMediaCard extends HTMLElement {
     this.tooltipListeners.set(element, { ...listeners, cleanup });
   }
 
+  // START: BetaSeries "mark as watched" button
+  // Resolves the `device_betaseries` option to the config entry id that
+  // betaseries.mark_episode_watched expects. The option holds a device id (that
+  // is what the device picker yields), but a raw config entry id is accepted
+  // too, so a hand-written YAML value keeps working.
+  _resolveBetaseriesEntry() {
+    const ref = this.config.device_betaseries;
+    if (!ref || !this._hass) return null;
+    const device = (this._hass.devices || {})[ref];
+    if (device && Array.isArray(device.config_entries) && device.config_entries.length > 0) {
+      return device.config_entries[0];
+    }
+    return ref;
+  }
+
+  // Adds a round button in the bottom-right corner of one media item. The item
+  // is already covered edge to edge by the deep-link overlay (z-index 5), so
+  // this sits above it and swallows the events it handles.
+  _addWatchedButton(container, episodeId) {
+    // Success is signalled by the eye filling in, not by a colour: the disc
+    // keeps its skin throughout. mdi:eye-outline at rest, mdi:eye once the
+    // episode is marked watched.
+    // The eye lens, as one closed outline. Whether it reads as hollow or solid
+    // is decided by how it is painted (see `draw`), not by the path data:
+    // hand-rolling a two-ring `mdi:eye-outline` silhouette relies on opposite
+    // winding, which is easy to get wrong and invisible until rendered.
+    const EYE_LENS = 'M12,5.5C7.2,5.5 3.1,8.4 1.5,12C3.1,15.6 7.2,18.5 12,18.5C16.8,18.5 20.9,15.6 22.5,12C20.9,8.4 16.8,5.5 12,5.5Z';
+    const EYE_PUPIL = 'M12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5Z';
+    const ICON_ALERT = 'M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z';
+    const ERR_BG = 'rgba(198,40,40,0.95)';
+    // Idle/hover skins, picked by `watched_button_style`. Success and failure
+    // keep their own colours in every skin: they carry meaning, not styling.
+    const SKINS = {
+      dark: {
+        idle: 'rgba(0,0,0,0.55)', hover: 'rgba(0,0,0,0.8)',
+        fg: '#fff', border: 'none'
+      },
+      ring: {
+        // 1px, not 2px: a 2px ring on an 11px disc eats most of the room the
+        // glyph needs.
+        idle: 'rgba(0,0,0,0.35)', hover: 'rgba(0,0,0,0.65)',
+        fg: '#fff', border: '1px solid rgba(255,255,255,0.9)'
+      },
+      light: {
+        idle: 'rgba(255,255,255,0.92)', hover: '#fff',
+        fg: '#1c1c1c', border: 'none'
+      }
+    };
+    const skin = SKINS[this.config.watched_button_style] || SKINS.dark;
+
+    // The button is the hit target; `disc` is the thing you actually see. The
+    // two are kept separate so either can be resized on its own.
+    // Deliberately below the 24px WCAG 2.5.8 touch-target minimum: this size
+    // was asked for, and it is comfortable with a pointer, fiddly with a thumb.
+    const HIT = 22;
+    const DISC = 18;
+    const GLYPH = 13;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'umc-watched-btn';
+    btn.title = 'Mark as watched';
+    btn.setAttribute('aria-label', 'Mark as watched');
+    btn.style.cssText = 'position:absolute;right:9px;bottom:9px;'
+      + 'width:' + HIT + 'px;height:' + HIT + 'px;'
+      + 'box-sizing:border-box;padding:0;display:flex;align-items:center;justify-content:center;'
+      + 'border:none;background:none;color:inherit;cursor:pointer;z-index:6;'
+      + 'transition:transform .2s,opacity .2s;';
+
+    const disc = document.createElement('span');
+    disc.className = 'umc-watched-disc';
+    disc.style.cssText = 'width:' + DISC + 'px;height:' + DISC + 'px;'
+      + 'box-sizing:border-box;display:flex;align-items:center;justify-content:center;'
+      + 'border:' + skin.border + ';border-radius:50%;background:' + skin.idle + ';'
+      + 'color:' + skin.fg + ';pointer-events:none;'
+      + 'box-shadow:0 1px 3px rgba(0,0,0,0.5);transition:background .2s;';
+    btn.appendChild(disc);
+
+    const svg = (body) => {
+      disc.innerHTML = '<svg viewBox="0 0 24 24" width="' + GLYPH + '" height="' + GLYPH + '" style="display:block;">'
+        + body + '</svg>';
+    };
+    // Hollow: both lens and pupil stroked, nothing filled. Solid: lens filled,
+    // pupil punched back out in the disc colour so it stays readable.
+    const drawEye = (solid) => {
+      if (solid) {
+        svg('<path fill="currentColor" d="' + EYE_LENS + '"/>'
+          + '<path fill="' + skin.idle + '" d="' + EYE_PUPIL + '"/>');
+      } else {
+        svg('<g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round">'
+          + '<path d="' + EYE_LENS + '"/><path d="' + EYE_PUPIL + '"/></g>');
+      }
+    };
+    const draw = (path) => svg('<path fill="currentColor" d="' + path + '"/>');
+    drawEye(false);
+
+    const reset = () => {
+      drawEye(false);
+      disc.style.background = skin.idle;
+      disc.style.color = skin.fg;
+      btn.style.transform = '';
+      btn.style.opacity = '1';
+      btn._umcBusy = false;
+    };
+
+    btn.addEventListener('mouseenter', () => {
+      if (!btn._umcBusy) disc.style.background = skin.hover;
+    });
+    btn.addEventListener('mouseleave', () => {
+      if (!btn._umcBusy) disc.style.background = skin.idle;
+    });
+
+    btn.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (btn._umcBusy) return;
+      const entryId = this._resolveBetaseriesEntry();
+      if (!entryId) {
+        console.error('upcoming-media-card: device_betaseries resolves to no config entry');
+        disc.style.background = ERR_BG;
+        disc.style.color = '#fff';
+        draw(ICON_ALERT);
+        setTimeout(reset, 2500);
+        return;
+      }
+      btn._umcBusy = true;
+      // Fill the eye on press rather than on reply: the round trip is long
+      // enough to read as a dead moment otherwise. It is an optimistic state -
+      // the catch below puts the outline back if the call turns out to fail.
+      drawEye(true);
+      try {
+        await this._hass.callService('betaseries', 'mark_episode_watched', {
+          config_entry: entryId,
+          episode_id: String(episodeId)
+        });
+        // The service refreshes the member and watch-list coordinators, so the
+        // sensor - and this card with it - redraws on its own shortly after.
+        // The filled eye is left in place until that happens: on a watch-list
+        // sensor the item disappears, on an airing sensor it stays as a "this
+        // one is watched" marker. `_umcBusy` stays true so the same episode is
+        // not sent twice while the refresh is in flight.
+      } catch (err) {
+        console.error('upcoming-media-card: mark_episode_watched failed', err);
+        disc.style.background = ERR_BG;
+        disc.style.color = '#fff';
+        draw(ICON_ALERT);
+        setTimeout(reset, 2500);
+      }
+    });
+
+    // Keep presses off the deep-link overlay underneath.
+    ['mousedown', 'pointerdown', 'touchstart'].forEach((type) => {
+      btn.addEventListener(type, (ev) => ev.stopPropagation(), { passive: true });
+    });
+
+    container.appendChild(btn);
+    return btn;
+  }
+  // END: BetaSeries "mark as watched" button
+
   _applyOverflow() {
     clearTimeout(this._overflowResizeTimer);
     clearTimeout(this._overflowImageTimer);
@@ -2236,10 +2450,13 @@ class UpcomingMediaCard extends HTMLElement {
 
       const items = Array.from(this.content.children);
       if (items.length === 0) { unlockAndReveal(); return 'empty'; }
+      const growWithContent = this.config.overflow_fit === 'content';
       const firstH = items[0].offsetHeight;
       if (firstH < 10 || this.offsetWidth < 50) {
-        this.content.style.height = Math.max(200, window.innerHeight - 120) + 'px';
-        this.content.style.overflowY = 'hidden';
+        if (!growWithContent) {
+          this.content.style.height = Math.max(200, window.innerHeight - 120) + 'px';
+          this.content.style.overflowY = 'hidden';
+        }
         return 'no-dimensions';
       }
 
@@ -2292,7 +2509,7 @@ class UpcomingMediaCard extends HTMLElement {
         itemCount: items.length,
         ancestors: _ancestorLog
       });
-      if (availableHeight < 100) {
+      if (availableHeight < 100 && !growWithContent) {
         this.content.style.height = Math.max(200, window.innerHeight - 120) + 'px';
         this.content.style.overflowY = 'hidden';
         return 'no-height';
@@ -2303,7 +2520,11 @@ class UpcomingMediaCard extends HTMLElement {
         ? this._overflowReducedColWidth
         : (fromRecovery && this._overflowProvenColWidth)
           ? this._overflowProvenColWidth : 500;
-      let maxColWidth = Math.min(containerWidth, baseMaxColWidth);
+      // Content mode shares the available width between the columns instead of
+      // capping each one at 500px, so the card keeps filling its container.
+      let maxColWidth = growWithContent
+        ? containerWidth
+        : Math.min(containerWidth, baseMaxColWidth);
       const originalMaxColWidth = maxColWidth;
       const isWidthUnconstrained = containerWidth > maxColWidth;
 
@@ -2335,7 +2556,7 @@ class UpcomingMediaCard extends HTMLElement {
         itemGap = items[1].offsetTop - (items[0].offsetTop + items[0].offsetHeight);
       }
       if (itemGap < 0) itemGap = 0;
-      if (!isWidthUnconstrained) {
+      if (!isWidthUnconstrained && !growWithContent) {
         let totalFlatHeight = 0;
         items.forEach((item, i) => {
           totalFlatHeight += item.offsetHeight + (i > 0 ? itemGap : 0);
@@ -2368,8 +2589,15 @@ class UpcomingMediaCard extends HTMLElement {
         this.content.style.alignItems = 'flex-start';
         this.content.style.justifyContent = 'center';
         this.content.style.gap = partition.length > 1 ? gap + 'px' : '0px';
-        this.content.style.height = availableHeight + 'px';
-        this.content.style.overflowY = 'hidden';
+        if (growWithContent) {
+          // Height follows the tallest column instead of the viewport, so no item
+          // ever falls below a clip line and gets trimmed away.
+          this.content.style.height = '';
+          this.content.style.overflowY = '';
+        } else {
+          this.content.style.height = availableHeight + 'px';
+          this.content.style.overflowY = 'hidden';
+        }
 
         partition.forEach((colIndices, colIndex) => {
           const colDiv = document.createElement('div');
@@ -2396,7 +2624,10 @@ class UpcomingMediaCard extends HTMLElement {
         const totalGaps = numCols > 1 ? (numCols - 1) * gap : 0;
         const cardMaxWidth = (numCols * maxColWidth) + totalGaps + contentPadX;
         if (haCard) {
-          haCard.style.maxWidth = cardMaxWidth + 'px';
+          // In content mode the card is meant to fill whatever space it is
+          // given, so cap it in percentage terms instead of pinning a pixel
+          // width that would leave a gap on wider screens.
+          haCard.style.maxWidth = growWithContent ? '100%' : cardMaxWidth + 'px';
           haCard.style.marginLeft = 'auto';
           haCard.style.marginRight = 'auto';
         }
@@ -2526,6 +2757,22 @@ class UpcomingMediaCard extends HTMLElement {
       const maxPossibleCols = Math.min(items.length, 6, this.config.max_columns || 6);
       const effectiveMinCols = this._overflowMinCols || 0;
       const startCols = Math.max(1, effectiveMinCols);
+
+      // START: content-fit layout (overflow_fit: content)
+      // The column count is driven by max_columns and the available width only.
+      // Every item is laid out; the card grows vertically instead of trimming.
+      if (growWithContent) {
+        const minColWidth = 250;
+        const widthCap = Math.max(1, Math.floor((containerWidth + gap) / (minColWidth + gap)));
+        const cols = Math.min(maxPossibleCols, widthCap);
+        const perCol = Math.ceil(items.length / cols);
+        applyPartition(buildPackedPartition(items.length, cols, perCol));
+        void this.content.offsetHeight;
+        unlockAndReveal();
+        this._overflowPending = false;
+        return 'applied';
+      }
+      // END: content-fit layout
 
       const scheduleDeferredTrim = () => {
         let prevColHeight = -1;
@@ -2791,7 +3038,11 @@ class UpcomingMediaCard extends HTMLElement {
       clearTimeout(this._overflowResizeTimer);
       this._overflowResizeTimer = setTimeout(recalculate, 60);
     });
-    this._overflowObserver.observe(this);
+    // Observe the parent, not the card: applyPartition pins a pixel max-width
+    // on ha-card, so once it is set the card itself stops widening and its
+    // contentRect freezes - the observer would never fire again and the layout
+    // would stay stuck at whatever width it was first measured at.
+    this._overflowObserver.observe(this.parentElement || this);
 
     // Detect card becoming visible after section visibility toggle (GitHub #117)
     if (this._overflowIntersectionObs) this._overflowIntersectionObs.disconnect();
@@ -2866,6 +3117,17 @@ class UpcomingMediaCard extends HTMLElement {
     this.config.overflow = config.overflow !== undefined ? config.overflow : false;
     const _mc = config.max_columns !== undefined ? parseInt(config.max_columns, 10) : NaN;
     this.config.max_columns = !isNaN(_mc) ? Math.max(0, Math.min(6, _mc)) : undefined;
+    // 'content' lays items out in up to max_columns columns and lets the card
+    // grow as tall as it needs; 'viewport' (default) keeps the original
+    // behaviour of fitting - and trimming to - the visible viewport height.
+    this.config.overflow_fit = config.overflow_fit === 'content' ? 'content' : 'viewport';
+    // Opt-in: without it, no item gets a "mark as watched" button and the card
+    // never calls a service.
+    this.config.device_betaseries = config.device_betaseries || undefined;
+    this.config.watched_button_style =
+      ['dark', 'ring', 'light'].indexOf(config.watched_button_style) !== -1
+        ? config.watched_button_style
+        : 'dark';
   }
 
   getCardSize() {
