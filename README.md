@@ -121,6 +121,9 @@ logger:
 
 ### upcoming-media-card
 
+<img src="img/upcoming-media-card-screeshot-01.png" width="600">
+<img src="img/upcoming-media-card-screeshot-02.png" width="600">
+
 The **Shows to catch up on**, **Calendar event count**, **Previous/Next episode airing** and
 **Suggestion of the day** sensors can feed the third-party
 [upcoming-media-card](https://github.com/custom-cards/upcoming-media-card) Lovelace card directly,
