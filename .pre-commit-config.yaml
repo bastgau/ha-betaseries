@@ -47,4 +47,6 @@ repos:
         additional_dependencies:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
-        exclude: ^bruno/
+        # `card/` holds a vendored third-party card kept diffable against
+        # upstream: reformatting it rewrites every line.
+        exclude: ^(bruno|card)/
