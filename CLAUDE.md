@@ -93,22 +93,44 @@ Cinq workflows. Les deux qui comptent au quotidien :
 - **`test.yml`** : 2 jobs, `client` et `integration`, chacun avec **son propre plancher de
   couverture à 95 %** (`--cov-fail-under=95`).
 
+⚠️ **Pas de filtre `paths:` au niveau du workflow, dans ni l'un ni l'autre** (retiré le 2026-08-11).
+Un required status check (branch protection : `client`, `integration`, `tests`) reste bloqué en
+« Expected — Waiting for status to be reported » si le workflow qui le produit ne se déclenche
+jamais - ce qui arrivait sur toute PR ne touchant aucun `.py` (doc, README, `bruno/`...), puisque
+les deux `on.pull_request.paths` filtraient déjà à ce niveau. Les deux workflows tournent
+maintenant sur chaque push/PR ; un job `changes` (en tête, via `dorny/paths-filter`) calcule si les
+chemins pertinents ont changé et expose `outputs.python`, que `client`/`integration`/`lint`
+consomment via `if: needs.changes.outputs.python == 'true'`. Un job dont le `if` est faux est
+**skipped**, pas absent - GitHub Actions traite un skip comme satisfaisant un required check,
+contrairement à un contexte qui n'est jamais rapporté. La liste de chemins surveillés par
+`paths-filter` dans chaque workflow reprend exactement l'ancien bloc `paths:`.
+
 Le découpage n'est pas cosmétique : **chaque moitié couvre 100 % de ce qu'elle possède, seule.**
 Si une branche du client finit par n'être atteinte que via un test HA, ça se voit comme une chute
 de couverture au lieu de se noyer dans un run combiné. Le job `integration` utilise
 `.coveragerc-integration`, qui soustrait le client de la mesure (`pytest-cov` sait ajouter des
 chemins, jamais en retrancher un).
 
-- **Version de HA résolue au run time**, jamais épinglée : chaque job interroge
-  `https://pypi.org/pypi/homeassistant/json` (`info.version` = dernière **stable**, les bêtas
-  `2026.8.0b*` en sont exclues) et installe avec `homeassistant==<cette version>`. La CI répond
-  donc « ça marche-t-il avec le HA que les gens font tourner ? ».
-  - Corollaire assumé : **la CI n'est pas déterministe**. Une sortie stable de HA peut la faire
-    rougir sans qu'aucun commit ne bouge. Le `::notice::` en tête de run affiche la version.
-  - `requirements-test-integration.txt` ne contient **qu'une ligne sans version** :
-    `pytest-homeassistant-custom-component` épingle tout son monde (HA, pytest, pytest-cov…), et
-    pip rétrograde ce paquet jusqu'à celui construit pour la HA demandée. Sans la contrainte, il
-    installerait une **bêta** (vérifié : 0.13.351 exige `homeassistant==2026.8.0b3`).
+- **Version de HA épinglée en dur**, pas résolue au run time (bascule faite le 2026-08-06, commit
+  `9e027ba` - ce que ce paragraphe affirmait avant, une résolution dynamique via
+  `https://pypi.org/pypi/homeassistant/json`, décrivait l'état **pré**-`9e027ba` et a survécu sans
+  être corrigé à la resynchronisation du 2026-08-01, elle-même antérieure). `test.yml` n'appelle
+  plus pypi.org et ne passe plus de `homeassistant==<version>` au job : seul
+  `requirements-test-integration.txt` fixe la version, via `pytest-homeassistant-custom-component`
+  **épinglé exactement** (`==0.13.348`, qui tire `homeassistant==2026.7.4` en transitif) plutôt que
+  laissé sans version.
+  - Corollaire inversé par rapport à l'ancien texte : **la CI est déterministe** - un run ne rougit
+    plus tout seul entre deux commits identiques, mais elle ne dit plus non plus « ça marche-t-il
+    avec le HA que les gens font tourner aujourd'hui ». Elle répond « ça marche-t-il avec la version
+    de HA fixée dans ce fichier ».
+  - Motif du pin, documenté dans le fichier lui-même : laisser
+    `pytest-homeassistant-custom-component` sans contrainte de version fait remonter des **bêtas**
+    HA non publiées (vérifié historiquement : 0.13.351 exigeait `homeassistant==2026.8.0b3`), donc
+    un pin exact vers une release qui précède ce comportement est le seul moyen d'obtenir du stable.
+  - ⚠️ Ce pin est un **entretien manuel récurrent**, pas un `TODO` isolé : le fichier dit
+    explicitement de le bumper « quand homeassistant est upgradé », mais rien ne rappelle qu'il
+    l'est - aucun job ne compare la version pinnée à la dernière stable HA. Vérifier ce fichier
+    avant de faire confiance à un run vert comme preuve de compatibilité avec le HA du jour.
 - `scripts/lint [client|integration|tests|src|all]` calque exactement la matrice CI, pour qu'un vert
   local prédise un vert distant. `scripts/test` lance la suite complète (plancher 95 % via
   `pyproject.toml`).

@@ -5,19 +5,7 @@ on:
   push:
     tags-ignore:
       - "v*"
-    paths:
-      - "custom_components/betaseries/**/*.py"
-      - "tests/**/*.py"
-      - "requirements-lint.txt"
-      - "pyproject.toml"
-      - ".github/workflows/lint.yml"
   pull_request:
-    paths:
-      - "custom_components/betaseries/**/*.py"
-      - "tests/**/*.py"
-      - "requirements-lint.txt"
-      - "pyproject.toml"
-      - ".github/workflows/lint.yml"
   workflow_dispatch:
 
 permissions: {}
@@ -26,8 +14,35 @@ env:
   PYTHON_VERSION: "3.14"
 
 jobs:
+  # Required status checks (branch protection) wait forever if the workflow
+  # itself never runs, which is what a top-level `paths:` filter causes on a
+  # PR that touches no .py file. This job always runs and tells the lint
+  # matrix below whether to do actual work or report a no-op success, so the
+  # check always reports instead of staying stuck on "Expected".
+  changes:
+    name: "changes"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+    outputs:
+      python: "${{ steps.filter.outputs.python }}"
+    steps:
+      - uses: "actions/checkout@v7"
+      - uses: "dorny/paths-filter@v3"
+        id: "filter"
+        with:
+          filters: |
+            python:
+              - "custom_components/betaseries/**/*.py"
+              - "tests/**/*.py"
+              - "requirements-lint.txt"
+              - "pyproject.toml"
+              - ".github/workflows/lint.yml"
+
   lint:
     name: "${{ matrix.name }}"
+    needs: "changes"
+    if: "needs.changes.outputs.python == 'true'"
     runs-on: "ubuntu-latest"
 
     # One job per scope rather than one job over everything: the three have

@@ -5,23 +5,7 @@ on:
   push:
     tags-ignore:
       - "v*"
-    paths:
-      - "custom_components/betaseries/**/*.py"
-      - "tests/**/*.py"
-      - "requirements.txt"
-      - "requirements-test-*.txt"
-      - "pyproject.toml"
-      - ".coveragerc*"
-      - ".github/workflows/test.yml"
   pull_request:
-    paths:
-      - "custom_components/betaseries/**/*.py"
-      - "tests/**/*.py"
-      - "requirements.txt"
-      - "requirements-test-*.txt"
-      - "pyproject.toml"
-      - ".coveragerc*"
-      - ".github/workflows/test.yml"
   workflow_dispatch:
 
 permissions: {}
@@ -30,6 +14,33 @@ env:
   PYTHON_VERSION: "3.14"
 
 jobs:
+  # Required status checks (branch protection) wait forever if the workflow
+  # itself never runs, which is what a top-level `paths:` filter causes on a
+  # PR that touches no .py file. This job always runs and tells the two real
+  # jobs below whether to do actual work or report a no-op success, so the
+  # check always reports instead of staying stuck on "Expected".
+  changes:
+    name: "changes"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+    outputs:
+      python: "${{ steps.filter.outputs.python }}"
+    steps:
+      - uses: "actions/checkout@v7"
+      - uses: "dorny/paths-filter@v3"
+        id: "filter"
+        with:
+          filters: |
+            python:
+              - "custom_components/betaseries/**/*.py"
+              - "tests/**/*.py"
+              - "requirements.txt"
+              - "requirements-test-*.txt"
+              - "pyproject.toml"
+              - ".coveragerc*"
+              - ".github/workflows/test.yml"
+
   # Same split as the lint workflow, for the same reason: the bundled client is
   # a library that stands on its own (see its README), the rest is the Home
   # Assistant integration, and a failure should say which of the two broke.
@@ -40,6 +51,8 @@ jobs:
   # as a coverage drop instead of hiding in a combined run.
   client:
     name: "client"
+    needs: "changes"
+    if: "needs.changes.outputs.python == 'true'"
     runs-on: "ubuntu-latest"
 
     steps:
@@ -71,6 +84,8 @@ jobs:
 
   integration:
     name: "integration"
+    needs: "changes"
+    if: "needs.changes.outputs.python == 'true'"
     runs-on: "ubuntu-latest"
 
     steps:
