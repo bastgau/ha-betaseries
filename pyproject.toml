@@ -39,7 +39,7 @@ pytest = "9.0.3"
 pytest-asyncio = "1.4.0"
 pytest-cov = "7.1.0"
 pytest-homeassistant-custom-component = "0.13.355"
-ruff = "0.15.1"
+ruff = "0.16.2"
 
 [tool.ruff]
 # NOTE: runtime target is Python 3.14, but ruff's target-version is intentionally
@@ -74,6 +74,7 @@ ignore = [
   "PLR0915", # Too many statements (58 > 50)
   "BLE001",  # Do not catch blind exception: `Exception`
   "S110",    # `try`-`except`-`pass` detected, consider logging the exception
+  "CPY001",  # No copyright header convention in this project
 
   # Formatter conflicts
   "COM812",
