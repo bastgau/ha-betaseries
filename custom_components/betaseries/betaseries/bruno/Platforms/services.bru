@@ -1,0 +1,182 @@
+meta {
+  name: services
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/platforms/services
+  body: none
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Display the different services a user can have.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/platforms/services
+    method: GET
+    mode: none
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "services": [
+            {
+              "id": 25,
+              "name": "ADN",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/25.jpg"
+            },
+            {
+              "id": 255,
+              "name": "Apple TV",
+              "subscribed": true,
+              "logo": "https://pictures.betaseries.com/platforms/255.jpg"
+            },
+            {
+              "id": 26,
+              "name": "Arte",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/26.jpg"
+            },
+            {
+              "id": 278,
+              "name": "Canal+",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/278.jpg"
+            },
+            {
+              "id": 221,
+              "name": "Crunchyroll",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/221.jpg"
+            },
+            {
+              "id": 246,
+              "name": "Disney+",
+              "subscribed": true,
+              "logo": "https://pictures.betaseries.com/platforms/246.jpg"
+            },
+            {
+              "id": 27,
+              "name": "france.tv",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/27.jpg"
+            },
+            {
+              "id": 418,
+              "name": "HBO Max",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/418.jpg"
+            },
+            {
+              "id": 421,
+              "name": "iQIYI",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/421.jpg"
+            },
+            {
+              "id": 17,
+              "name": "M6+",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/17.jpg"
+            },
+            {
+              "id": 1,
+              "name": "Netflix",
+              "subscribed": true,
+              "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+            },
+            {
+              "id": 420,
+              "name": "NOVO19",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/420.jpg"
+            },
+            {
+              "id": 2,
+              "name": "OCS",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/2.jpg"
+            },
+            {
+              "id": 33,
+              "name": "Paramount+",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/33.jpg"
+            },
+            {
+              "id": 415,
+              "name": "Pass Warner",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/415.jpg"
+            },
+            {
+              "id": 3,
+              "name": "Prime Video",
+              "subscribed": true,
+              "logo": "https://pictures.betaseries.com/platforms/3.jpg"
+            },
+            {
+              "id": 252,
+              "name": "Rakuten Viki",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/252.jpg"
+            },
+            {
+              "id": 416,
+              "name": "TF1+",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/416.jpg"
+            },
+            {
+              "id": 419,
+              "name": "WOW Presents Plus",
+              "subscribed": false,
+              "logo": "https://pictures.betaseries.com/platforms/419.jpg"
+            }
+          ],
+          "locale": "fr",
+          "errors": []
+        }
+      '''
+    }
+  }
+}
