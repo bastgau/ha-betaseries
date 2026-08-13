@@ -969,14 +969,16 @@ class UpcomingMediaCard extends HTMLElement {
       card.header = this.config.title;
 
       this._searchBar = document.createElement("div");
-      this._searchBar.style.padding = "5px 10px 0";
+      this._searchBar.style.padding = "0 10px";
       this._searchInput = document.createElement("input");
       this._searchInput.type = "search";
       this._searchInput.autocomplete = "off";
       this._searchInput.spellcheck = false;
       this._searchInput.placeholder = this.config.search_placeholder || "Search title or platform…";
-      this._searchInput.style.width = "100%";
+      this._searchInput.style.width = "calc(100% - 30px)";
       this._searchInput.style.boxSizing = "border-box";
+      const initialView = this.config.image_style || "poster";
+      this._searchInput.style.margin = initialView == "poster" ? "15px 15px 0" : "15px";
       this._searchInput.style.padding = "8px 12px";
       this._searchInput.style.borderRadius = "8px";
       this._searchInput.style.border = "1px solid var(--divider-color, #ccc)";
@@ -1173,13 +1175,18 @@ class UpcomingMediaCard extends HTMLElement {
         noResultsMsg.textContent = `No results for “${this._searchQuery}”`;
         this.content.innerHTML = "";
         this.content.appendChild(noResultsMsg);
-        this.prev_json = JSON.stringify(json);
+        this.prev_json = JSON.stringify(json) + '|' + (this.config.image_style || "poster");
       }
       return;
     }
-    if (this.prev_json == JSON.stringify(json)) return;
-    this.prev_json = JSON.stringify(json);
     const view = this.config.image_style || "poster";
+    const cacheKey = JSON.stringify(json) + '|' + view;
+    if (this.prev_json == cacheKey) return;
+    this.prev_json = cacheKey;
+    this.content.style.marginTop = view == "poster" ? "9px" : "";
+    if (this._searchInput) {
+      this._searchInput.style.marginBottom = view == "poster" ? "0" : "15px";
+    }
     const dateform = this.config.date || "mmdd";
     const icon = this.config.icon || json[0]["icon"];
     const icon_hide = this.config.icon == "none" ? "display:none;" : "";
@@ -1313,7 +1320,7 @@ class UpcomingMediaCard extends HTMLElement {
             background-position: center;
             background-repeat: no-repeat;
             background-size: cover;
-            margin:5px 0 15px 5px;
+            margin:5px 0 0 5px;
             ${corner_radius ? 'border-radius:' + corner_radius + 'px; overflow:hidden;' : ''}
           }
           .${this.uniqueId} .${service}_flag_${view} {
@@ -1732,11 +1739,13 @@ class UpcomingMediaCard extends HTMLElement {
             : size[i].match(/14/)
               ? (y = "-2")
               : (y = "0");
+        const extraPx = i == 1 ? 3 : i >= 2 ? 2 : 0;
+        const lineDy = (1.3 + extraPx / size[i]).toFixed(3) + "em";
         if (view == "fanart")
-          svgshift = i == 0 ? `x="0" dy="1.15em" ` : `x="0" dy="1.3em" `;
+          svgshift = i == 0 ? `x="0" dy="1.15em" ` : `x="0" dy="${lineDy}" `;
         else
           svgshift =
-            i == 0 ? `x="15" y="${y}" dy="1.3em" ` : `x="15" dy="1.3em" `;
+            i == 0 ? `x="9" y="${y}" dy="1.3em" ` : `x="9" dy="${lineDy}" `;
 
         // Build lines HTML or empty line
         line[i] = line[i].match("empty")
@@ -1775,7 +1784,7 @@ class UpcomingMediaCard extends HTMLElement {
         if (thumbsHtml) l4Parts.push(thumbsHtml);
         const l4Html = l4Parts.join(' \u2009\u2013\u2009 ');
         if (l4Html) {
-          const foX = view === "poster" ? 15 : 0;
+          const foX = view === "poster" ? 9 : 0;
           const l4Shadow = txtshdw ? `text-shadow:${txtshdw} rgba(0,0,0,0.9);` : '';
           line[4] = line[4].replace('<tspan ', '<tspan data-umc-l4 ');
           l4FOData = { l4Html, foX, l4Shadow, fontSize: size[4], color: line4_color };
