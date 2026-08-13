@@ -229,7 +229,8 @@ const UMC_EDITOR_SCHEMA = [
         }
       },
       { name: "sort_ascending", selector: { boolean: {} } },
-      { name: "filter", selector: { text: {} } }
+      { name: "filter", selector: { text: {} } },
+      { name: "enable_search", selector: { boolean: {} } }
     ]
   },
   {
@@ -266,7 +267,8 @@ const UMC_EDITOR_LABELS = {
   enable_transparency: "Enable Transparency", hide_empty: "Hide When Empty",
   hide_flagged: "Hide Flagged", hide_unflagged: "Hide Unflagged",
   sort_by: "Sort By", sort_ascending: "Sort Ascending",
-  filter: "Filter (attribute=value)", url: "Custom URL", icon: "Icon",
+  filter: "Filter (attribute=value)", enable_search: "Enable Live Search",
+  url: "Custom URL", icon: "Icon",
   flag: "Show Flag", all_shadows: "All Shadows",
   box_shadows: "Box Shadows", text_shadows: "Text Shadows"
 };
@@ -358,7 +360,7 @@ class UpcomingMediaCardEditor extends HTMLElement {
       'enable_trailers', 'disable_hyperlinks',
       'enable_transparency', 'hide_empty',
       'hide_flagged', 'hide_unflagged',
-      'sort_by', 'sort_ascending', 'filter',
+      'sort_by', 'sort_ascending', 'filter', 'enable_search',
       'url', 'icon', 'flag',
       'box_shadows', 'text_shadows'
     ];
@@ -377,6 +379,7 @@ class UpcomingMediaCardEditor extends HTMLElement {
       overflow_fit: 'viewport',
       watched_button_style: 'dark',
       sort_ascending: false,
+      enable_search: false,
       clock: 12,
       box_shadows: true,
       text_shadows: true
@@ -493,6 +496,7 @@ class UpcomingMediaCard extends HTMLElement {
     this._boundClickListener;
     this.deepLinkListeners = new Map();
     this.tooltipListeners = new Map();
+    this._searchQuery = '';
   }
   connectedCallback() {
     this.style.position = 'relative';
@@ -951,6 +955,11 @@ class UpcomingMediaCard extends HTMLElement {
       this.deepLinkListeners.delete(element);
     }
   }
+  _onSearchInput(ev) {
+    this._searchQuery = ev.target.value || '';
+    this.prev_json = null;
+    if (this._hass) this.hass = this._hass;
+  }
 
   set hass(hass) {
     this._hass = hass;
@@ -958,12 +967,33 @@ class UpcomingMediaCard extends HTMLElement {
     if (!this.content) {
       const card = document.createElement("ha-card");
       card.header = this.config.title;
+
+      this._searchBar = document.createElement("div");
+      this._searchBar.style.padding = "5px 10px 0";
+      this._searchInput = document.createElement("input");
+      this._searchInput.type = "search";
+      this._searchInput.autocomplete = "off";
+      this._searchInput.spellcheck = false;
+      this._searchInput.placeholder = this.config.search_placeholder || "Search title or platform…";
+      this._searchInput.style.width = "100%";
+      this._searchInput.style.boxSizing = "border-box";
+      this._searchInput.style.padding = "8px 12px";
+      this._searchInput.style.borderRadius = "8px";
+      this._searchInput.style.border = "1px solid var(--divider-color, #ccc)";
+      this._searchInput.style.background = "var(--card-background-color, #fff)";
+      this._searchInput.style.color = "var(--primary-text-color)";
+      this._searchInput.style.fontSize = "14px";
+      this._searchInput.addEventListener("input", this._onSearchInput.bind(this));
+      this._searchBar.appendChild(this._searchInput);
+      card.appendChild(this._searchBar);
+
       this.content = document.createElement("div");
       this.content.style.padding = "5px 10px";
       this.content.style.position = "relative";
       card.appendChild(this.content);
       this.appendChild(card);
     }
+    this._searchBar.style.display = this.config.enable_search ? "" : "none";
 
     const entity = this.config.entity;
     if (!hass.states[entity]) return;
@@ -1116,8 +1146,38 @@ class UpcomingMediaCard extends HTMLElement {
     }
 
 
-    if (!json[1] && this.config.hide_empty) this.style.display = "none";
-    if (!json || !json[1] || this.prev_json == JSON.stringify(json)) return;
+    // Live search filter (title or platform), applied on top of config.filter above
+    if (this._searchQuery && this._searchQuery.trim() !== '') {
+      const q = this._searchQuery.trim().toLowerCase();
+      const templateItem = json[0];
+      const searched = json.slice(1).filter(item => {
+        const title = String(item.title || '').toLowerCase();
+        const studio = String(item.studio || '').toLowerCase();
+        return title.includes(q) || studio.includes(q);
+      });
+      json = [templateItem, ...searched];
+    }
+
+
+    if (!json[1] && this.config.hide_empty && !this._searchQuery) {
+      this.style.display = "none";
+    } else if (this.style.display === "none") {
+      this.style.display = "";
+    }
+    if (!json || !json[1]) {
+      if (this._searchQuery) {
+        const noResultsMsg = document.createElement("div");
+        noResultsMsg.style.padding = "16px";
+        noResultsMsg.style.textAlign = "center";
+        noResultsMsg.style.color = "var(--secondary-text-color)";
+        noResultsMsg.textContent = `No results for “${this._searchQuery}”`;
+        this.content.innerHTML = "";
+        this.content.appendChild(noResultsMsg);
+        this.prev_json = JSON.stringify(json);
+      }
+      return;
+    }
+    if (this.prev_json == JSON.stringify(json)) return;
     this.prev_json = JSON.stringify(json);
     const view = this.config.image_style || "poster";
     const dateform = this.config.date || "mmdd";
@@ -3128,6 +3188,7 @@ class UpcomingMediaCard extends HTMLElement {
       ['dark', 'ring', 'light'].indexOf(config.watched_button_style) !== -1
         ? config.watched_button_style
         : 'dark';
+    this.config.enable_search = config.enable_search !== undefined ? config.enable_search : false;
   }
 
   getCardSize() {

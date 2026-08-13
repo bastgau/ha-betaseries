@@ -11,6 +11,7 @@ This fork adds functionality specific to the [BetaSeries Home Assistant integrat
 - **Responsive columns**: Configurable number of columns with automatic overflow handling.
 - **BetaSeries device selector**: Link the card to your BetaSeries integration for watched button functionality.
 - **Multiple button styles**: Choose from dark, ring, or light themed watched buttons to match your Lovelace design.
+- **Live search**: Optional search bar to filter displayed items in real time by show title or streaming platform.
 
 ## Configuration
 
@@ -36,6 +37,7 @@ Below are the options specific to this BetaSeries fork. For a complete list of a
 | `overflow_fit` | select | `viewport` | Layout mode: `viewport` (limited to screen) or `content` (full height) |
 | `max_columns` | number | 3 | Maximum number of columns before wrapping |
 | `title` | string | - | Card title |
+| `enable_search` | boolean | `false` | Show a live search bar to filter items by title or streaming platform |
 
 ## Credits
 
