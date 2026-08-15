@@ -2442,10 +2442,23 @@ class UpcomingMediaCard extends HTMLElement {
         const heightRatio = isPoster ? 102 / 178 : 1;
         let adjustedHeight = elementHeight * heightRatio;
         const scaleFactor = Math.sqrt(elementWidth * adjustedHeight) / 200;
-        const scaleFactorPadding = 10 * scaleFactor;
-        tooltip.style.padding = `${scaleFactorPadding}px`;
+        // Positioning still scales with the item (see calculatePosition), but
+        // the text does not: a summary is prose, and prose has one readable
+        // size. Upstream derived the font size from the poster's dimensions,
+        // which rendered it at ~7px on a 100px-wide poster.
+        tooltip.style.padding = '12px 14px';
         tooltip.style.zIndex = '1000';
         tooltip.style.whiteSpace = 'pre-wrap';
+        // The overlay is appended to document.body, but the card's own text
+        // rules (title_size/line_size, weights, letter-spacing) still reach it
+        // through inheritance from :root in some themes. Reset them here so a
+        // card configured with, say, a bold condensed line style does not
+        // silently restyle its summaries - the other tooltips above already
+        // pin fontWeight for the same reason.
+        tooltip.style.fontFamily = 'var(--paper-font-body1_-_font-family, inherit)';
+        tooltip.style.fontWeight = 'normal';
+        tooltip.style.letterSpacing = 'normal';
+        tooltip.style.textShadow = 'none';
         tooltip.style.background = 'rgba(0, 0, 0, 0.50)';
         tooltip.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.90)';
         tooltip.style.color = 'white';
@@ -2457,10 +2470,17 @@ class UpcomingMediaCard extends HTMLElement {
         tooltip.style.top = `-9999px`;
         document.body.appendChild(tooltip);
         requestAnimationFrame(() => {
-          tooltip.style.fontSize = `${14 * scaleFactor}px`;
-          tooltip.style.maxWidth = `${300 * scaleFactor}px`;
-          tooltip.style.minWidth = `${200 * scaleFactor}px`;
-          tooltip.style.borderRadius = `${8 * scaleFactor}px`;
+          // Fixed rather than derived from the thumbnail: an overlay is read at
+          // reading distance whatever the item it came from. Upstream computed
+          // `14 * scaleFactor`, which rendered at ~7px on a 100px-wide poster.
+          // Not a theme variable either - a summary is secondary text, and this
+          // stays 12px whatever body size the dashboard is set to. Width is
+          // clamped so a narrow phone still fits the bubble on screen.
+          tooltip.style.fontSize = '12px';
+          tooltip.style.lineHeight = '1.45';
+          tooltip.style.maxWidth = 'min(340px, calc(100vw - 32px))';
+          tooltip.style.minWidth = 'min(240px, calc(100vw - 32px))';
+          tooltip.style.borderRadius = '8px';
           requestAnimationFrame(() => {
             const rect = tooltip.getBoundingClientRect();
             const windowWidth = window.innerWidth;
