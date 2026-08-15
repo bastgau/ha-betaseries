@@ -60,20 +60,11 @@ const UMC_EDITOR_SCHEMA = [
     // The options this fork adds, kept together and folded away so the editor
     // still opens on the upstream settings.
     type: "expandable",
-    title: "BetaSeries",
+    title: "BetaSeries forked enhancements",
     schema: [
-      {
-        name: "overflow_fit",
-        selector: {
-          select: {
-            mode: "dropdown",
-            options: [
-              { value: "viewport", label: "Fit viewport height" },
-              { value: "content", label: "Grow with content" }
-            ]
-          }
-        }
-      },
+      // The device comes first: it is what the watched button, the catalog
+      // search and the add/remove buttons all resolve their config entry from,
+      // so everything below is inert until it is set.
       {
         name: "device_betaseries",
         selector: { device: { integration: "betaseries" } }
@@ -90,7 +81,24 @@ const UMC_EDITOR_SCHEMA = [
             ]
           }
         }
-      }
+      },
+      {
+        name: "overflow_fit",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "viewport", label: "Fit viewport height" },
+              { value: "content", label: "Grow with content" }
+            ]
+          }
+        }
+      },
+      { name: "enable_search", selector: { boolean: {} } },
+      { name: "search_catalog", selector: { boolean: {} } },
+      { name: "search_min_chars", selector: { number: { min: 1, max: 10, mode: "box" } } },
+      { name: "search_debounce", selector: { number: { min: 0, max: 3000, step: 50, mode: "box" } } },
+      { name: "search_limit", selector: { number: { min: 1, max: 50, mode: "box" } } }
     ]
   },
   {
@@ -229,12 +237,7 @@ const UMC_EDITOR_SCHEMA = [
         }
       },
       { name: "sort_ascending", selector: { boolean: {} } },
-      { name: "filter", selector: { text: {} } },
-      { name: "enable_search", selector: { boolean: {} } },
-      { name: "search_catalog", selector: { boolean: {} } },
-      { name: "search_min_chars", selector: { number: { min: 1, max: 10, mode: "box" } } },
-      { name: "search_debounce", selector: { number: { min: 0, max: 3000, step: 50, mode: "box" } } },
-      { name: "search_limit", selector: { number: { min: 1, max: 50, mode: "box" } } }
+      { name: "filter", selector: { text: {} } }
     ]
   },
   {

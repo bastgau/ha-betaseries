@@ -12,7 +12,7 @@ This fork adds functionality specific to the [BetaSeries Home Assistant integrat
 - **BetaSeries device selector**: Link the card to your BetaSeries integration for watched button functionality.
 - **Multiple button styles**: Choose from dark, ring, or light themed watched buttons to match your Lovelace design.
 - **Live search**: Optional search bar to filter displayed items in real time by show title or streaming platform.
-- **Catalog search**: On the *Shows to catch up on* sensor, the same bar also searches the whole BetaSeries catalog. Two tabs appear once the query is long enough — *My list* (the local filter) and *BetaSeries* (catalog results) — and the catalog tab is preselected when the local filter matched nothing. Cards bound to a single-item sensor keep the plain local filter, since there is nothing to cascade from.
+- **Catalog search**: On the _Shows to catch up on_ sensor, the same bar also searches the whole BetaSeries catalog. Two tabs appear once the query is long enough — _My list_ (the local filter) and _BetaSeries_ (catalog results) — and the catalog tab is preselected when the local filter matched nothing. Cards bound to a single-item sensor keep the plain local filter, since there is nothing to cascade from.
 - **Add to / remove from my list**: Click the `+` on a catalog result to add that show to your BetaSeries account. Shows you already follow show a check, which turns into a `−` on hover — clicking it removes the show. Removal is immediate, with no confirmation step.
 
 ## Configuration
@@ -22,28 +22,27 @@ This fork adds functionality specific to the [BetaSeries Home Assistant integrat
 ```yaml
 type: custom:upcoming-media-card
 entity: sensor.betaseries_shows_to_catch_up_on
-device_betaseries: 0a1b2c3d4e5f  # Your BetaSeries device (or a config entry id)
+device_betaseries: 0a1b2c3d4e5f # Your BetaSeries device (or a config entry id)
 watched_button_style: dark
 overflow_fit: content
 ```
 
 ### Options
 
-Below are the options specific to this BetaSeries fork. For a complete list of all available options from the original project, refer to the [upstream repository documentation](https://github.com/custom-cards/upcoming-media-card#options).
+The eight options this fork adds. In the visual editor they are grouped under a single
+**BetaSeries forked enhancements** section, in the order below. Every other option comes from the
+[original card](https://github.com/custom-cards/upcoming-media-card#options).
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | - | Entity ID to display |
-| `device_betaseries` | string | - | BetaSeries device id, as the device picker yields it (a raw config entry id also works). Enables the watched button, the catalog search and the add button |
-| `watched_button_style` | select | `dark` | Button appearance: `dark`, `ring`, or `light` |
-| `overflow_fit` | select | `viewport` | Layout mode: `viewport` (limited to screen) or `content` (full height) |
-| `max_columns` | number | 3 | Maximum number of columns before wrapping |
-| `title` | string | - | Card title |
-| `enable_search` | boolean | `false` | Show a live search bar to filter items by title or streaming platform |
-| `search_catalog` | boolean | `true` | Also search the BetaSeries catalog. Needs `device_betaseries`, inert without `enable_search`, and **only applies to the "Shows to catch up on" sensor** — on the single-item sensors (previous/next episode airing, suggestion of the day) the bar stays a local filter |
-| `search_min_chars` | number | 3 | Minimum characters before the catalog is queried |
-| `search_debounce` | number | 400 | Milliseconds of inactivity before the catalog request is sent |
-| `search_limit` | number | 20 | Maximum catalog results requested (1-50) |
+| Option                 | Type    | Default    | Description                                                                                                                                                                                                                                                             |
+| ---------------------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `device_betaseries`    | string  | -          | BetaSeries device id, as the device picker yields it (a raw config entry id also works). Enables the watched button, the catalog search and the add/remove buttons - everything below that talks to the integration is inert without it                                 |
+| `watched_button_style` | select  | `dark`     | Button appearance: `dark`, `ring`, or `light`                                                                                                                                                                                                                           |
+| `overflow_fit`         | select  | `viewport` | Layout mode: `viewport` (limited to screen) or `content` (full height)                                                                                                                                                                                                  |
+| `enable_search`        | boolean | `false`    | Show a live search bar to filter items by title or streaming platform                                                                                                                                                                                                   |
+| `search_catalog`       | boolean | `true`     | Also search the BetaSeries catalog. Needs `device_betaseries`, inert without `enable_search`, and **only applies to the "Shows to catch up on" sensor** — on the single-item sensors (previous/next episode airing, suggestion of the day) the bar stays a local filter |
+| `search_min_chars`     | number  | 3          | Minimum characters before the catalog is queried                                                                                                                                                                                                                        |
+| `search_debounce`      | number  | 400        | Milliseconds of inactivity before the catalog request is sent                                                                                                                                                                                                           |
+| `search_limit`         | number  | 20         | Maximum catalog results requested (1-50)                                                                                                                                                                                                                                |
 
 ## Credits
 
