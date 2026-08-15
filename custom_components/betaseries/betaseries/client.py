@@ -28,6 +28,8 @@ from .const import (
     EPISODES_LIST_EXCLUDE_CHARACTERS,
     EPISODES_NOTE_ENDPOINT,
     EPISODES_WATCHED_ENDPOINT,
+    ERROR_CODE_ALREADY_IN_ACCOUNT,
+    ERROR_CODE_NOT_IN_ACCOUNT,
     ERROR_CODE_NOT_WATCHED,
     INVALID_CREDENTIALS_ERROR_CODES,
     MEMBERS_BADGES_ENDPOINT,
@@ -48,7 +50,7 @@ from .const import (
 )
 from .episode import Episode
 from .episode_watched_event import EpisodeWatchedEvent
-from .exceptions import AuthError, Error, NotWatchedError
+from .exceptions import AlreadyInAccountError, AuthError, Error, NotInAccountError, NotWatchedError
 from .member_data import MemberData
 from .member_identity import MemberIdentity
 from .member_stats import MemberStats
@@ -167,6 +169,11 @@ class Client:  # pylint: disable=too-many-public-methods
         episode/season is not marked as watched - surfaced as NotWatchedError
         so callers can tell this apart from a generic failure (verified via
         Bruno on /episodes/note, /seasons/note and DELETE /episodes/watched).
+        The same treatment applies to the two show-membership codes,
+        ERROR_CODE_ALREADY_IN_ACCOUNT and ERROR_CODE_NOT_IN_ACCOUNT (verified
+        via Bruno on both directions of /shows/show): all three say the caller
+        asked for something the account's state does not allow, which is
+        actionable, unlike a network or server failure.
 
         Args:
             response (aiohttp.ClientResponse): The response to check.
@@ -178,6 +185,8 @@ class Client:  # pylint: disable=too-many-public-methods
         Raises:
             AuthError: If the access token was rejected.
             NotWatchedError: If the target episode/season is not marked as watched.
+            AlreadyInAccountError: If the show is already in the member's account.
+            NotInAccountError: If the show is not in the member's account.
             Error: If the request failed for any other reason.
 
         """
@@ -200,6 +209,12 @@ class Client:  # pylint: disable=too-many-public-methods
                 if error_code == ERROR_CODE_NOT_WATCHED:
                     msg = "Target is not marked as watched"
                     raise NotWatchedError(msg, status=response.status, body=body)
+                if error_code == ERROR_CODE_ALREADY_IN_ACCOUNT:
+                    msg = "Show is already in the member's account"
+                    raise AlreadyInAccountError(msg, status=response.status, body=body)
+                if error_code == ERROR_CODE_NOT_IN_ACCOUNT:
+                    msg = "Show is not in the member's account"
+                    raise NotInAccountError(msg, status=response.status, body=body)
         msg = f"Failed to {action} (HTTP {response.status})"
         raise Error(msg, status=response.status, body=body)
 
@@ -683,6 +698,9 @@ class Client:  # pylint: disable=too-many-public-methods
     async def add_show(self, show_id: str) -> None:
         """Add a show to the member's account (POST /shows/show).
 
+        Raises AlreadyInAccountError (via _post/_raise_for_error) if the show
+        is already followed (verified via Bruno, bruno/Shows/add-show.bru).
+
         Args:
             show_id (str): BetaSeries show id to add.
 
@@ -691,6 +709,22 @@ class Client:  # pylint: disable=too-many-public-methods
 
         """
         await self._post(SHOWS_SHOW_ENDPOINT, "add show", {"id": show_id})
+
+    async def remove_show(self, show_id: str) -> None:
+        """Remove a show from the member's account (DELETE /shows/show).
+
+        Same endpoint as add_show, opposite verb - and the mirror-image error:
+        NotInAccountError if the show is not followed in the first place
+        (verified via Bruno, bruno/Shows/remove-show.bru).
+
+        Args:
+            show_id (str): BetaSeries show id to remove.
+
+        Returns:
+            None
+
+        """
+        await self._delete(SHOWS_SHOW_ENDPOINT, "remove show", {"id": show_id})
 
     async def mark_episodes_watched(self, episode_ids: Iterable[str]) -> None:
         """Mark one or more episodes as watched (POST /episodes/watched).
