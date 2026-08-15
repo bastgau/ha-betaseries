@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, patch
 
 from custom_components.betaseries.betaseries.exceptions import AuthError, Error, NotWatchedError
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
+from custom_components.betaseries.betaseries.show import Show
+from custom_components.betaseries.betaseries.show_additional_information import ShowAdditionalInformation
+from custom_components.betaseries.betaseries.show_images import ShowImages
 from custom_components.betaseries.const import DOMAIN
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -43,6 +46,44 @@ MEMBER_DATA = MemberData(
         member_since_days=3650,
         episodes_per_month=25.5,
         favorite_genre="Drama",
+    ),
+)
+
+
+SEARCH_RESULT = Show(
+    id="38605",
+    title="Achtsam Morden",
+    description="Un avocat véreux devient tueur à gages malgré lui.",
+    slug="achtsam-morden",
+    additional_information=ShowAdditionalInformation(
+        original_title="Achtsam Morden",
+        imdb_id="tt30217222",
+        themoviedb_id="252372",
+        genres=("Comédie", "Crime"),
+        showrunners=("Karsten Dusse",),
+        aliases=(),
+        seasons=2,
+        followers=5974,
+        network="Netflix",
+        country="Allemagne",
+        original_language="allemand",
+        length=30,
+        rating="",
+        notes_mean=3.89,
+        notes_total=164,
+        trailer_url=None,
+        resource_url="https://www.betaseries.com/serie/achtsam-morden",
+        images=ShowImages(
+            show="https://pictures.betaseries.com/fonds/show/a.jpg",
+            banner=None,
+            box=None,
+            poster="https://pictures.betaseries.com/fonds/poster/a.jpg",
+            clearlogo=None,
+        ),
+        creation="2024",
+        broadcast_status="Continuing",
+        platforms=("Netflix", "Apple TV+"),
+        in_account=False,
     ),
 )
 
@@ -86,6 +127,7 @@ def _client_mock() -> AsyncMock:
         ("unrate_season", {"show_id": "38605", "season": 2}, "unrate_season", ("38605", 2)),
         ("rate_show", {"show_id": "38605", "note": 4}, "rate_show", ("38605", 4)),
         ("unrate_show", {"show_id": "38605"}, "unrate_show", ("38605",)),
+        ("add_show", {"show_id": "38605"}, "add_show", ("38605",)),
         ("delete_token", {}, "delete_token", ()),
     ],
 )
@@ -182,6 +224,7 @@ async def test_delete_token_refreshes_member_but_not_watch_list(hass: HomeAssist
         ("unrate_season", {"show_id": "38605", "season": 2}, "unrate_season"),
         ("rate_show", {"show_id": "38605", "note": 4}, "rate_show"),
         ("unrate_show", {"show_id": "38605"}, "unrate_show"),
+        ("add_show", {"show_id": "38605"}, "add_show"),
         ("delete_token", {}, "delete_token"),
     ],
 )
@@ -244,6 +287,150 @@ async def test_auth_error_raises_home_assistant_error(hass: HomeAssistant) -> No
             DOMAIN, "rate_show", {"config_entry": entry.entry_id, "show_id": "38605", "note": 4}, blocking=True
         )
     assert not isinstance(exc_info.value, ServiceValidationError)
+
+
+async def test_add_show_refreshes_member_and_watch_list(hass: HomeAssistant) -> None:
+    """Refresh both coordinators after adding a show: it moves the account's counters and the catch-up list."""
+    mock_client = _client_mock()
+    entry = await _async_setup(hass, mock_client)
+    fetch_calls_before = mock_client.fetch_member_data.await_count
+    watch_list_calls_before = mock_client.fetch_watch_list.await_count
+
+    await hass.services.async_call(
+        DOMAIN, "add_show", {"config_entry": entry.entry_id, "show_id": "38605"}, blocking=True
+    )
+
+    assert mock_client.fetch_member_data.await_count > fetch_calls_before
+    assert mock_client.fetch_watch_list.await_count > watch_list_calls_before
+
+
+async def test_search_shows_returns_the_matching_shows(hass: HomeAssistant) -> None:
+    """Return one flat dict per result, holding what a card or a template can act on."""
+    mock_client = _client_mock()
+    mock_client.search_shows.return_value = (SEARCH_RESULT,)
+    entry = await _async_setup(hass, mock_client)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        "search_shows",
+        {"config_entry": entry.entry_id, "query": "achtsam"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "shows": [
+            {
+                "id": "38605",
+                "title": "Achtsam Morden",
+                "year": "2024",
+                "status": "Continuing",
+                "rating": 3.89,
+                "platforms": ["Netflix", "Apple TV+"],
+                "genres": ["Comédie", "Crime"],
+                "seasons": 2,
+                "followers": 5974,
+                "in_account": False,
+                "poster": "https://pictures.betaseries.com/fonds/poster/a.jpg",
+                "fanart": "https://pictures.betaseries.com/fonds/show/a.jpg",
+                "summary": "Un avocat véreux devient tueur à gages malgré lui.",
+                "resource_url": "https://www.betaseries.com/serie/achtsam-morden",
+            }
+        ]
+    }
+
+
+async def test_search_shows_returns_an_empty_list_when_nothing_matches(hass: HomeAssistant) -> None:
+    """Answer with an empty list rather than no response at all, so a caller can tell the two apart."""
+    mock_client = _client_mock()
+    mock_client.search_shows.return_value = ()
+    entry = await _async_setup(hass, mock_client)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        "search_shows",
+        {"config_entry": entry.entry_id, "query": "nothing at all"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {"shows": []}
+
+
+async def test_search_shows_falls_back_to_the_slug_derived_url(hass: HomeAssistant) -> None:
+    """Use Show.resource_url when the payload carried none, and tolerate absent details."""
+    mock_client = _client_mock()
+    mock_client.search_shows.return_value = (Show(id="1", title="Bare", slug="bare"),)
+    entry = await _async_setup(hass, mock_client)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        "search_shows",
+        {"config_entry": entry.entry_id, "query": "bare"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response is not None
+    show = cast("list[dict[str, object]]", response["shows"])[0]
+    assert show["resource_url"] == "https://www.betaseries.com/serie/bare"
+    assert show["year"] is None
+    assert show["platforms"] == []
+    assert show["in_account"] is False
+
+
+@pytest.mark.parametrize(("data", "expected_limit"), [({}, 20), ({"limit": 5}, 5)])
+async def test_search_shows_passes_the_limit(hass: HomeAssistant, data: dict[str, object], expected_limit: int) -> None:
+    """Send the requested result count, defaulting to 20 when the caller omits it."""
+    mock_client = _client_mock()
+    mock_client.search_shows.return_value = ()
+    entry = await _async_setup(hass, mock_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "search_shows",
+        {"config_entry": entry.entry_id, "query": "achtsam", **data},
+        blocking=True,
+        return_response=True,
+    )
+
+    mock_client.search_shows.assert_awaited_once_with("achtsam", limit=expected_limit)
+
+
+async def test_search_shows_does_not_refresh_any_coordinator(hass: HomeAssistant) -> None:
+    """Change nothing: a search is a read, and refreshing on every keystroke would hammer the API."""
+    mock_client = _client_mock()
+    mock_client.search_shows.return_value = ()
+    entry = await _async_setup(hass, mock_client)
+    fetch_calls_before = mock_client.fetch_member_data.await_count
+    watch_list_calls_before = mock_client.fetch_watch_list.await_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        "search_shows",
+        {"config_entry": entry.entry_id, "query": "achtsam"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert mock_client.fetch_member_data.await_count == fetch_calls_before
+    assert mock_client.fetch_watch_list.await_count == watch_list_calls_before
+
+
+async def test_search_shows_surfaces_a_client_error(hass: HomeAssistant) -> None:
+    """Raise a HomeAssistantError when the search request fails."""
+    mock_client = _client_mock()
+    mock_client.search_shows.side_effect = Error("boom", status=500, body="{}")
+    entry = await _async_setup(hass, mock_client)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "search_shows",
+            {"config_entry": entry.entry_id, "query": "achtsam"},
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_generic_error_raises_home_assistant_error(hass: HomeAssistant) -> None:

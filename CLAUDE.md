@@ -41,14 +41,17 @@ Custom component HACS pour un compte membre BetaSeries.
 - Auth par device flow ou login/mot de passe (choix au premier écran, voir §3), reauth, OptionsFlow.
 - **v3** : 10 services (marquer/démarquer vu épisode/saison, noter/dénoter épisode/saison/série) -
   périmètre restreint à Show/Episode/Season (arbitrage #6), routes testées via Bruno avant
-  implémentation. Voir §8.
+  implémentation. Voir §8. Plus `delete_token`, et `search_shows`/`add_show` (recherche catalogue
+  depuis la card, voir §8) : **13 services au total**.
 
 **À faire** :
 
+- 🧪 **Vérifier via Bruno les deux routes de la recherche catalogue** (`/shows/search`,
+  `POST /shows/show`) : seul endroit du projet où du code client a été écrit avant le test réel.
 - **v3 - films** : `rate_movie`/`unrate_movie` laissés de côté faute de besoin identifié - à faire
   si le besoin se confirme, même démarche (Bruno d'abord). Voir §8.
-- Pas de v4 prévue ; on avisera selon les retours d'usage (`add_show`, `set_movie_status` restent
-  des candidats si le besoin se confirme).
+- Pas de v4 prévue ; on avisera selon les retours d'usage (`set_movie_status` reste un candidat si
+  le besoin se confirme).
 
 > Le découpage v1/v2/v2bis a servi à cadencer le développement ; il n'a plus de valeur descriptive
 > aujourd'hui et le README ne l'utilise plus. Ne pas s'en servir pour raisonner sur l'existant :
@@ -590,8 +593,8 @@ custom_components/betaseries/
 ├── calendar.py         # CalendarEntity
 ├── button.py           # 3 boutons de purge de cache (diagnostic)
 ├── diagnostics.py      # export agrégé, credentials redacted
-├── services.py         # 10 services v3 (Show/Episode/Season), voir §8
-├── services.yaml       # champs des 10 services (gabarit habitica)
+├── services.py         # 13 services : 10 Show/Episode/Season + delete_token + search/add, voir §8
+├── services.yaml       # champs des 13 services (gabarit habitica)
 ├── strings.json        # textes config flow + entités + services (EN)
 ├── translations/       # en.json + fr.json
 └── icons.json          # icônes mdi
@@ -699,6 +702,37 @@ obligatoirement par le config flow (device code ou login/mot de passe), il n'y a
 token qui vient d'être détruit, ce qui déclenche immédiatement le reauth plutôt que d'attendre le
 prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme déjà en place, voir §3).
 
+### `search_shows` / `add_show` - recherche catalogue 🧪
+
+Douzième et treizième services, ajoutés pour la recherche de séries depuis la card (voir
+`card/README.md`). Ils sortent du périmètre « ce que je suis déjà » de tous les autres : ils
+touchent au **catalogue**, pas au compte.
+
+| Service        | Route               | Paramètres                         | Réponse                            |
+| -------------- | ------------------- | ---------------------------------- | ---------------------------------- |
+| `search_shows` | `GET /shows/search` | `query`, `limit` (1-50, défaut 20) | `{"shows": [...]}` - voir ci-après |
+| `add_show`     | `POST /shows/show`  | `show_id`                          | rien (comme les autres écritures)  |
+
+- **`search_shows` est le seul service en `SupportsResponse.ONLY`** : il répond au lieu d'agir, et
+  une variante sans réponse ne servirait à rien. La réponse est volontairement **neutre** (dicts
+  plats : `id, title, year, status, rating, platforms, genres, seasons, followers, in_account,
+poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - le mapping vers
+  les items de la card se fait dans la card, seul consommateur qui en a besoin. Aucun refresh de
+  coordinator : une recherche ne change rien, et la card l'appelle à chaque frappe débouncée.
+- `add_show` refresh **member + watch list**, comme `mark_episode_watched` et pour la même raison
+  (`shows`, `shows_to_watch` et la liste à rattraper bougent). `add_show` sort donc des candidats
+  v4 listés plus haut.
+- ⚠️ **Les deux routes n'ont pas encore été vérifiées via Bruno** (contrairement aux onze autres) :
+  l'OpenAPI ne documente aucun schéma de réponse pour elles. `bruno/Shows/search.bru` et
+  `bruno/Shows/add.bru` existent, **sans bloc `example`**, et disent quoi vérifier. Le parsing
+  suppose que `/shows/search` renvoie les mêmes objets show que `/shows/display` - hypothèse
+  raisonnable (`in_account`, `creation`, `status`, `platforms.svods[].name`, `notes.mean` y sont
+  vérifiés) mais **non confirmée**. Un `POST /shows/show` sur une série déjà suivie tombe pour
+  l'instant dans le cas générique (`HomeAssistantError`), faute de code d'erreur observé.
+- Quatre champs ont été ajoutés à `ShowAdditionalInformation` pour ça (`creation`,
+  `broadcast_status`, `platforms`, `in_account`) - tous déjà présents dans le payload
+  `/shows/display`, donc gratuits pour les appelants existants.
+
 ## 9. Arbitrages - tous tranchés ✅
 
 1. **Enabled par défaut** : tous les sensors sont `enabled` par défaut (pas de noyau restreint).
@@ -764,8 +798,14 @@ prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme d�
 
 ## 11. Reste à faire
 
+### À faire en premier
+
+- 🧪 **Vérifier `/shows/search` et `POST /shows/show` via Bruno** (`bruno/Shows/search.bru`,
+  `bruno/Shows/add.bru`, tous deux sans bloc `example`) : c'est la seule dette assumée de la
+  recherche catalogue, et les deux fichiers disent quoi regarder. Voir §8.
+
 ### La prochaine grosse étape
 
-- **v3 - services pour les films** : `rate_movie`/`unrate_movie` (et `add_show`/`set_movie_status`
-  en v4 candidats) restent à faire si le besoin se confirme - voir §8. Même démarche que pour
+- **v3 - services pour les films** : `rate_movie`/`unrate_movie` (et `set_movie_status` en v4
+  candidat) restent à faire si le besoin se confirme - voir §8. Même démarche que pour
   Show/Episode/Season : tester via Bruno (créer `bruno/Movies/`) avant d'écrire une ligne de client.
