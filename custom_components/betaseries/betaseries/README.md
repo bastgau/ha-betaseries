@@ -33,6 +33,14 @@ collection types described below. Each maps to a single BetaSeries endpoint.
 | `fetch_timeline(member_id, *, nbpp=, since_id=, last_id=, types=)`      | `GET /timeline/member`  | `CollectionTimelineEvent`                  | The member's recent activity, paginated by event-id cursor (`since_id`/`last_id`), not by date - see [`docs/watch-history-calendar-exploration.md`](../../../docs/watch-history-calendar-exploration.md). Only `EpisodeWatchedEvent`/`SeasonWatchedEvent` are modeled; any other event type is silently dropped. |
 | `search_shows(title, *, limit=)`                                        | `GET /shows/search`     | `tuple[Show, ...]`                         | Catalog search, ordered by popularity. Returns an ordered tuple, not a `CollectionShow`: the ranking is the point of a search, and `CollectionShow` is an id-keyed lookup with no iteration API. Each `Show` carries `additional_information`, `in_account` included.                                            |
 
+`add_show(show_id)` / `remove_show(show_id)` (`POST` / `DELETE /shows/show`) change whether a show
+belongs to the member's account. They return nothing - like every other write action here, the
+caller refreshes what it displays instead. Both raise a dedicated exception when the account is
+already in the requested state: `AlreadyInAccountError` (BetaSeries code 2003) and
+`NotInAccountError` (2004), the same treatment `NotWatchedError` (2005) gets, and for the same
+reason - the caller asked for something the account's state does not allow, which is actionable,
+unlike a transport or server failure.
+
 `Auth` (in `auth.py`) is a separate entry point used only during initial authentication
 (OAuth device flow: device code request, polling, and a minimal `fetch_member_identity()` -
 see its own docstrings).

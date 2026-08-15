@@ -41,3 +41,11 @@ class AuthTimeoutError(Error):
 
 class NotWatchedError(Error):
     """The target episode/season is not marked as watched, a precondition for the requested action."""
+
+
+class AlreadyInAccountError(Error):
+    """The show is already in the member's account, so it cannot be added again."""
+
+
+class NotInAccountError(Error):
+    """The show is not in the member's account, so it cannot be removed."""

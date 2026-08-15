@@ -14,7 +14,13 @@ import aiohttp
 from custom_components.betaseries.betaseries.client import Client
 from custom_components.betaseries.betaseries.const import REQUEST_TIMEOUT_SECONDS
 from custom_components.betaseries.betaseries.episode_watched_event import EpisodeWatchedEvent
-from custom_components.betaseries.betaseries.exceptions import AuthError, Error, NotWatchedError
+from custom_components.betaseries.betaseries.exceptions import (
+    AlreadyInAccountError,
+    AuthError,
+    Error,
+    NotInAccountError,
+    NotWatchedError,
+)
 from custom_components.betaseries.betaseries.season_watched_event import SeasonWatchedEvent
 from custom_components.betaseries.betaseries.timeline_event_type import TimelineEventType
 import pytest
@@ -840,6 +846,47 @@ async def test_add_show_failure(status: int) -> None:
 
     with pytest.raises(Error):
         await client.add_show("38605")
+
+
+async def test_add_show_already_followed_raises_already_in_account() -> None:
+    """Narrow code 2003 to AlreadyInAccountError, so callers can tell it apart from a real failure."""
+    payload = {"errors": [{"code": 2003, "text": "L'utilisateur a déjà cette série dans son compte."}]}
+    session = FakeSession(post_responses=[FakeResponse(400, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(AlreadyInAccountError):
+        await client.add_show("29030")
+
+
+async def test_remove_show_sends_show_id() -> None:
+    """DELETE /shows/show with the show id."""
+    session = FakeSession(delete_responses=[FakeResponse(200, {"show": {}, "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.remove_show("38605")
+
+    _args, kwargs = session.delete_calls[0]
+    assert kwargs["data"] == {"id": "38605"}
+
+
+async def test_remove_show_not_followed_raises_not_in_account() -> None:
+    """Narrow code 2004 to NotInAccountError - the mirror image of 2003 on the same endpoint."""
+    payload = {"errors": [{"code": 2004, "text": "L'utilisateur n'a pas cette série dans son compte."}]}
+    session = FakeSession(delete_responses=[FakeResponse(400, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(NotInAccountError):
+        await client.remove_show("29030")
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_remove_show_failure(status: int) -> None:
+    """Raise Error when removing a show fails."""
+    session = FakeSession(delete_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.remove_show("38605")
 
 
 EPISODES_DISPLAY_PAYLOAD: dict[str, Any] = {

@@ -87,3 +87,12 @@ INVALID_CREDENTIALS_ERROR_CODES = frozenset({ERROR_CODE_INVALID_API_KEY, ERROR_C
 # across granularities, error text always mentions "episode" even in a season
 # context.
 ERROR_CODE_NOT_WATCHED = 2005
+
+# BetaSeries returns these two codes (HTTP 400) when a show-membership write
+# contradicts the account's current state - verified via Bruno on both
+# directions of /shows/show (bruno/Shows/add-show.bru, bruno/Shows/remove-show.bru):
+# adding a show already followed, or removing one that is not followed.
+# Like ERROR_CODE_NOT_WATCHED, these are caller-fixable rather than technical
+# failures, hence their own exception types.
+ERROR_CODE_ALREADY_IN_ACCOUNT = 2003
+ERROR_CODE_NOT_IN_ACCOUNT = 2004

@@ -16,7 +16,7 @@ from .collection_watch_list_show import CollectionWatchListShow
 from .device_code import DeviceCodeData
 from .episode import Episode
 from .episode_watched_event import EpisodeWatchedEvent
-from .exceptions import AuthError, AuthTimeoutError, Error, NotWatchedError
+from .exceptions import AlreadyInAccountError, AuthError, AuthTimeoutError, Error, NotInAccountError, NotWatchedError
 from .member_data import MemberData
 from .member_identity import MemberIdentity
 from .member_stats import MemberStats
@@ -29,6 +29,7 @@ from .timeline_event_type import TimelineEventType
 from .watch_list_show import WatchListShow
 
 __all__ = [
+    "AlreadyInAccountError",
     "Auth",
     "AuthError",
     "AuthTimeoutError",
@@ -46,6 +47,7 @@ __all__ = [
     "MemberData",
     "MemberIdentity",
     "MemberStats",
+    "NotInAccountError",
     "NotWatchedError",
     "SeasonWatchedEvent",
     "Show",
