@@ -12,7 +12,7 @@ This fork adds functionality specific to the [BetaSeries Home Assistant integrat
 - **BetaSeries device selector**: Link the card to your BetaSeries integration for watched button functionality.
 - **Multiple button styles**: Choose from dark, ring, or light themed watched buttons to match your Lovelace design.
 - **Live search**: Optional search bar to filter displayed items in real time by show title or streaming platform.
-- **Catalog search**: The same bar also searches the whole BetaSeries catalog. Two tabs appear once the query is long enough — *My list* (the local filter) and *BetaSeries* (catalog results) — and the catalog tab is preselected when the local filter matched nothing.
+- **Catalog search**: On the *Shows to catch up on* sensor, the same bar also searches the whole BetaSeries catalog. Two tabs appear once the query is long enough — *My list* (the local filter) and *BetaSeries* (catalog results) — and the catalog tab is preselected when the local filter matched nothing. Cards bound to a single-item sensor keep the plain local filter, since there is nothing to cascade from.
 - **Add to / remove from my list**: Click the `+` on a catalog result to add that show to your BetaSeries account. Shows you already follow show a check, which turns into a `−` on hover — clicking it removes the show. Removal is immediate, with no confirmation step.
 
 ## Configuration
@@ -40,7 +40,7 @@ Below are the options specific to this BetaSeries fork. For a complete list of a
 | `max_columns` | number | 3 | Maximum number of columns before wrapping |
 | `title` | string | - | Card title |
 | `enable_search` | boolean | `false` | Show a live search bar to filter items by title or streaming platform |
-| `search_catalog` | boolean | `true` | Also search the BetaSeries catalog (needs `device_betaseries`; inert without `enable_search`) |
+| `search_catalog` | boolean | `true` | Also search the BetaSeries catalog. Needs `device_betaseries`, inert without `enable_search`, and **only applies to the "Shows to catch up on" sensor** — on the single-item sensors (previous/next episode airing, suggestion of the day) the bar stays a local filter |
 | `search_min_chars` | number | 3 | Minimum characters before the catalog is queried |
 | `search_debounce` | number | 400 | Milliseconds of inactivity before the catalog request is sent |
 | `search_limit` | number | 20 | Maximum catalog results requested (1-50) |

@@ -998,12 +998,27 @@ class UpcomingMediaCard extends HTMLElement {
   // ── BetaSeries catalog search ──────────────────────────────────────
   // The local filter above answers "which of the shows I already follow", this
   // answers "which shows exist" - the cascade the card shows as two sections.
+  // Catalog search only makes sense on the watch-list sensor ("Shows to catch
+  // up on"): it is the one whose `data` lists several shows, so "filter what I
+  // follow, then widen to the catalog" reads as a cascade. The airing sensors
+  // (previous/next episode) carry exactly one item, where the local filter can
+  // only ever match 1 or 0 - the catalog tab would take over on the first
+  // keystroke and turn a "what airs next" card into a search engine.
+  //
+  // Detected from the attributes rather than the entity_id, which the user can
+  // rename: only the watch-list sensor exposes `total_shows`/`shows`.
+  _supportsCatalogSearch() {
+    const state = this._hass && this._hass.states[this.config.entity];
+    return !!(state && state.attributes && state.attributes.total_shows !== undefined);
+  }
+
   _scheduleCatalogSearch() {
     clearTimeout(this._catalogTimer);
     // A new query invalidates the tab the user picked for the previous one.
     this._catalogView = null;
     const query = this._searchQuery.trim();
     if (!this.config.enable_search || !this.config.search_catalog
+      || !this._supportsCatalogSearch()
       || query.length < this.config.search_min_chars) {
       // Bumping the sequence cancels any reply still in flight: the user has
       // backed out of catalog territory, its results must not land later.
@@ -1113,6 +1128,7 @@ class UpcomingMediaCard extends HTMLElement {
   _renderSearchTabs(localCount) {
     const query = this._searchQuery.trim();
     const active = this.config.enable_search && this.config.search_catalog
+      && this._supportsCatalogSearch()
       && query.length >= this.config.search_min_chars;
     if (!this._searchTabs) return false;
     this._searchTabs.style.display = active ? "flex" : "none";
