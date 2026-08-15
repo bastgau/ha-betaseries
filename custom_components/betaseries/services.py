@@ -17,7 +17,7 @@ from homeassistant.helpers.selector import (
     TextSelector,  # pyright: ignore[reportUnknownVariableType]
 )
 
-from .betaseries import AuthError, Error, NotWatchedError
+from .betaseries import AlreadyInAccountError, AuthError, Error, NotInAccountError, NotWatchedError
 from .const import (
     ATTR_CONFIG_ENTRY,
     ATTR_EPISODE_ID,
@@ -39,6 +39,7 @@ from .const import (
     SERVICE_RATE_EPISODE,
     SERVICE_RATE_SEASON,
     SERVICE_RATE_SHOW,
+    SERVICE_REMOVE_SHOW,
     SERVICE_SEARCH_SHOWS,
     SERVICE_UNRATE_EPISODE,
     SERVICE_UNRATE_SEASON,
@@ -157,12 +158,14 @@ def _episode_ids(call: ServiceCall) -> list[str]:
 def _raise_for_client_error(err: Exception) -> NoReturn:
     """Translate a client Error/AuthError/NotWatchedError into an HA-facing exception.
 
-    NotWatchedError is the one case the caller can act on (rate/unwatch the
-    prerequisite first), hence ServiceValidationError; AuthError and any other
-    Error are HomeAssistantError - a rejected token is not something the
-    caller can fix by changing their service call, and the entry's normal
-    reauth flow (triggered by the next scheduled coordinator refresh) handles
-    it separately (see CLAUDE.md §3).
+    Three cases are things the caller can act on, so they get
+    ServiceValidationError: the target is not watched yet (rate/unwatch the
+    prerequisite first), the show is already followed (nothing to add), or it
+    is not followed (nothing to remove). AuthError and any other Error are
+    HomeAssistantError - a rejected token is not something the caller can fix
+    by changing their service call, and the entry's normal reauth flow
+    (triggered by the next scheduled coordinator refresh) handles it
+    separately (see CLAUDE.md §3).
 
     Args:
         err (Exception): The exception raised by the client call.
@@ -171,12 +174,16 @@ def _raise_for_client_error(err: Exception) -> NoReturn:
         NoReturn: Never returns - every path raises.
 
     Raises:
-        ServiceValidationError: If the target is not marked as watched.
+        ServiceValidationError: If the account's state does not allow the requested action.
         HomeAssistantError: For any other client failure.
 
     """
     if isinstance(err, NotWatchedError):
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_watched") from err
+    if isinstance(err, AlreadyInAccountError):
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="already_in_account") from err
+    if isinstance(err, NotInAccountError):
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_in_account") from err
     if isinstance(err, AuthError):
         raise HomeAssistantError(translation_domain=DOMAIN, translation_key="auth_error") from err
     raise HomeAssistantError(
@@ -456,6 +463,30 @@ async def _add_show(call: ServiceCall) -> None:
         await entry.runtime_data.watch_list.async_request_refresh()
 
 
+async def _remove_show(call: ServiceCall) -> None:
+    """Remove a show from the account, then refresh the affected coordinators.
+
+    Mirror of _add_show, down to the two coordinators it refreshes: dropping a
+    show moves the same counters adding one does, and takes its episodes back
+    out of the catch-up list.
+
+    Args:
+        call (ServiceCall): The service call data.
+
+    Returns:
+        None
+
+    """
+    entry = _get_entry(call.hass, call)
+    try:
+        await entry.runtime_data.member.client.remove_show(call.data[ATTR_SHOW_ID])
+    except Error as err:
+        _raise_for_client_error(err)
+    else:
+        await entry.runtime_data.member.async_request_refresh()
+        await entry.runtime_data.watch_list.async_request_refresh()
+
+
 async def _delete_token(call: ServiceCall) -> None:
     """Destroy the account's active access token, then trigger reauthentication.
 
@@ -514,6 +545,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_RATE_SHOW, _rate_show, schema=_RATE_SHOW_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_UNRATE_SHOW, _unrate_show, schema=_SHOW_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_ADD_SHOW, _add_show, schema=_SHOW_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_REMOVE_SHOW, _remove_show, schema=_SHOW_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_DELETE_TOKEN, _delete_token, schema=_CONFIG_ENTRY_ONLY_SCHEMA)
     # ONLY, not OPTIONAL: a search that returns nothing to its caller does
     # nothing at all, so there is no useful response-less form of this call.
