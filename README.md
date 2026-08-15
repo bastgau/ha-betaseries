@@ -145,6 +145,47 @@ trailer - BetaSeries returns other hosts as well, and only YouTube's URL is reco
 See **[Entities & Services](docs/guide-explained-entities.md)** for the exact shape of the `data`
 attribute each sensor exposes once the option is on.
 
+### Bundled fork of upcoming-media-card
+
+This repository also ships a fork of that card, in [`card/`](card/), adding BetaSeries-specific
+features the upstream card has no reason to carry: a **catalog search bar** (find any show on
+BetaSeries and add or remove it from your account without leaving the dashboard), a **mark as
+watched** button on each item, and unbounded/responsive layout options. See
+[`card/README.md`](card/README.md) for the full list and every option.
+
+It is optional - the integration works with the upstream card, and this fork is only worth
+installing if you want those extras.
+
+#### Installing it
+
+1. Copy [`card/upcoming-media-card.js`](card/upcoming-media-card.js) into your Home Assistant
+   `config/www/` directory (create it if it does not exist).
+2. Add it as a Lovelace resource, in **Settings → Dashboards → ⋮ → Resources**:
+   - URL: `/local/upcoming-media-card.js`
+   - Type: **JavaScript Module**
+3. Reload the page (a hard refresh, `Ctrl+F5`, avoids serving the old file from cache).
+
+> **Do not install it alongside the upstream card.** The fork registers the same
+> `upcoming-media-card` element name, so whichever loads first wins and the other is skipped with a
+> console warning. Remove the upstream resource, or the HACS-installed card, before adding this
+> one.
+
+Configuration is identical to the upstream card - the extras are additional options, so an existing
+card configuration keeps working as-is. The catalog search needs `enable_search: true` plus
+`device_betaseries` pointing at your BetaSeries device, and only applies to the **Shows to catch up
+on** sensor.
+
+```yaml
+type: custom:upcoming-media-card
+entity: sensor.betaseries_shows_to_catch_up_on
+device_betaseries: 0a1b2c3d4e5f
+title: To catch up on
+enable_search: true
+```
+
+> Being a manual copy, it does not update through HACS: re-copy the file after pulling a new
+> version of this repository.
+
 ## Troubleshooting
 
 ### Setup stuck on "waiting for confirmation" in the Android companion app
