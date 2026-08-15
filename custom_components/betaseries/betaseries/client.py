@@ -40,6 +40,10 @@ from .const import (
     SHOWS_DISPLAY_ENDPOINT,
     SHOWS_EPISODES_ENDPOINT,
     SHOWS_NOTE_ENDPOINT,
+    SHOWS_SEARCH_DEFAULT_LIMIT,
+    SHOWS_SEARCH_ENDPOINT,
+    SHOWS_SEARCH_ORDER,
+    SHOWS_SHOW_ENDPOINT,
     TIMELINE_MEMBER_ENDPOINT,
 )
 from .episode import Episode
@@ -640,6 +644,54 @@ class Client:  # pylint: disable=too-many-public-methods
 
         return payload["shows"] if "shows" in payload else [payload["show"]]
 
+    async def search_shows(self, title: str, *, limit: int = SHOWS_SEARCH_DEFAULT_LIMIT) -> tuple[Show, ...]:
+        """Search the BetaSeries catalog by title (GET /shows/search).
+
+        Returns an ordered tuple rather than a CollectionShow: the API ranks
+        results, and that ranking is the point of a search - CollectionShow is
+        an id-keyed lookup table with no iteration API, which would lose it.
+
+        The member's own relationship to each result (`in_account`) is only
+        filled in because this client always authenticates its requests; the
+        endpoint returns it "if a token is provided" (OpenAPI wording).
+
+        Args:
+            title (str): The searched title. Sent as-is; the API does the matching.
+            limit (int): Maximum number of results to ask for (API caps it at 100).
+
+        Returns:
+            tuple[Show, ...]: The matching shows, in the order the API ranked them.
+
+        """
+        payload = await self._get(
+            SHOWS_SEARCH_ENDPOINT,
+            "search shows",
+            {"title": title, "nbpp": str(limit), "order": SHOWS_SEARCH_ORDER},
+        )
+
+        # Same singular/plural shape as /shows/display (see _fetch_shows), plus
+        # a third case that endpoint cannot produce: a search matching nothing.
+        if "shows" in payload:
+            shows: list[dict[str, Any]] = payload["shows"] or []
+        elif "show" in payload:
+            shows = [payload["show"]]
+        else:
+            shows = []
+
+        return tuple(self._parse_show(show) for show in shows)
+
+    async def add_show(self, show_id: str) -> None:
+        """Add a show to the member's account (POST /shows/show).
+
+        Args:
+            show_id (str): BetaSeries show id to add.
+
+        Returns:
+            None
+
+        """
+        await self._post(SHOWS_SHOW_ENDPOINT, "add show", {"id": show_id})
+
     async def mark_episodes_watched(self, episode_ids: Iterable[str]) -> None:
         """Mark one or more episodes as watched (POST /episodes/watched).
 
@@ -887,6 +939,10 @@ class Client:  # pylint: disable=too-many-public-methods
         aliases: dict[str, str] = show.get("aliases") or {}
         notes: dict[str, Any] = show.get("notes") or {}
         themoviedb_id = show.get("themoviedb_id")
+        # "platforms" carries several buckets (svods, svod, vod...); only the
+        # SVOD list is read, and each entry is an object rather than a name.
+        platforms: dict[str, Any] = show.get("platforms") or {}
+        svods: list[dict[str, Any]] = platforms.get("svods") or []
         return ShowAdditionalInformation(
             original_title=show.get("original_title") or "",
             imdb_id=show.get("imdb_id") or None,
@@ -907,6 +963,10 @@ class Client:  # pylint: disable=too-many-public-methods
             trailer_url=_trailer_url(show.get("next_trailer"), show.get("next_trailer_host")),
             resource_url=show.get("resource_url") or "",
             images=Client._parse_show_images(show.get("images") or {}),
+            creation=str(show["creation"]) if show.get("creation") else None,
+            broadcast_status=show.get("status") or None,
+            platforms=tuple(svod["name"] for svod in svods if svod.get("name")),
+            in_account=bool(show.get("in_account")),
         )
 
     @staticmethod

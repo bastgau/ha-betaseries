@@ -1,0 +1,40 @@
+meta {
+  name: search
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/shows/search?title=severance&nbpp=20&order=popularity
+  body: none
+  auth: none
+}
+
+params:query {
+  title: severance
+  nbpp: 20
+  order: popularity
+  ~summary: true
+  ~recent: true
+  ~page: 1
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Search the catalog by title, with member information when a token is sent.
+
+  Backs Client.search_shows(). No example block yet: the response has not been
+  captured against a real key, so the parsing in client.py assumes this
+  endpoint returns the same show objects as /shows/display (verified there:
+  in_account, creation, status, platforms.svods[].name, notes.mean, slug).
+  Run this request, save the response as an example, and correct the parsing
+  if any of those five fields turns out to be absent here.
+
+  `summary` is left disabled on purpose: it returns "only essential series
+  info", which is likely to drop exactly those fields.
+}
