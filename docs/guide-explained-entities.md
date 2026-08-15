@@ -330,26 +330,29 @@ It contains your options, each coordinator's last refresh outcome/error, the acc
 
 ### Actions
 
-These actions let you mark episodes/seasons as watched or rate episodes/seasons/shows directly from Home Assistant (automations, scripts, dashboards).
+These actions let you mark episodes/seasons as watched, rate episodes/seasons/shows, search the BetaSeries catalog and add or remove shows from your account, directly from Home Assistant (automations, scripts, dashboards).
 
 <details>
   <summary>Display the actions</summary>
 
-| Action                   | Fields                                   | Notes                                                            |
-| ------------------------ | ---------------------------------------- | ---------------------------------------------------------------- |
-| `mark_episode_watched`   | `episode_id` (one or more)               | Marks one or more episodes as watched.                           |
-| `mark_episode_unwatched` | `episode_id` (one or more)               | Fails if an episode targeted is not currently marked as watched. |
-| `rate_episode`           | `episode_id` (one or more), `note` (1-5) | An episode must already be marked as watched to be rated.        |
-| `unrate_episode`         | `episode_id` (one or more)               | Removes the rating from one or more episodes.                    |
-| `mark_season_watched`    | `show_id`, `season`                      | One show/season at a time (no bulk, unlike the episode actions). |
-| `mark_season_unwatched`  | `show_id`, `season`                      | One show/season at a time.                                       |
-| `rate_season`            | `show_id`, `season`, `note` (1-5)        | A season must already be fully watched to be rated.              |
-| `unrate_season`          | `show_id`, `season`                      | Removes a season's rating.                                       |
-| `rate_show`              | `show_id`, `note` (1-5)                  | One show at a time.                                              |
-| `unrate_show`            | `show_id`                                | Removes a show's rating.                                         |
-| `delete_token`           | none besides `config_entry`              | Destroys the account's active access token. **Irreversible.**    |
+| Action                   | Fields                                   | Notes                                                               |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------------------------- |
+| `mark_episode_watched`   | `episode_id` (one or more)               | Marks one or more episodes as watched.                              |
+| `mark_episode_unwatched` | `episode_id` (one or more)               | Fails if an episode targeted is not currently marked as watched.    |
+| `rate_episode`           | `episode_id` (one or more), `note` (1-5) | An episode must already be marked as watched to be rated.           |
+| `unrate_episode`         | `episode_id` (one or more)               | Removes the rating from one or more episodes.                       |
+| `mark_season_watched`    | `show_id`, `season`                      | One show/season at a time (no bulk, unlike the episode actions).    |
+| `mark_season_unwatched`  | `show_id`, `season`                      | One show/season at a time.                                          |
+| `rate_season`            | `show_id`, `season`, `note` (1-5)        | A season must already be fully watched to be rated.                 |
+| `unrate_season`          | `show_id`, `season`                      | Removes a season's rating.                                          |
+| `rate_show`              | `show_id`, `note` (1-5)                  | One show at a time.                                                 |
+| `unrate_show`            | `show_id`                                | Removes a show's rating.                                            |
+| `add_show`               | `show_id`                                | Adds a show to your account. Fails if it is already there.          |
+| `remove_show`            | `show_id`                                | Removes a show from your account. Fails if it is not there.         |
+| `search_shows`           | `query`, `limit` (1-50, default 20)      | Searches the catalog. **Returns data** - needs `response_variable`. |
+| `delete_token`           | none besides `config_entry`              | Destroys the account's active access token. **Irreversible.**       |
 
-`episode_id` / `show_id` match the attributes already exposed by the sensors above (e.g. `episode_id` on **Previous/Next episode airing**), so a value copied from a dashboard card works as-is.
+`episode_id` / `show_id` match the attributes already exposed by the sensors above (e.g. `episode_id` on **Previous/Next episode airing**), so a value copied from a dashboard card works as-is. For a show you do not follow yet, `search_shows` is where the `show_id` comes from - the sensors only ever list shows already in your account.
 
 #### - Mark episode(s) as watched
 
@@ -375,6 +378,41 @@ data:
   show_id: "38605"
   note: 4
 ```
+
+#### - Search the catalog
+
+**Name:** betaseries.search_shows
+**Action:**
+
+```yaml
+action: betaseries.search_shows
+data:
+  config_entry: <config_entry_id>
+  query: "severance"
+  limit: 10
+response_variable: results
+```
+
+> The only action that returns data, so it is the only one requiring `response_variable`. The
+> result is `{"shows": [...]}`, one entry per match, ordered by popularity. Each entry carries the
+> show's `id` - what `add_show` below expects - alongside its title, year, rating, platforms and
+> whether it is already `in_account`. An empty search returns `{"shows": []}`, not an error.
+
+#### - Add a show to your account
+
+**Name:** betaseries.add_show
+**Action:**
+
+```yaml
+action: betaseries.add_show
+data:
+  config_entry: <config_entry_id>
+  show_id: "29029"
+```
+
+> Fails if the show is already in your account - a mistake you can correct, so it surfaces as a
+> validation error rather than a generic failure. `remove_show` takes exactly the same fields and
+> fails symmetrically when the show is not in your account.
 
 #### - Delete the access token
 
