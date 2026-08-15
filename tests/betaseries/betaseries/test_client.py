@@ -487,6 +487,17 @@ SHOW_SINGLE_PAYLOAD: dict[str, Any] = {
         "next_trailer": "ZDdijwdg7s8",
         "next_trailer_host": "youtube",
         "resource_url": "https://www.betaseries.com/serie/achtsam-morden",
+        "creation": "2024",
+        "status": "Continuing",
+        "in_account": True,
+        "platforms": {
+            "svods": [
+                {"id": 1, "name": "Netflix", "tag": None, "color": "#e50914"},
+                {"id": 2, "name": "Apple TV+", "tag": None, "color": None},
+                {"id": 3, "tag": None},
+            ],
+            "vod": [],
+        },
         "images": {
             "show": "https://pictures.betaseries.com/fonds/show/38605_a.jpg",
             "banner": None,
@@ -565,6 +576,11 @@ async def test_fetch_shows_single_id_success() -> None:
     assert info.trailer_url == "https://www.youtube.com/watch?v=ZDdijwdg7s8"
     assert info.resource_url == "https://www.betaseries.com/serie/achtsam-morden"
     assert info.images.poster == "https://pictures.betaseries.com/fonds/poster/a.jpg"
+    assert info.creation == "2024"
+    assert info.broadcast_status == "Continuing"
+    assert info.in_account is True
+    # The third svod entry has no name: dropped rather than read as an empty one.
+    assert info.platforms == ("Netflix", "Apple TV+")
 
 
 async def test_fetch_shows_multiple_ids_success() -> None:
@@ -598,6 +614,11 @@ async def test_fetch_shows_normalizes_empty_and_zero_ids() -> None:
     assert info.additional_information.country is None
     assert info.additional_information.original_language is None
     assert info.additional_information.trailer_url is None
+    # Absent entirely from this payload: the fallbacks, not a crash.
+    assert info.additional_information.creation is None
+    assert info.additional_information.broadcast_status is None
+    assert info.additional_information.platforms == ()
+    assert info.additional_information.in_account is False
     assert info.additional_information.seasons == 0
     assert info.additional_information.followers == 0
 
@@ -734,6 +755,91 @@ async def test_fetch_shows_failure(status: int) -> None:
 
     with pytest.raises(Error):
         await client.fetch_shows(["38605"])
+
+
+async def test_search_shows_returns_results_in_payload_order() -> None:
+    """Return the plural "shows" list as an ordered tuple, ranking preserved."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_MULTIPLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    results = await client.search_shows("achtsam")
+
+    assert [show.id for show in results] == ["38605", "38606"]
+    assert results[0].title == "Achtsam Morden"
+    assert results[0].additional_information is not None
+    assert results[0].additional_information.in_account is True
+
+
+async def test_search_shows_accepts_a_singular_payload() -> None:
+    """Normalize a singular "show" key the same way /shows/display's parsing does."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_SINGLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    results = await client.search_shows("achtsam")
+
+    assert [show.id for show in results] == ["38605"]
+
+
+@pytest.mark.parametrize("payload", [{"shows": [], "errors": []}, {"shows": None}, {"errors": []}])
+async def test_search_shows_without_a_match_returns_empty(payload: dict[str, Any]) -> None:
+    """Return an empty tuple when the search matched nothing, however the API says it."""
+    session = FakeSession(get_responses=[FakeResponse(200, payload)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    assert await client.search_shows("nothing at all") == ()
+
+
+async def test_search_shows_sends_title_limit_and_order() -> None:
+    """Send the searched title, the requested page size and the popularity ranking."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_MULTIPLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.search_shows("achtsam", limit=5)
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"] == {"locale": "fr", "title": "achtsam", "nbpp": "5", "order": "popularity"}
+
+
+async def test_search_shows_defaults_to_twenty_results() -> None:
+    """Ask for 20 results when the caller does not say (the API's own default of 5 is too few)."""
+    session = FakeSession(get_responses=[FakeResponse(200, SHOW_MULTIPLE_PAYLOAD)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.search_shows("achtsam")
+
+    _args, kwargs = session.get_calls[0]
+    assert kwargs["params"]["nbpp"] == "20"
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_search_shows_failure(status: int) -> None:
+    """Raise Error when the search request fails."""
+    session = FakeSession(get_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.search_shows("achtsam")
+
+
+async def test_add_show_sends_show_id() -> None:
+    """POST /shows/show with the show id."""
+    session = FakeSession(post_responses=[FakeResponse(200, {"show": {}, "errors": []})])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    await client.add_show("38605")
+
+    _args, kwargs = session.post_calls[0]
+    assert kwargs["data"] == {"id": "38605"}
+
+
+@pytest.mark.parametrize("status", [400, 401, 500])
+async def test_add_show_failure(status: int) -> None:
+    """Raise Error when adding a show fails."""
+    session = FakeSession(post_responses=[FakeResponse(status)])
+    client = Client(session, API_KEY, ACCESS_TOKEN)  # type: ignore[arg-type]
+
+    with pytest.raises(Error):
+        await client.add_show("38605")
 
 
 EPISODES_DISPLAY_PAYLOAD: dict[str, Any] = {

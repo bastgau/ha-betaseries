@@ -31,6 +31,7 @@ collection types described below. Each maps to a single BetaSeries endpoint.
 | `fetch_watch_list(shows_limit, episodes_limit, *, exclude_characters=)` | `GET /episodes/list`    | `tuple[CollectionWatchListShow, int, int]` | Same endpoint, capped to `shows_limit` shows of `episodes_limit` episodes; keeps each show's `remaining` and returns the endpoint's own global counters, which the caps do not affect.                                                                                                                           |
 | `fetch_shows(show_ids)`                                                 | `GET /shows/display`    | `CollectionShow`                           | Accepts any number of ids in one request; each `Show` comes back with `additional_information` populated.                                                                                                                                                                                                        |
 | `fetch_timeline(member_id, *, nbpp=, since_id=, last_id=, types=)`      | `GET /timeline/member`  | `CollectionTimelineEvent`                  | The member's recent activity, paginated by event-id cursor (`since_id`/`last_id`), not by date - see [`docs/watch-history-calendar-exploration.md`](../../../docs/watch-history-calendar-exploration.md). Only `EpisodeWatchedEvent`/`SeasonWatchedEvent` are modeled; any other event type is silently dropped. |
+| `search_shows(title, *, limit=)`                                        | `GET /shows/search`     | `tuple[Show, ...]`                         | Catalog search, ordered by popularity. Returns an ordered tuple, not a `CollectionShow`: the ranking is the point of a search, and `CollectionShow` is an id-keyed lookup with no iteration API. Each `Show` carries `additional_information`, `in_account` included.                                            |
 
 `Auth` (in `auth.py`) is a separate entry point used only during initial authentication
 (OAuth device flow: device code request, polling, and a minimal `fetch_member_identity()` -
@@ -130,10 +131,18 @@ Net effect: calling `fetch_shows()` then `fetch_episodes()` (or the reverse) on 
 - no episode is involved, so `fetch_episodes()` has nothing to do for this event type.
 
 `ShowAdditionalInformation` (genres, showrunners, aliases, seasons, followers, network,
-country, language, length, rating, notes, trailer_url, resource_url, `images: ShowImages`)
-and `ShowImages` (show/banner/box/poster/clearlogo URLs, all hosted on the public
-`pictures.betaseries.com` CDN - no auth needed to load them) are plain data, only ever
-constructed by `Client.fetch_shows()`.
+country, language, length, rating, notes, trailer_url, resource_url, `images: ShowImages`,
+creation, broadcast_status, platforms, in_account) and `ShowImages`
+(show/banner/box/poster/clearlogo URLs, all hosted on the public `pictures.betaseries.com`
+CDN - no auth needed to load them) are plain data, only ever constructed by
+`Client.fetch_shows()` and `Client.search_shows()`.
+
+The last four fields are the show's _state_ rather than its description:
+`creation` (year), `broadcast_status` (`"Continuing"`/`"Ended"` - named apart from `rating`,
+which is a content rating), `platforms` (SVOD names, read from `platforms.svods[].name`) and
+`in_account` (is this show in the authenticated member's account). All four come from the same
+payload as the rest and are parsed with the same `.get(key) or <fallback>` discipline, so a
+show that omits them simply reads as `None`/`()`/`False`.
 
 ## Design notes
 

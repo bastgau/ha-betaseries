@@ -35,6 +35,10 @@ class ShowAdditionalInformation:  # pylint: disable=too-many-instance-attributes
         trailer_url (str | None): Playable URL of the latest trailer, None if there is none or its host is not one this client can build a URL for.
         resource_url (str): Link to the show's BetaSeries page.
         images (ShowImages): The show's images.
+        creation (str | None): Year the show was created ("2024"), None if the payload has none.
+        broadcast_status (str | None): Broadcast state ("Continuing"/"Ended"), None if the payload has none. Named apart from `rating` (a content rating) to keep the two "status-looking" fields distinguishable.
+        platforms (tuple[str, ...]): Names of the SVOD platforms streaming this show.
+        in_account (bool): Whether this show is in the authenticated member's account.
 
     """
 
@@ -56,3 +60,7 @@ class ShowAdditionalInformation:  # pylint: disable=too-many-instance-attributes
     trailer_url: str | None
     resource_url: str
     images: ShowImages
+    creation: str | None = None
+    broadcast_status: str | None = None
+    platforms: tuple[str, ...] = ()
+    in_account: bool = False
