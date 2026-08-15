@@ -15,6 +15,11 @@
 
 This integration connects Home Assistant to your [BetaSeries](https://www.betaseries.com/) account. It exposes your viewing statistics and watchlist metrics as sensors, notifies you about upcoming episodes, provides a planning calendar, and allows you to mark episodes as watched or rate them directly from Home Assistant.
 
+> [!NOTE]
+> This is a community project, built on BetaSeries' public API. It is **not affiliated with,
+> endorsed by, or supported by BetaSeries**. Please report any issue here rather than to
+> BetaSeries. "BetaSeries" and its logo belong to their respective owners.
+
 ## Requirements
 
 - Home Assistant **2026.7.0** or newer.
