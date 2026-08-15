@@ -1999,7 +1999,7 @@ class UpcomingMediaCard extends HTMLElement {
           svgshift = i == 0 ? `x="0" dy="1.15em" ` : `x="0" dy="${lineDy}" `;
         else
           svgshift =
-            i == 0 ? `x="9" y="${y}" dy="1.3em" ` : `x="9" dy="${lineDy}" `;
+            i == 0 ? `x="12" y="${y}" dy="1.3em" ` : `x="12" dy="${lineDy}" `;
 
         // Build lines HTML or empty line
         line[i] = line[i].match("empty")
@@ -2038,7 +2038,7 @@ class UpcomingMediaCard extends HTMLElement {
         if (thumbsHtml) l4Parts.push(thumbsHtml);
         const l4Html = l4Parts.join(' \u2009\u2013\u2009 ');
         if (l4Html) {
-          const foX = view === "poster" ? 9 : 0;
+          const foX = view === "poster" ? 12 : 0;
           const l4Shadow = txtshdw ? `text-shadow:${txtshdw} rgba(0,0,0,0.9);` : '';
           line[4] = line[4].replace('<tspan ', '<tspan data-umc-l4 ');
           l4FOData = { l4Html, foX, l4Shadow, fontSize: size[4], color: line4_color };
