@@ -401,6 +401,38 @@
         }
       }
     },
+    "add_show": {
+      "name": "Ajouter une série",
+      "description": "Ajoute une série à la liste du compte.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        }
+      }
+    },
+    "search_shows": {
+      "name": "Rechercher des séries",
+      "description": "Recherche des séries dans le catalogue BetaSeries par titre et renvoie les résultats.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "query": {
+          "name": "Terme recherché",
+          "description": "Le titre à rechercher."
+        },
+        "limit": {
+          "name": "Nombre maximum de résultats",
+          "description": "Nombre de résultats à renvoyer, de 1 à 50."
+        }
+      }
+    },
     "delete_token": {
       "name": "Supprimer le token d'accès",
       "description": "Détruit le token d'accès actif du compte. Irréversible - l'entrée nécessitera une réauthentification par la suite.",
