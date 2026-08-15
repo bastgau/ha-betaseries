@@ -1198,7 +1198,7 @@ class UpcomingMediaCard extends HTMLElement {
       this._searchInput.type = "search";
       this._searchInput.autocomplete = "off";
       this._searchInput.spellcheck = false;
-      this._searchInput.placeholder = this.config.search_placeholder || "Search title or platform…";
+      this._searchInput.placeholder = this.config.search_placeholder || "Search title";
       this._searchInput.style.width = "calc(100% - 30px)";
       this._searchInput.style.boxSizing = "border-box";
       const initialView = this.config.image_style || "poster";
