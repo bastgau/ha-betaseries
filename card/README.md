@@ -13,7 +13,7 @@ This fork adds functionality specific to the [BetaSeries Home Assistant integrat
 - **Multiple button styles**: Choose from dark, ring, or light themed watched buttons to match your Lovelace design.
 - **Live search**: Optional search bar to filter displayed items in real time by show title or streaming platform.
 - **Catalog search**: The same bar also searches the whole BetaSeries catalog. Two tabs appear once the query is long enough — *My list* (the local filter) and *BetaSeries* (catalog results) — and the catalog tab is preselected when the local filter matched nothing.
-- **Add to my list**: Click the `+` on a catalog result to add that show to your BetaSeries account. Shows already followed show a check instead.
+- **Add to / remove from my list**: Click the `+` on a catalog result to add that show to your BetaSeries account. Shows you already follow show a check, which turns into a `−` on hover — clicking it removes the show. Removal is immediate, with no confirmation step.
 
 ## Configuration
 

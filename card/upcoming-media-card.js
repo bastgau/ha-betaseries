@@ -2693,6 +2693,7 @@ class UpcomingMediaCard extends HTMLElement {
   _addShowButton(container, showId, inAccount) {
     const ICON_PLUS = 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z';
     const ICON_CHECK = 'M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z';
+    const ICON_MINUS = 'M19,13H5V11H19V13Z';
     const ICON_ALERT = 'M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 12,2Z';
     const ERR_BG = 'rgba(198,40,40,0.95)';
     const SKINS = {
@@ -2708,17 +2709,17 @@ class UpcomingMediaCard extends HTMLElement {
     const HIT = 22;
     const DISC = 18;
     const GLYPH = 13;
+    // `followed` is the button's own state, not the item's: it flips on every
+    // successful call, so one result can be added and removed without waiting
+    // for a redraw.
+    let followed = !!inAccount;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'umc-add-show-btn';
-    const label = inAccount ? 'Already in your list' : 'Add to my list';
-    btn.title = label;
-    btn.setAttribute('aria-label', label);
     btn.style.cssText = 'position:absolute;right:9px;bottom:9px;'
       + 'width:' + HIT + 'px;height:' + HIT + 'px;'
       + 'box-sizing:border-box;padding:0;display:flex;align-items:center;justify-content:center;'
-      + 'border:none;background:none;color:inherit;z-index:6;'
-      + 'cursor:' + (inAccount ? 'default' : 'pointer') + ';'
+      + 'border:none;background:none;color:inherit;z-index:6;cursor:pointer;'
       + 'transition:transform .2s,opacity .2s;';
 
     const disc = document.createElement('span');
@@ -2734,27 +2735,28 @@ class UpcomingMediaCard extends HTMLElement {
       disc.innerHTML = '<svg viewBox="0 0 24 24" width="' + GLYPH + '" height="' + GLYPH + '" style="display:block;">'
         + '<path fill="currentColor" d="' + path + '"/></svg>';
     };
-    draw(inAccount ? ICON_CHECK : ICON_PLUS);
-
-    // A show already followed gets the check and nothing else: no hover, no
-    // click, no way to send an add the API would only reject.
-    if (inAccount) {
-      container.appendChild(btn);
-      return btn;
-    }
-
-    const reset = () => {
-      draw(ICON_PLUS);
-      disc.style.background = skin.idle;
+    // Idle look for the current state, and the label that says what a click
+    // will do - never merely what the state is, since both states act.
+    const reset = (hovered) => {
+      const label = followed
+        ? (hovered ? 'Remove from my list' : 'In your list - click to remove')
+        : 'Add to my list';
+      btn.title = label;
+      btn.setAttribute('aria-label', label);
+      // Followed + hovered is the one case the glyph announces the action
+      // rather than the state: the check turns into a minus under the cursor.
+      draw(followed ? (hovered ? ICON_MINUS : ICON_CHECK) : ICON_PLUS);
+      disc.style.background = hovered ? skin.hover : skin.idle;
       disc.style.color = skin.fg;
       btn._umcBusy = false;
     };
+    reset(false);
 
     btn.addEventListener('mouseenter', () => {
-      if (!btn._umcBusy) disc.style.background = skin.hover;
+      if (!btn._umcBusy) reset(true);
     });
     btn.addEventListener('mouseleave', () => {
-      if (!btn._umcBusy) disc.style.background = skin.idle;
+      if (!btn._umcBusy) reset(false);
     });
 
     btn.addEventListener('click', async (ev) => {
@@ -2762,32 +2764,36 @@ class UpcomingMediaCard extends HTMLElement {
       ev.stopPropagation();
       if (btn._umcBusy) return;
       const entryId = this._resolveBetaseriesEntry();
-      if (!entryId) {
-        console.error('upcoming-media-card: device_betaseries resolves to no config entry');
+      const failed = () => {
         disc.style.background = ERR_BG;
         disc.style.color = '#fff';
         draw(ICON_ALERT);
-        setTimeout(reset, 2500);
+        setTimeout(() => reset(false), 2500);
+      };
+      if (!entryId) {
+        console.error('upcoming-media-card: device_betaseries resolves to no config entry');
+        failed();
         return;
       }
+      const removing = followed;
+      const service = removing ? 'remove_show' : 'add_show';
       btn._umcBusy = true;
-      // Optimistic, same reasoning as the watched button: the check appears on
-      // press and is put back to a plus if the call fails.
-      draw(ICON_CHECK);
+      // Optimistic, same reasoning as the watched button: the glyph flips on
+      // press and is put back by failed() if the call turns out to fail.
+      draw(removing ? ICON_PLUS : ICON_CHECK);
       try {
-        await this._hass.callService('betaseries', 'add_show', {
+        await this._hass.callService('betaseries', service, {
           config_entry: entryId,
           show_id: String(showId)
         });
-        // The cached result for this query must agree with what just happened:
-        // switching tabs and back would otherwise offer to add it again.
-        this._markCachedShowAdded(showId);
+        followed = !removing;
+        // The cached results must agree with what just happened: switching
+        // tabs and back would otherwise offer the action already taken.
+        this._markCachedShowMembership(showId, followed);
+        reset(false);
       } catch (err) {
-        console.error('upcoming-media-card: add_show failed', err);
-        disc.style.background = ERR_BG;
-        disc.style.color = '#fff';
-        draw(ICON_ALERT);
-        setTimeout(reset, 2500);
+        console.error('upcoming-media-card: ' + service + ' failed', err);
+        failed();
       }
     });
 
@@ -2799,16 +2805,16 @@ class UpcomingMediaCard extends HTMLElement {
     return btn;
   }
 
-  // Flips `in_account` on one show wherever the search cache holds it: the same
+  // Sets `in_account` on one show wherever the search cache holds it: the same
   // show can sit in several cached queries.
-  _markCachedShowAdded(showId) {
-    const flip = (shows) => shows.map(show => (
-      String(show.id) === String(showId) ? { ...show, in_account: true } : show
+  _markCachedShowMembership(showId, inAccount) {
+    const apply = (shows) => shows.map(show => (
+      String(show.id) === String(showId) ? { ...show, in_account: inAccount } : show
     ));
-    this._catalogCache.forEach((shows, query) => this._catalogCache.set(query, flip(shows)));
-    if (this._catalogResults) this._catalogResults = flip(this._catalogResults);
+    this._catalogCache.forEach((shows, query) => this._catalogCache.set(query, apply(shows)));
+    if (this._catalogResults) this._catalogResults = apply(this._catalogResults);
   }
-  // END: BetaSeries "add to my list" button
+  // END: BetaSeries "add to / remove from my list" button
 
   _applyOverflow() {
     clearTimeout(this._overflowResizeTimer);
