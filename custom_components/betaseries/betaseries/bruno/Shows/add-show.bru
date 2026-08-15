@@ -1,0 +1,262 @@
+meta {
+  name: add-show
+  type: http
+  seq: 8
+  tags: [
+    Shows
+  ]
+}
+
+post {
+  url: {{baseUrl}}/shows/show
+  body: formUrlEncoded
+  auth: none
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+body:form-urlencoded {
+  @description('Series ID. You can include multiple by separating them with a comma (Optional if thetvdb_id or imdb_id specified)')
+  id: 29030
+  @description('Series ID on TheTVDB. You can include multiple by separating them with a comma (Optional if id or imdb_id specified)')
+  locale: fr
+  @description('Series ID on IMDB. You can include multiple by separating them with a comma (Optional if id or thetvdb_id specified)')
+  ~thetvdb_id: null
+  @description('ID of the last watched episode. If multiple series, the order of episodes must be exactly the same (Optional)')
+  ~imdb_id: null
+  @description('Locale parameter to specify language preference')
+  ~episode_id: null
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}
+
+docs {
+  Add a series to the member's account.
+}
+
+example {
+  name: example - 200
+
+  request: {
+    url: {{baseUrl}}/shows/show
+    method: POST
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 29030
+      locale: fr
+      ~thetvdb_id: null
+      ~imdb_id: null
+      ~episode_id: null
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "show": {
+            "id": 29030,
+            "thetvdb_id": 382244,
+            "imdb_id": "tt12708140",
+            "themoviedb_id": 103416,
+            "slug": "la-vita-bugiarda-degli-adulti",
+            "title": "La vita bugiarda degli adulti",
+            "original_title": "La vita bugiarda degli adulti",
+            "description": "Dans les années 90, l'impertinente Vittoria prend sa nièce sous son aile et lui fait découvrir une autre facette de Naples, au grand dam des parents stricts de la jeune fille.",
+            "seasons": "1",
+            "seasons_details": [
+              {
+                "number": 1,
+                "episodes": 6
+              }
+            ],
+            "episodes": "6",
+            "followers": "359",
+            "comments": 0,
+            "similars": "0",
+            "characters": "0",
+            "creation": "2023",
+            "showrunner": {
+              "id": "504579",
+              "name": "Edoardo De Angelis",
+              "picture": "https://pictures.betaseries.com/persons/w9KHIrN2QF6GvYR3NGh7CVeucLE.jpg"
+            },
+            "showrunners": [
+              {
+                "id": "504579",
+                "name": "Edoardo De Angelis",
+                "slug": "edoardo-de-angelis",
+                "picture": "https://pictures.betaseries.com/persons/w9KHIrN2QF6GvYR3NGh7CVeucLE.jpg"
+              }
+            ],
+            "genres": {
+              "Drama": "Drame",
+              "Mini-Series": "Mini-série"
+            },
+            "length": "50",
+            "network": "Netflix",
+            "country": "Italie",
+            "rating": "",
+            "status": "Ended",
+            "language": "it",
+            "originalLanguage": null,
+            "notes": {
+              "total": 10,
+              "mean": 2.5,
+              "user": 0
+            },
+            "in_account": true,
+            "images": {
+              "show": "https://pictures.betaseries.com/fonds/show/29030_1672845892.jpg",
+              "banner": null,
+              "box": null,
+              "poster": "https://pictures.betaseries.com/fonds/poster/0fcb222a2029fd3e66664dc96092827a.jpg"
+            },
+            "aliases": {
+              "97395": "A Vida Mentirosa dos Adultos",
+              "97598": "Das lügenhafte Leben der Erwachsenen",
+              "97597": "La vida mentirosa de los adultos",
+              "71517": "La vie mensongère des adultes",
+              "71513": "La vita bugiarda degli adulti",
+              "97394": "La vita bugiarda degli adulti",
+              "71514": "The Lying Life of Adults",
+              "97396": "Лживая взрослая жизнь"
+            },
+            "social_links": [],
+            "user": {
+              "archived": false,
+              "favorited": false,
+              "remaining": 6,
+              "status": 0,
+              "last": "S00E00",
+              "tags": "",
+              "next": {
+                "id": 2821878,
+                "code": "S01E01",
+                "date": "2023-01-04",
+                "title": "Bellezza",
+                "image": "https://pictures.betaseries.com/banners/v4/episode/9034447/screencap/63b5857c171f3.jpg"
+              },
+              "friends_watching": [],
+              "rewatch": {
+                "total": 0,
+                "agenda": false
+              }
+            },
+            "next_trailer": "x8h4tyo",
+            "next_trailer_host": "dailymotion",
+            "resource_url": "https://www.betaseries.com/serie/la-vita-bugiarda-degli-adulti",
+            "platforms": {
+              "svods": [
+                {
+                  "id": 1,
+                  "name": "Netflix",
+                  "tag": null,
+                  "color": "#000000",
+                  "link_url": "https://www.betaseries.com/link/60176574",
+                  "available": {
+                    "last": 1
+                  },
+                  "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+                }
+              ],
+              "svod": {
+                "id": 1,
+                "name": "Netflix",
+                "tag": null,
+                "color": "#000000",
+                "link_url": "https://www.betaseries.com/link/60176574",
+                "available": {
+                  "last": 1
+                },
+                "logo": "https://pictures.betaseries.com/platforms/1.jpg"
+              }
+            }
+          },
+          "errors": []
+        }
+      '''
+    }
+  }
+}
+
+example {
+  name: example - 400
+
+  request: {
+    url: {{baseUrl}}/shows/show
+    method: POST
+    mode: formUrlEncoded
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+
+    body:form-urlencoded: {
+      id: 29030
+      locale: fr
+      ~thetvdb_id: null
+      ~imdb_id: null
+      ~episode_id: null
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 400
+      text: Bad Request
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "errors": [
+            {
+              "code": 2003,
+              "text": "L'utilisateur a déjà cette série dans son compte."
+            }
+          ]
+        }
+      '''
+    }
+  }
+}

@@ -1,22 +1,37 @@
 meta {
   name: search
   type: http
-  seq: 7
+  seq: 8
+  tags: [
+    Shows
+  ]
 }
 
 get {
-  url: {{baseUrl}}/shows/search?title=severance&nbpp=20&order=popularity
+  url: {{baseUrl}}/shows/search?title=silo&locale=fr
   body: none
-  auth: none
+  auth: inherit
 }
 
 params:query {
-  title: severance
-  nbpp: 20
-  order: popularity
-  ~summary: true
-  ~recent: true
-  ~page: 1
+  @description('Searched title')
+  title: silo
+  @description('Locale parameter to specify language preference')
+  locale: fr
+  @description('Return only essential series info')
+  ~summary: false
+  @description('Return order (title|popularity|followers), default title')
+  ~order: null
+  @description('Only series from the last two years')
+  ~recent: false
+  @description('IDs of SVOD/VOD platforms where series are available')
+  ~platforms: null
+  @description('Country for SVOD/VOD platforms')
+  ~country: null
+  @description('Number of results per page, default 5, maximum 100')
+  ~nbpp: null
+  @description('Page number, default 1')
+  ~page: null
 }
 
 headers {
@@ -25,16 +40,203 @@ headers {
   Authorization: Bearer {{token}}
 }
 
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}
+
 docs {
-  Search the catalog by title, with member information when a token is sent.
+  Search for a series, with member information if a token is provided.
+}
 
-  Backs Client.search_shows(). No example block yet: the response has not been
-  captured against a real key, so the parsing in client.py assumes this
-  endpoint returns the same show objects as /shows/display (verified there:
-  in_account, creation, status, platforms.svods[].name, notes.mean, slug).
-  Run this request, save the response as an example, and correct the parsing
-  if any of those five fields turns out to be absent here.
+example {
+  name: example
 
-  `summary` is left disabled on purpose: it returns "only essential series
-  info", which is likely to drop exactly those fields.
+  request: {
+    url: {{baseUrl}}/shows/search?title=silo&locale=fr
+    method: GET
+    mode: none
+    params:query: {
+      title: silo
+      locale: fr
+      ~summary: false
+      ~order: null
+      ~recent: false
+      ~platforms: null
+      ~country: null
+      ~nbpp: null
+      ~page: null
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "shows": [
+            {
+              "id": 29029,
+              "thetvdb_id": 403245,
+              "imdb_id": "tt14688458",
+              "themoviedb_id": 125988,
+              "slug": "wool",
+              "title": "Silo",
+              "original_title": "Silo",
+              "description": "Dans un monde futur dévasté et toxique, des milliers de survivants habitent un gigantesque silo souterrain. Après la transgression d'une règle d'or par leur shérif et la mort mystérieuse de plusieurs résidents, Juliette, une mécanicienne, perce peu à peu les terribles secrets du Silo.",
+              "seasons": "4",
+              "seasons_details": [
+                {
+                  "number": 0,
+                  "episodes": 4
+                },
+                {
+                  "number": 1,
+                  "episodes": 10
+                },
+                {
+                  "number": 2,
+                  "episodes": 10
+                },
+                {
+                  "number": 3,
+                  "episodes": 10
+                }
+              ],
+              "episodes": "31",
+              "followers": "32352",
+              "comments": 110,
+              "similars": "17",
+              "characters": "0",
+              "creation": "2023",
+              "showrunner": {
+                "id": "327379",
+                "name": "Graham Yost",
+                "picture": "https://pictures.betaseries.com/persons/zbaUcbYdFU28bGoi6F2lJo0XUaX.jpg"
+              },
+              "showrunners": [
+                {
+                  "id": "327379",
+                  "name": "Graham Yost",
+                  "slug": "graham-yost",
+                  "picture": "https://pictures.betaseries.com/persons/zbaUcbYdFU28bGoi6F2lJo0XUaX.jpg"
+                }
+              ],
+              "genres": {
+                "Drama": "Drame",
+                "Science Fiction": "Science-fiction"
+              },
+              "length": "43",
+              "network": "Apple TV",
+              "country": "États-Unis",
+              "rating": "TV-MA",
+              "status": "Continuing",
+              "language": "en",
+              "originalLanguage": "anglais",
+              "notes": {
+                "total": 1129,
+                "mean": 4.37112000000000033850255931611172854900360107421875,
+                "user": 5
+              },
+              "in_account": true,
+              "images": {
+                "show": "https://pictures.betaseries.com/fonds/show/29029_1678197941.jpg",
+                "banner": "https://pictures.betaseries.com/fonds/banner/29029_64799584.jpg",
+                "box": "https://pictures.betaseries.com/fonds/box/29029_64799584.jpg",
+                "poster": "https://pictures.betaseries.com/fonds/poster/5da2b1d3d7e75d3afe82ae3c30ed0919.jpg",
+                "clearlogo": {
+                  "url": "https://pictures.betaseries.com/clearlogo/en/29029_63488532.png",
+                  "width": "800",
+                  "height": "141"
+                }
+              },
+              "aliases": {
+                "104727": "O Silo",
+                "100043": "Silo",
+                "102938": "Silos",
+                "71512": "Wool",
+                "102397": "Wool",
+                "100619": "Бункер",
+                "101929": "Укрытие"
+              },
+              "social_links": [],
+              "user": {
+                "archived": false,
+                "favorited": false,
+                "remaining": 1,
+                "status": 96.2999999999999971578290569595992565155029296875,
+                "last": "S03E06",
+                "tags": "",
+                "next": {
+                  "id": 3965199,
+                  "code": "S03E07",
+                  "date": "2026-08-14",
+                  "title": "Radio",
+                  "image": "https://pictures.betaseries.com/banners/episodes/29029/054046ccd90879904652d7196eaef353.jpg"
+                },
+                "friends_watching": [],
+                "rewatch": {
+                  "total": 0,
+                  "agenda": false
+                }
+              },
+              "next_trailer": "x8jvfyv",
+              "next_trailer_host": "dailymotion",
+              "resource_url": "https://www.betaseries.com/serie/wool",
+              "platforms": {
+                "svods": [
+                  {
+                    "id": 255,
+                    "name": "Apple TV+",
+                    "tag": null,
+                    "color": "#2F2F2F",
+                    "link_url": "https://www.betaseries.com/link/62768940",
+                    "available": {
+                      "last": 3,
+                      "first": 1
+                    },
+                    "logo": "https://pictures.betaseries.com/platforms/255.jpg"
+                  }
+                ],
+                "svod": {
+                  "id": 255,
+                  "name": "Apple TV+",
+                  "tag": null,
+                  "color": "#2F2F2F",
+                  "link_url": "https://www.betaseries.com/link/62768940",
+                  "available": {
+                    "last": 3,
+                    "first": 1
+                  },
+                  "logo": "https://pictures.betaseries.com/platforms/255.jpg"
+                }
+              }
+            }
+          ],
+          "errors": []
+        }
+      '''
+    }
+  }
 }
