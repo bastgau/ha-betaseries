@@ -383,7 +383,7 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if self.login_task.done():
-            exception = self.login_task.exception()
+            exception = self.login_task.exception()  # noqa: LOG004
             if isinstance(exception, BetaSeriesAuthTimeoutError):
                 return self.async_show_progress_done(next_step_id="timeout")
             if exception is not None:

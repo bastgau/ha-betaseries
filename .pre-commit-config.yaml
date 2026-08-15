@@ -4,7 +4,7 @@
 # GitHub Actions (see .github/workflows/), not here.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.1
+    rev: v0.16.2
     hooks:
       - id: ruff-check
         args:
@@ -47,4 +47,6 @@ repos:
         additional_dependencies:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
-        exclude: ^bruno/
+        # `card/` holds a vendored third-party card kept diffable against
+        # upstream: reformatting it rewrites every line.
+        exclude: ^(bruno|card)/

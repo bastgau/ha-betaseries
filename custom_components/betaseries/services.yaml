@@ -67,6 +67,31 @@ unrate_show:
   fields:
     config_entry: *config_entry
     show_id: *show_id
+add_show:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
+remove_show:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
+search_shows:
+  fields:
+    config_entry: *config_entry
+    query:
+      required: true
+      example: severance
+      selector:
+        text:
+    limit:
+      required: false
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 50
+          step: 1
+          mode: box
 delete_token:
   fields:
     config_entry: *config_entry

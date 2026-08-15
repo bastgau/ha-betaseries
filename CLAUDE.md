@@ -41,14 +41,16 @@ Custom component HACS pour un compte membre BetaSeries.
 - Auth par device flow ou login/mot de passe (choix au premier écran, voir §3), reauth, OptionsFlow.
 - **v3** : 10 services (marquer/démarquer vu épisode/saison, noter/dénoter épisode/saison/série) -
   périmètre restreint à Show/Episode/Season (arbitrage #6), routes testées via Bruno avant
-  implémentation. Voir §8.
+  implémentation. Voir §8. Plus `delete_token`, et `search_shows`/`add_show`/`remove_show`
+  (recherche catalogue depuis la card, voir §8) : **14 services au total**, toutes routes
+  vérifiées via Bruno.
 
 **À faire** :
 
 - **v3 - films** : `rate_movie`/`unrate_movie` laissés de côté faute de besoin identifié - à faire
   si le besoin se confirme, même démarche (Bruno d'abord). Voir §8.
-- Pas de v4 prévue ; on avisera selon les retours d'usage (`add_show`, `set_movie_status` restent
-  des candidats si le besoin se confirme).
+- Pas de v4 prévue ; on avisera selon les retours d'usage (`set_movie_status` reste un candidat si
+  le besoin se confirme).
 
 > Le découpage v1/v2/v2bis a servi à cadencer le développement ; il n'a plus de valeur descriptive
 > aujourd'hui et le README ne l'utilise plus. Ne pas s'en servir pour raisonner sur l'existant :
@@ -84,7 +86,7 @@ Custom component HACS pour un compte membre BetaSeries.
 - HACS default store (si soumission) exige : README avec install (HACS + manuel),
   options du config flow, et **table des entités** (entity_id, unité, sens).
 
-### CI ✅ (mise en place le 2026-08-01)
+### CI ✅
 
 Cinq workflows. Les deux qui comptent au quotidien :
 
@@ -93,22 +95,44 @@ Cinq workflows. Les deux qui comptent au quotidien :
 - **`test.yml`** : 2 jobs, `client` et `integration`, chacun avec **son propre plancher de
   couverture à 95 %** (`--cov-fail-under=95`).
 
+⚠️ **Pas de filtre `paths:` au niveau du workflow, dans ni l'un ni l'autre** (retiré le 2026-08-11).
+Un required status check (branch protection : `client`, `integration`, `tests`) reste bloqué en
+« Expected — Waiting for status to be reported » si le workflow qui le produit ne se déclenche
+jamais - ce qui arrivait sur toute PR ne touchant aucun `.py` (doc, README, `bruno/`...), puisque
+les deux `on.pull_request.paths` filtraient déjà à ce niveau. Les deux workflows tournent
+maintenant sur chaque push/PR ; un job `changes` (en tête, via `dorny/paths-filter`) calcule si les
+chemins pertinents ont changé et expose `outputs.python`, que `client`/`integration`/`lint`
+consomment via `if: needs.changes.outputs.python == 'true'`. Un job dont le `if` est faux est
+**skipped**, pas absent - GitHub Actions traite un skip comme satisfaisant un required check,
+contrairement à un contexte qui n'est jamais rapporté. La liste de chemins surveillés par
+`paths-filter` dans chaque workflow reprend exactement l'ancien bloc `paths:`.
+
 Le découpage n'est pas cosmétique : **chaque moitié couvre 100 % de ce qu'elle possède, seule.**
 Si une branche du client finit par n'être atteinte que via un test HA, ça se voit comme une chute
 de couverture au lieu de se noyer dans un run combiné. Le job `integration` utilise
 `.coveragerc-integration`, qui soustrait le client de la mesure (`pytest-cov` sait ajouter des
 chemins, jamais en retrancher un).
 
-- **Version de HA résolue au run time**, jamais épinglée : chaque job interroge
-  `https://pypi.org/pypi/homeassistant/json` (`info.version` = dernière **stable**, les bêtas
-  `2026.8.0b*` en sont exclues) et installe avec `homeassistant==<cette version>`. La CI répond
-  donc « ça marche-t-il avec le HA que les gens font tourner ? ».
-  - Corollaire assumé : **la CI n'est pas déterministe**. Une sortie stable de HA peut la faire
-    rougir sans qu'aucun commit ne bouge. Le `::notice::` en tête de run affiche la version.
-  - `requirements-test-integration.txt` ne contient **qu'une ligne sans version** :
-    `pytest-homeassistant-custom-component` épingle tout son monde (HA, pytest, pytest-cov…), et
-    pip rétrograde ce paquet jusqu'à celui construit pour la HA demandée. Sans la contrainte, il
-    installerait une **bêta** (vérifié : 0.13.351 exige `homeassistant==2026.8.0b3`).
+- **Version de HA épinglée en dur**, pas résolue au run time (bascule faite le 2026-08-06, commit
+  `9e027ba` - ce que ce paragraphe affirmait avant, une résolution dynamique via
+  `https://pypi.org/pypi/homeassistant/json`, décrivait l'état **pré**-`9e027ba` et a survécu sans
+  être corrigé à la resynchronisation du 2026-08-01, elle-même antérieure). `test.yml` n'appelle
+  plus pypi.org et ne passe plus de `homeassistant==<version>` au job : seul
+  `requirements-test-integration.txt` fixe la version, via `pytest-homeassistant-custom-component`
+  **épinglé exactement** (`==0.13.348`, qui tire `homeassistant==2026.7.4` en transitif) plutôt que
+  laissé sans version.
+  - Corollaire inversé par rapport à l'ancien texte : **la CI est déterministe** - un run ne rougit
+    plus tout seul entre deux commits identiques, mais elle ne dit plus non plus « ça marche-t-il
+    avec le HA que les gens font tourner aujourd'hui ». Elle répond « ça marche-t-il avec la version
+    de HA fixée dans ce fichier ».
+  - Motif du pin, documenté dans le fichier lui-même : laisser
+    `pytest-homeassistant-custom-component` sans contrainte de version fait remonter des **bêtas**
+    HA non publiées (vérifié historiquement : 0.13.351 exigeait `homeassistant==2026.8.0b3`), donc
+    un pin exact vers une release qui précède ce comportement est le seul moyen d'obtenir du stable.
+  - ⚠️ Ce pin est un **entretien manuel récurrent**, pas un `TODO` isolé : le fichier dit
+    explicitement de le bumper « quand homeassistant est upgradé », mais rien ne rappelle qu'il
+    l'est - aucun job ne compare la version pinnée à la dernière stable HA. Vérifier ce fichier
+    avant de faire confiance à un run vert comme preuve de compatibilité avec le HA du jour.
 - `scripts/lint [client|integration|tests|src|all]` calque exactement la matrice CI, pour qu'un vert
   local prédise un vert distant. `scripts/test` lance la suite complète (plancher 95 % via
   `pyproject.toml`).
@@ -162,14 +186,12 @@ Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste minc
   un problème d'identifiants sur `/members/infos`, `/planning/member`, `/shows/display`,
   `/shows/episodes`, `/episodes/list` renvoie HTTP **400** (pas 401), avec deux codes distincts
   observés selon la cause :
-  - `{"code": 1001, "text": "Mauvaise clé API."}` → `X-BetaSeries-Key` (api_key/client_id) invalide -
-    **cause confirmée du bug initial** (pas un token expiré comme supposé au départ).
+  - `{"code": 1001, "text": "Mauvaise clé API."}` → `X-BetaSeries-Key` (api_key/client_id) invalide.
   - `{"code": 2001, "text": "Données d'identification incorrectes."}` → access token rejeté - même
     code numérique `2001` que l'état "en attente" du device flow (§3), signification différente.
     `client.py` (`Client._raise_for_error`, `const.INVALID_CREDENTIALS_ERROR_CODES = {1001, 2001}`)
     détecte les deux et lève `AuthError` au même titre qu'un 401, pour déclencher le reauth flow
-    (`ConfigEntryAuthFailed`) plutôt qu'un `ConfigEntryNotReady` en boucle (bug corrigé - avant ce
-    fix, ces deux cas tombaient dans l'erreur générique et ne déclenchaient jamais le reauth).
+    (`ConfigEntryAuthFailed`) plutôt qu'un `ConfigEntryNotReady` en boucle.
 - **Le client ne logge jamais lui-même** ✅ (choix d'architecture) : `Error`/`AuthError`
   (`betaseries/exceptions.py`) portent `status`/`body` (réponse brute qui a déclenché l'erreur) en
   attributs plutôt que de logger un warning directement dans `client.py`. C'est `coordinator.py`
@@ -200,25 +222,22 @@ Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste minc
   d'origine, le nouveau token obtenu pendant cette tentative est juste jeté. Pour changer de compte
   sur une entrée existante, il faut supprimer/recréer l'intégration - le reauth ne permet de
   renouveler les identifiants que **pour le même compte**. Chaîne de traduction
-  (`strings.json`/`translations/{en,fr}.json`, clé `config.abort.unique_id_mismatch`) ajoutée pour
-  ce cas - absente au départ (`_abort_if_unique_id_mismatch()` utilise ce nom de raison par défaut,
-  mais rien ne le traduisait, HA aurait affiché la clé brute).
-- **Mode d'auth alternatif via login/mot de passe - implémenté le 2026-08-06, malgré le risque déjà
-  identifié** : `POST /members/auth?login=...&password=...` (`bruno/Members/auth.bru`, vérifié -
-  renvoie `{"user": {...}, "token": "...", "hash": "...", "errors": []}`) donne un `token` utilisable
-  en `Authorization: Bearer` sur les endpoints authentifiés comme un access_token OAuth classique
-  (testé en enchaînant `auth.bru` → `infos.bru` avec ce token). Un premier examen (2026-08-05) avait
-  écarté ce mode : le token est **stable** (jamais régénéré) et **n'est pas révoqué par un
-  changement de mot de passe du compte** - un token compromis resterait donc utilisable
-  indéfiniment, sans moyen de rotation.
-  **Repris et implémenté le lendemain** (issue #9 - device flow bloqué dans l'appli mobile Android,
-  voir le `## Troubleshooting` du README) après un contre-argument de l'utilisateur : la rotation du
-  `client_secret` du device flow n'est **pas non plus** self-service (suppression/recréation de
-  l'app via le support BetaSeries, voir ci-dessus) - la différence entre les deux modes n'est donc
-  pas « révocable / pas révocable » mais « pas de geste de rotation rapide, dans les deux cas, sous
-  des formes différentes ». Décision produit de l'utilisateur, pas un fait technique qui aurait
-  changé : le token `/members/auth` reste non révoqué par un changement de mot de passe, ce point
-  n'a pas été retesté ni infirmé.
+  (`strings.json`/`translations/{en,fr}.json`, clé `config.abort.unique_id_mismatch`) présente pour
+  ce cas (`_abort_if_unique_id_mismatch()` utilise ce nom de raison par défaut - sans traduction,
+  HA afficherait la clé brute).
+- **Mode d'auth alternatif via login/mot de passe** : `POST /members/auth?login=...&password=...`
+  (`bruno/Members/auth.bru`, vérifié - renvoie `{"user": {...}, "token": "...", "hash": "...",
+"errors": []}`) donne un `token` utilisable en `Authorization: Bearer` sur les endpoints
+  authentifiés comme un access_token OAuth classique (testé en enchaînant `auth.bru` → `infos.bru`
+  avec ce token). Limite connue : le token est **stable** (jamais régénéré) et **n'est pas révoqué
+  par un changement de mot de passe du compte** - un token compromis resterait donc utilisable
+  indéfiniment, sans moyen de rotation. Accepté malgré cette limite : la rotation du `client_secret`
+  du device flow n'est **pas non plus** self-service (suppression/recréation de l'app via le
+  support BetaSeries, voir ci-dessus) - la différence entre les deux modes n'est donc pas
+  « révocable / pas révocable » mais « pas de geste de rotation rapide, dans les deux cas, sous des
+  formes différentes ». Ce mode alternatif existe en complément du device flow, notamment pour
+  contourner un blocage connu du device flow dans l'appli mobile Android (voir le
+  `## Troubleshooting` du README).
   **Implémentation** : `Auth.authenticate_with_password(login, password)` (`betaseries/auth.py`) -
   seule méthode de `Auth` qui n'a pas besoin de `client_secret` (paramètre optionnel du
   constructeur, `""` par défaut). Contrairement au device flow, une seule requête bloquante, pas de
@@ -267,8 +286,7 @@ movies, streak_days, member_since_days, episodes_per_month, favorite_genre`.
 
 - `date` (`"YYYY-MM-DD"`) → **all-day** (pas d'heure) · `show.title` + `code` (`"S03E04"`) → titre event
 - `title` (nom épisode) → description
-- `user.seen` (bool) → **plus aucune entité ne le lit** (corrigé le 2026-08-01, voir le cache
-  ci-dessous). Le calendrier ne l'a jamais filtré (c'est un calendrier de **sorties**), et les deux
+- `user.seen` (bool) → **plus aucune entité ne le lit** (voir le cache ci-dessous). Le calendrier ne l'a jamais filtré (c'est un calendrier de **sorties**), et les deux
   capteurs `previous_episode_airing` / `next_episode_airing` répondent « qu'est-ce qui est sorti /
   va sortir », pas « que dois-je regarder ». Seul `diagnostics.py` le compte encore, à titre
   informatif. La question « que me reste-t-il à voir » est traitée par `/episodes/list` (§4bis)
@@ -289,12 +307,12 @@ movies, streak_days, member_since_days, episodes_per_month, favorite_genre`.
   d'URL BetaSeries vérifié sur `/shows/display` (`https://www.betaseries.com/serie/{slug}`) -
   aucun endpoint « episode » ne renvoie directement l'URL de la série elle-même (seulement celle
   de l'épisode, `Episode.resource_url`), d'où ce calcul plutôt qu'une lecture directe.
-- **Cache du planning** (`_episode_to_dict`/`_episode_from_dict`, `PLANNING_STORE_VERSION`, qui vaut
-  **1** depuis l'origine) : persiste `show_description`/`show_slug`, et **ne persiste plus `seen`**.
-  - **Bug corrigé le 2026-08-01, reproduit empiriquement.** Le cache se justifiait par « un mois
-    passé ne change plus » : vrai d'une date de diffusion, **faux d'un statut de visionnage**. Un
-    mois caché n'étant jamais refetché, le capteur qui lisait `seen` restait figé sur un épisode
-    déjà regardé pendant toute la fenêtre `months_behind`.
+- **Cache du planning** (`_episode_to_dict`/`_episode_from_dict`, `PLANNING_STORE_VERSION`) :
+  persiste `show_description`/`show_slug`, et **ne persiste plus `seen`**.
+  - Le cache se justifie par « un mois passé ne change plus » : vrai d'une date de diffusion,
+    **faux d'un statut de visionnage**. Un mois caché n'étant jamais refetché, un capteur qui
+    lirait `seen` depuis le cache resterait figé sur un épisode déjà regardé pendant toute la
+    fenêtre `months_behind` - d'où le retrait de ce champ de la sérialisation.
   - `Episode.seen` est donc `bool | None`, où **`None` veut dire « inconnu », jamais « pas vu »** :
     un filtre doit tester `is False`, pas la véracité. Un mois passé traverse le cycle
     sérialisation → désérialisation **dès le refresh qui le fetch** (écrit puis relu), donc il ne
@@ -339,21 +357,19 @@ header → `200`, `cache-control: public, max-age=31536000`). `images.*` peut ê
 cassée). L'endpoint `GET /pictures/shows` (censé renvoyer l'image brute) est écarté : renvoie une
 erreur Cloudflare en pratique, alors que `/shows/display` donne déjà tout ce qu'il faut en JSON.
 
-### `GET /pictures/episodes?id=id` → vignette d'épisode, ❌ **exige une clé API** (corrigé 2026-07-30)
+### `GET /pictures/episodes?id=id` → vignette d'épisode, ❌ **exige une clé API**
 
-⚠️ **Cette section disait auparavant l'inverse** (« public, utilisable tel quel en `entity_picture` »,
-sur la foi d'un `302` obtenu sans header). Re-testé le 2026-07-30 sur **4 ids** dont 3 valides,
-issus des réponses `/planning/member` sauvegardées dans `bruno/` : **sans header, l'endpoint renvoie
-systématiquement `400` + `{"code": 1001, "text": "Please set an API key."}`**, sans redirection.
+Vérifié sur **4 ids** dont 3 valides, issus des réponses `/planning/member` sauvegardées dans
+`bruno/` : **sans header, l'endpoint renvoie systématiquement `400` + `{"code": 1001, "text":
+"Please set an API key."}`**, sans redirection.
 
-**Pourquoi l'ancien test concluait le contraire** (cause identifiée, c'est le point important) :
-BetaSeries répond `cache-control: private, max-age=14400` sur cet endpoint, et **Cloudflare met
-malgré tout la réponse en cache et la ressert à des requêtes anonymes**. Un `curl` sans header
-lancé peu après un appel authentifié (navigateur connecté, Bruno…) reçoit donc le `302` de
-_quelqu'un d'autre_ - vérifiable à l'en-tête `x-betaseries-key` de la réponse, qui porte alors une
-clé qu'on n'a pas envoyée, avec `cf-cache-status: HIT`. En forçant un `MISS` (paramètre aléatoire),
-on retombe toujours sur le `400`. **Leçon générale : sur cet hôte, tester une URL « publique »
-juste après un appel authentifié ne prouve rien - forcer un cache MISS.**
+⚠️ **Piège pour retester ça un jour** : BetaSeries répond `cache-control: private, max-age=14400`
+sur cet endpoint, et **Cloudflare met malgré tout la réponse en cache et la ressert à des requêtes
+anonymes**. Un `curl` sans header lancé peu après un appel authentifié peut donc recevoir un `302`
+qui appartient à _quelqu'un d'autre_ (vérifiable à l'en-tête `x-betaseries-key` de la réponse et
+`cf-cache-status: HIT`) et laisser croire à tort que l'endpoint est public. Forcer un cache `MISS`
+(paramètre aléatoire) donne le vrai résultat : `400`. **Leçon générale : sur cet hôte, tester une
+URL « publique » juste après un appel authentifié ne prouve rien - forcer un cache MISS.**
 
 Conséquence : **inutilisable en `entity_picture`** (le navigateur du frontend HA charge l'URL sans
 en-tête → image brisée, de façon non déterministe selon l'état du cache Cloudflare). La propriété
@@ -365,7 +381,7 @@ lignes + cache) - **écarté** : le poster de série ci-dessus est déjà public
 
 ### `GET https://pictures.betaseries.com/...` (posters de `/shows/display`) → ✅ réellement public
 
-Vérifié à froid le 2026-07-30 (aucun en-tête, cache MISS) : `200 image/jpeg`, ~646 Ko,
+Vérifié à froid (aucun en-tête, cache MISS) : `200 image/jpeg`, ~646 Ko,
 `cache-control: public`. C'est **l'hôte des URLs `images.poster`** renvoyées par `/shows/display`
 (§4 ci-dessus), et donc la seule source d'image utilisable directement en `entity_picture`.
 
@@ -425,7 +441,7 @@ Attribut `shows` : les N premières séries avec leurs prochains épisodes (born
 l'endpoint et **ignorent ces bornes**. `shows` est **non enregistré au recorder** (~8,5 kB ; le
 recorder jette _tous_ les attributs d'une entité au-delà de 16 kB).
 
-**Attribut `data` (opt-in, 2026-08-08)** ✅ : sur `Shows to catch up on`, `Calendar event count`,
+**Attribut `data` (opt-in)** ✅ : sur `Shows to catch up on`, `Calendar event count`,
 `Previous/Next episode airing` et `Suggestion of the day`, derrière l'option `upcoming_media_card`
 (`entry.options`, défaut `False`) - voir §6/§9 pour le détail. Une seule option pour les cinq
 sensors, pas une par sensor.
@@ -496,8 +512,8 @@ laisserait d'ailleurs l'état contredire les évènements que le calendrier affi
 
 ⚠️ `event` doit en revanche **ignorer les épisodes déjà diffusés** (`air_date >= today`). HA dérive
 l'état de cette seule propriété et n'allume le calendrier que pendant l'évènement : retourner le
-premier épisode du planning - trié par date, remontant des mois en arrière - figeait l'état sur
-`off` en permanence (bug corrigé le 2026-07-31, test de non-régression à dates relatives).
+premier épisode du planning - trié par date, remontant des mois en arrière - figerait l'état sur
+`off` en permanence (test de non-régression à dates relatives).
 
 ---
 
@@ -531,25 +547,25 @@ premier épisode du planning - trié par date, remontant des mois en arrière - 
   par cette version du cache » - une entrée qui ne l'a pas est retraitée comme manquante,
   ré-fetchée, sans bump de `*_STORE_VERSION`).
   - ⚠️ **L'appel est dans le `try`** des deux coordinators, et le helper **relaie les `AuthError`**
-    au lieu de les absorber comme les autres `Error`. `AuthError` héritant d'`Error`, tout absorber
-    faisait passer un token rejeté pour un simple souci d'artwork : le refresh se déclarait réussi
-    et le reauth n'était jamais demandé (bug corrigé le 2026-08-01).
-  - **`trailers`** (2026-08-08) ✅ : `ShowAdditionalInformation.trailer_url`, déjà une URL HTTPS
-    jouable ou `None` - reconstruite **côté client** (`betaseries/client.py`, `_trailer_url()`),
-    pas dans `coordinator.py`. L'API renvoie deux champs bruts, `next_trailer` (id vidéo nu) et
+    au lieu de les absorber comme les autres `Error` : `AuthError` héritant d'`Error`, tout absorber
+    ferait passer un token rejeté pour un simple souci d'artwork (refresh déclaré réussi, reauth
+    jamais demandé).
+  - **`trailers`** ✅ : `ShowAdditionalInformation.trailer_url`, déjà une URL HTTPS jouable ou
+    `None` - reconstruite **côté client** (`betaseries/client.py`, `_trailer_url()`), pas dans
+    `coordinator.py`. L'API renvoie deux champs bruts, `next_trailer` (id vidéo nu) et
     `next_trailer_host` (plateforme) ; seul le host `"youtube"` est confirmé en pratique
     (`bruno/Shows/display.bru`) - tout autre host, ou absence de trailer, donne `None` plutôt
     qu'une URL devinée pour un host jamais vérifié. `ShowAdditionalInformation` n'expose donc
-    **jamais** les deux champs bruts séparément, contrairement à ce qu'un premier essai avait fait.
-  - **`genres`** (2026-08-08) ✅ : `ShowAdditionalInformation.genres` (déjà localisés par l'API),
-    tuple vide si absent - aucune transformation, contrairement au trailer.
+    **jamais** les deux champs bruts séparément.
+  - **`genres`** ✅ : `ShowAdditionalInformation.genres` (déjà localisés par l'API), tuple vide si
+    absent - aucune transformation, contrairement au trailer.
 - Arbitrage #4 : les **trois** intervalles, la fenêtre de mois et les bornes de la watch list sont
   réglables via OptionsFlow (défauts 15/60/30 min, 2/2 mois, 10 séries × 2 épisodes).
 - `entity.py` : base entity, `DeviceInfo` unique (« BetaSeries - {login} »),
   `unique_id = f"{member_id}_{key}"` → toutes les entités sous un seul device.
   - ⚠️ Le login vient de **`entry.runtime_data.member.data.identity.login`**, jamais de
     `entry.title` : le titre n'en est que la valeur initiale et l'utilisateur peut le renommer, ce
-    qui pointait le lien « Visiter l'appareil » sur une page inexistante (corrigé le 2026-08-01).
+    qui pointerait le lien « Visiter l'appareil » sur une page inexistante sinon.
 - `__init__.py` : `async_setup_entry` construit le client puis les 3 coordinators.
   - Seul **`MemberCoordinator`** utilise `async_config_entry_first_refresh()` : c'est la requête qui
     prouve que les identifiants marchent. Les deux autres font un `async_refresh()` simple, donc une
@@ -576,8 +592,8 @@ custom_components/betaseries/
 ├── calendar.py         # CalendarEntity
 ├── button.py           # 3 boutons de purge de cache (diagnostic)
 ├── diagnostics.py      # export agrégé, credentials redacted
-├── services.py         # 10 services v3 (Show/Episode/Season), voir §8
-├── services.yaml       # champs des 10 services (gabarit habitica)
+├── services.py         # 14 services : 10 Show/Episode/Season + delete_token + search/add/remove, voir §8
+├── services.yaml       # champs des 14 services (gabarit habitica)
 ├── strings.json        # textes config flow + entités + services (EN)
 ├── translations/       # en.json + fr.json
 └── icons.json          # icônes mdi
@@ -605,13 +621,13 @@ Repo root : `hacs.json`, `README.md`, `LICENSE`, `tests/`, `bruno/`, `scripts/`,
 
 ## 8. Services - v3 ✅ (Show/Episode/Season livrés, Movies différé)
 
-Livré le 2026-08-03. Périmètre : Show, Episode et Season uniquement - Movies laissé de côté
-(pas de `rate_movie`, pas de dossier `bruno/Movies/`) faute de valeur d'automatisation identifiée
-pour l'instant ; à reconsidérer si le besoin se confirme.
+Périmètre : Show, Episode et Season uniquement - Movies laissé de côté (pas de `rate_movie`, pas de
+dossier `bruno/Movies/`) faute de valeur d'automatisation identifiée pour l'instant ; à
+reconsidérer si le besoin se confirme.
 
 Les 10 routes ont toutes été testées via Bruno (`.bru` avec un bloc `example` et une vraie réponse
 sauvegardée, gabarit `bruno/Planning/member.bru`) avant d'écrire une seule ligne de client - c'est
-ce qui a permis de corriger deux points que le spec OpenAPI seul avait fait supposer à tort
+ce qui a permis de corriger deux points que le spec OpenAPI seul aurait fait supposer à tort
 (voir juste après la table).
 
 | Service (v3)             | Route                      | Paramètres                                                                   | Réponse (succès)                                              |
@@ -627,17 +643,16 @@ ce qui a permis de corriger deux points que le spec OpenAPI seul avait fait supp
 | `rate_show`              | `POST /shows/note`         | `show_id`, `note` (1-5)                                                      | `{"show": {...complet...}, "note": N, "errors": []}`          |
 | `unrate_show`            | `DELETE /shows/note`       | `show_id` (pas de champ note)                                                | `{"show": {...complet...}, "errors": []}`                     |
 
-**Deux corrections apportées par les tests Bruno, par rapport à ce que le spec OpenAPI seul avait
-fait supposer** (résynchronisation du 2026-08-03, cf. avertissement en tête de fichier) :
+**Deux corrections apportées par les tests Bruno, par rapport à ce que le spec OpenAPI seul aurait
+fait supposer** :
 
 - **Pas de flag `bulk` booléen** : aucune réponse Bruno n'en montre trace, sur aucune route,
-  malgré plusieurs essais. L'ancien arbitrage #7 (un flag distinct pour la rétroactivité) reposait
-  sur une lecture erronée du texte descriptif OpenAPI - "bulk marking" décrivait la capacité à
-  passer plusieurs ids par virgules, pas un paramètre en plus. **Retiré** : `mark_episode_watched`
-  n'a qu'un champ `episode_id` (accepte plusieurs valeurs).
+  malgré plusieurs essais - "bulk marking" (texte descriptif OpenAPI) décrit la capacité à passer
+  plusieurs ids par virgules, pas un paramètre en plus. `mark_episode_watched` n'a donc qu'un champ
+  `episode_id` (accepte plusieurs valeurs).
 - **`rate_season` est un service à part entière**, pas un paramètre `note` optionnel de
-  `mark_season_watched` comme l'ancienne table le documentait. Les deux actions restent liées par
-  une règle métier : une saison doit être **entièrement vue** avant de pouvoir être notée.
+  `mark_season_watched`. Les deux actions restent liées par une règle métier : une saison doit être
+  **entièrement vue** avant de pouvoir être notée.
 
 **Règle métier confirmée par un vrai 400** (code `2005`, même texte "L'utilisateur n'a pas marqué
 cet épisode comme vu." réutilisé à travers plusieurs routes, y compris en contexte saison) : noter
@@ -686,6 +701,50 @@ obligatoirement par le config flow (device code ou login/mot de passe), il n'y a
 token qui vient d'être détruit, ce qui déclenche immédiatement le reauth plutôt que d'attendre le
 prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme déjà en place, voir §3).
 
+### `search_shows` / `add_show` / `remove_show` - catalogue et appartenance au compte ✅
+
+Douzième à quatorzième services, ajoutés pour la recherche de séries depuis la card (voir
+`card/README.md`). Ils sortent du périmètre « ce que je suis déjà » de tous les autres : ils
+touchent au **catalogue** et à l'appartenance d'une série au compte, pas au visionnage.
+
+| Service        | Route                | Paramètres                         | Réponse                            |
+| -------------- | -------------------- | ---------------------------------- | ---------------------------------- |
+| `search_shows` | `GET /shows/search`  | `query`, `limit` (1-50, défaut 20) | `{"shows": [...]}` - voir ci-après |
+| `add_show`     | `POST /shows/show`   | `show_id`                          | rien (comme les autres écritures)  |
+| `remove_show`  | `DELETE /shows/show` | `show_id`                          | rien (même endpoint, verbe opposé) |
+
+- **`search_shows` est le seul service en `SupportsResponse.ONLY`** : il répond au lieu d'agir, et
+  une variante sans réponse ne servirait à rien. La réponse est volontairement **neutre** (dicts
+  plats : `id, title, year, status, rating, platforms, genres, seasons, followers, in_account,
+poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - le mapping vers
+  les items de la card se fait dans la card, seul consommateur qui en a besoin. Aucun refresh de
+  coordinator : une recherche ne change rien, et la card l'appelle à chaque frappe débouncée.
+- `add_show` et `remove_show` refreshent **member + watch list**, comme `mark_episode_watched` et
+  pour la même raison (`shows`, `shows_to_watch` et la liste à rattraper bougent). `add_show` sort
+  donc des candidats v4 listés plus haut.
+- ✅ **Les trois routes sont vérifiées via Bruno** (`bruno/Shows/search.bru`,
+  `bruno/Shows/add-show.bru`, `bruno/Shows/remove-show.bru`, tous avec bloc `example` et réponse
+  réelle) - l'OpenAPI n'en documentait aucun schéma de réponse. Ce que ça a confirmé :
+  `/shows/search` renvoie bien les **mêmes objets show que `/shows/display`** (`shows` au pluriel,
+  avec `creation`, `status`, `notes.mean`, `in_account`, `slug`, `resource_url`,
+  `platforms.svods[].name`), donc `_parse_show` est réutilisable tel quel.
+- **Deux codes d'erreur métier, propres à `/shows/show`** (HTTP 400, vérifiés dans les deux
+  directions) : `2003` « L'utilisateur a déjà cette série dans son compte » et `2004`
+  « L'utilisateur n'a pas cette série dans son compte ». Traités comme `ERROR_CODE_NOT_WATCHED`
+  (2005) : détectés dans `Client._raise_for_error`, surfacés en `AlreadyInAccountError` /
+  `NotInAccountError` (`betaseries/exceptions.py`), narrowés en **`ServiceValidationError`** côté
+  `services.py`. C'est le critère déjà retenu pour 2005 - l'appelant peut corriger son appel,
+  contrairement à un token rejeté ou une panne serveur.
+- ⚠️ **Piège de lecture d'un `.bru`** : `add-show.bru` affiche `POST /shows/show?id=29030` dans sa
+  ligne `url:`, ce qui donne à croire que le paramètre passe en query. C'est faux - le bloc
+  faisant foi est `body: formUrlEncoded` + `body:form-urlencoded`, et la query de l'`url:` n'est
+  que le reflet d'affichage maintenu par Bruno. **Vérifié sur les 37 requêtes de la collection** :
+  les 18 GET passent tout en `params:query` (`body: none`), les 17 POST/DELETE tout en
+  form-urlencoded, sans une seule exception.
+- Quatre champs ont été ajoutés à `ShowAdditionalInformation` pour ça (`creation`,
+  `broadcast_status`, `platforms`, `in_account`) - tous déjà présents dans le payload
+  `/shows/display`, donc gratuits pour les appelants existants.
+
 ## 9. Arbitrages - tous tranchés ✅
 
 1. **Enabled par défaut** : tous les sensors sont `enabled` par défaut (pas de noyau restreint).
@@ -698,10 +757,8 @@ prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme d�
    `mark_season_unwatched`, `rate_season`/`unrate_season`, `rate_show`/`unrate_show`. Movies
    (`rate_movie`) et `add_show`/`set_movie_status` écartés pour l'instant (candidats v4 selon
    usage, voir §8).
-7. **Pas de flag `bulk` distinct** : abandonné après les tests Bruno (§8) - aucune réponse n'en
-   montre trace ; "bulk" décrit la capacité à passer plusieurs ids par virgules, pas un paramètre
-   séparé. L'ancien texte de cet arbitrage (un flag `false` par défaut contre la rétroactivité)
-   reposait sur une lecture erronée du spec OpenAPI, jamais vérifiée avant le 2026-08-03.
+7. **Pas de flag `bulk` distinct** : aucune réponse Bruno n'en montre trace (§8) ; "bulk" décrit la
+   capacité à passer plusieurs ids par virgules, pas un paramètre séparé.
 8. **Identifiant cible des services** : `id` BetaSeries uniquement, pas de `thetvdb_id` en
    alternative - suffisant vu que les coordinators exposent déjà cet id pour tout ce qui est
    actionnable (v2bis, §5).
@@ -711,14 +768,14 @@ prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme d�
    mode choisi au menu `user`, y compris pendant une reauth - mêmes formulaires partagés) puis
    stockée en **option** (`entry.options`, pas `entry.data`), éditable ensuite via OptionsFlow comme
    les intervalles/fenêtre de mois. Défaut `fr`, alignée sur le défaut de l'API elle-même (voir §3).
-10. **Deux méthodes d'authentification, choix explicite de l'utilisateur** (2026-08-06) : le device
+10. **Deux méthodes d'authentification, choix explicite de l'utilisateur** : le device
     flow reste la méthode par défaut/recommandée (menu `user`, premier item), mais le mode
     login/mot de passe (`Auth.authenticate_with_password`, voir §3) est offert comme alternative
     plutôt qu'écarté silencieusement - la rotation du `client_secret` n'étant elle-même pas
     self-service, le compromis n'est pas clair-cut. Le menu et le formulaire `password_credentials`
     portent chacun un avertissement (`strings.json`/`translations/{en,fr}.json`) sur le token non
     révoqué, pour que le choix reste informé plutôt qu'implicite.
-11. **`data` pour `upcoming-media-card`, opt-in** (2026-08-08) : intégration tierce avec la card
+11. **`data` pour `upcoming-media-card`, opt-in** : intégration tierce avec la card
     Lovelace [`custom-cards/upcoming-media-card`](https://github.com/custom-cards/upcoming-media-card),
     dont le contrat de données a été vérifié dans son propre source (pas sa doc) - nom d'attribut
     `data` figé en dur, élément 0 = objet gabarit (`title_default`/`line1_default`.../`icon`),
@@ -753,28 +810,8 @@ prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme d�
 
 ## 11. Reste à faire
 
-_(mis à jour le 2026-08-03 ; tout ce qui précédait est livré - auth, les 3 coordinators, les 4
-plateformes, diagnostics, options, CI, et maintenant les 10 services Show/Episode/Season (§8),
-387 tests à 100 % de couverture branches incluses)_
-
 ### La prochaine grosse étape
 
-- **v3 - services pour les films** : `rate_movie`/`unrate_movie` (et `add_show`/`set_movie_status`
-  en v4 candidats) restent à faire si le besoin se confirme - voir §8. Même démarche que pour
+- **v3 - services pour les films** : `rate_movie`/`unrate_movie` (et `set_movie_status` en v4
+  candidat) restent à faire si le besoin se confirme - voir §8. Même démarche que pour
   Show/Episode/Season : tester via Bruno (créer `bruno/Movies/`) avant d'écrire une ligne de client.
-
-### Décisions en attente
-
-- **Densité de prose** : 58 % des lignes non vides du paquet livré sont des docstrings/commentaires
-  (2 056 + 171 contre 1 617 de code), `docstring-linter` en `select = ["ALL"]` imposant du
-  remplissage. À assumer ou à assouplir - mais voir l'avertissement en tête de ce fichier.
-- **Format du nom de device** : `BetaSeries - {login}` duplique ce que le frontend affiche déjà avec
-  `has_entity_name`. Passer à `{login}` seul changerait tous les `entity_id` générés.
-
-### Petit reste
-
-- `## Troubleshooting` est un titre vide dans le README.
-- `MAX_PLANNING_MONTHS_AHEAD = 2` : le plafond se défend par le coût (§6), mais l'argument
-  « BetaSeries n'a presque rien à renvoyer si loin » est **déduit, pas mesuré**. Une requête Bruno
-  sur un mois lointain trancherait.
-- `order=smart` sur `/episodes/list` : jamais testé, réglerait peut-être le biais alphabétique (§5).

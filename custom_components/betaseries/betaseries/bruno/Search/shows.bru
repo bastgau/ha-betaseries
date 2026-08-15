@@ -1,0 +1,147 @@
+meta {
+  name: shows
+  type: http
+  seq: 1
+  tags: [
+    Search
+  ]
+}
+
+get {
+  url: {{baseUrl}}/search/shows?text=silo&locale=fr
+  body: none
+  auth: inherit
+}
+
+params:query {
+  @description('Search term')
+  text: silo
+  @description('Locale parameter to specify language preference')
+  locale: fr
+  @description('Number of results returned (optional, default 20, maximum 100)')
+  ~limit:
+  @description('Starting number for the series list (optional, default 0)')
+  ~offset:
+  @description('Genres separated by a comma (must correspond to keys returned by shows/genres)')
+  ~genres:
+  @description('Broadcasts separated by a comma (week, finished, ongoing, standby, inproduction, planned, pilot, canceled)')
+  ~diffusions:
+  @description('Episode duration (1-19, 20-30, 31-40, 41-50, 51-60, 61+)')
+  ~duration:
+  @description('SVoD platform IDs separated by a comma')
+  ~svods:
+  @description('Years separated by a comma')
+  ~creations:
+  @description('Origin countries of the series separated by a comma (must be the 2-letter country code)')
+  ~pays:
+  @description('Broadcast channels separated by a comma')
+  ~chaines:
+  @description('Initial of the series returned')
+  ~debut:
+  @description('Sorting of the series (name, followed, id, rating, popularity by default, release-asc, release-desc)')
+  ~tri:
+  @description('Other options. Can be new for only series not followed or mine for only those followed by the user')
+  ~autres:
+}
+
+headers {
+  X-BetaSeries-Key: {{apiKey}}
+  X-BetaSeries-Version: 3.0
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}
+
+docs {
+  Return series search results with advanced filters.
+}
+
+example {
+  name: example
+
+  request: {
+    url: {{baseUrl}}/search/shows?text=silo&locale=fr
+    method: GET
+    mode: none
+    params:query: {
+      text: silo
+      locale: fr
+      ~limit:
+      ~offset:
+      ~genres:
+      ~diffusions:
+      ~duration:
+      ~svods:
+      ~creations:
+      ~pays:
+      ~chaines:
+      ~debut:
+      ~tri:
+      ~autres:
+    }
+
+    headers: {
+      X-BetaSeries-Key: {{apiKey}}
+      X-BetaSeries-Version: 3.0
+      Authorization: Bearer {{token}}
+    }
+  }
+
+  response: {
+    headers: {
+      content-type: application/json
+      cache-control: no-cache, private
+      access-control-allow-origin: *
+      access-control-allow-headers: Content-Type,Origin,X-BetaSeries-Token,X-BetaSeries-Key,X-BetaSeries-Version,Authorization
+      access-control-allow-methods: GET,POST,PUT,DELETE,OPTIONS
+    }
+
+    status: {
+      code: 200
+      text: OK
+    }
+
+    body: {
+      type: json
+      content: '''
+        {
+          "shows": [
+            {
+              "id": 29029,
+              "following": 32352,
+              "release_date": 2023,
+              "poster": "https://pictures.betaseries.com/fonds/poster/5da2b1d3d7e75d3afe82ae3c30ed0919.jpg",
+              "svods": [
+                {
+                  "id": 255,
+                  "name": "Apple TV"
+                }
+              ],
+              "slug": "wool",
+              "alias_title": null,
+              "title": "Silo"
+            },
+            {
+              "id": 49694,
+              "following": 342,
+              "release_date": 2026,
+              "poster": "https://pictures.betaseries.com/fonds/poster/f1ad298045621f3c7a9563d81e4e63a3.jpg",
+              "svods": [],
+              "slug": "love-of-silom",
+              "alias_title": null,
+              "title": "Love of Silom"
+            }
+          ],
+          "total": 2,
+          "locale": "fr",
+          "errors": []
+        }
+      '''
+    }
+  }
+}

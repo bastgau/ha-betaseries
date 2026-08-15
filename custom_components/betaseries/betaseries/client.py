@@ -28,6 +28,8 @@ from .const import (
     EPISODES_LIST_EXCLUDE_CHARACTERS,
     EPISODES_NOTE_ENDPOINT,
     EPISODES_WATCHED_ENDPOINT,
+    ERROR_CODE_ALREADY_IN_ACCOUNT,
+    ERROR_CODE_NOT_IN_ACCOUNT,
     ERROR_CODE_NOT_WATCHED,
     INVALID_CREDENTIALS_ERROR_CODES,
     MEMBERS_BADGES_ENDPOINT,
@@ -40,11 +42,15 @@ from .const import (
     SHOWS_DISPLAY_ENDPOINT,
     SHOWS_EPISODES_ENDPOINT,
     SHOWS_NOTE_ENDPOINT,
+    SHOWS_SEARCH_DEFAULT_LIMIT,
+    SHOWS_SEARCH_ENDPOINT,
+    SHOWS_SEARCH_ORDER,
+    SHOWS_SHOW_ENDPOINT,
     TIMELINE_MEMBER_ENDPOINT,
 )
 from .episode import Episode
 from .episode_watched_event import EpisodeWatchedEvent
-from .exceptions import AuthError, Error, NotWatchedError
+from .exceptions import AlreadyInAccountError, AuthError, Error, NotInAccountError, NotWatchedError
 from .member_data import MemberData
 from .member_identity import MemberIdentity
 from .member_stats import MemberStats
@@ -163,6 +169,11 @@ class Client:  # pylint: disable=too-many-public-methods
         episode/season is not marked as watched - surfaced as NotWatchedError
         so callers can tell this apart from a generic failure (verified via
         Bruno on /episodes/note, /seasons/note and DELETE /episodes/watched).
+        The same treatment applies to the two show-membership codes,
+        ERROR_CODE_ALREADY_IN_ACCOUNT and ERROR_CODE_NOT_IN_ACCOUNT (verified
+        via Bruno on both directions of /shows/show): all three say the caller
+        asked for something the account's state does not allow, which is
+        actionable, unlike a network or server failure.
 
         Args:
             response (aiohttp.ClientResponse): The response to check.
@@ -174,6 +185,8 @@ class Client:  # pylint: disable=too-many-public-methods
         Raises:
             AuthError: If the access token was rejected.
             NotWatchedError: If the target episode/season is not marked as watched.
+            AlreadyInAccountError: If the show is already in the member's account.
+            NotInAccountError: If the show is not in the member's account.
             Error: If the request failed for any other reason.
 
         """
@@ -196,6 +209,12 @@ class Client:  # pylint: disable=too-many-public-methods
                 if error_code == ERROR_CODE_NOT_WATCHED:
                     msg = "Target is not marked as watched"
                     raise NotWatchedError(msg, status=response.status, body=body)
+                if error_code == ERROR_CODE_ALREADY_IN_ACCOUNT:
+                    msg = "Show is already in the member's account"
+                    raise AlreadyInAccountError(msg, status=response.status, body=body)
+                if error_code == ERROR_CODE_NOT_IN_ACCOUNT:
+                    msg = "Show is not in the member's account"
+                    raise NotInAccountError(msg, status=response.status, body=body)
         msg = f"Failed to {action} (HTTP {response.status})"
         raise Error(msg, status=response.status, body=body)
 
@@ -640,6 +659,73 @@ class Client:  # pylint: disable=too-many-public-methods
 
         return payload["shows"] if "shows" in payload else [payload["show"]]
 
+    async def search_shows(self, title: str, *, limit: int = SHOWS_SEARCH_DEFAULT_LIMIT) -> tuple[Show, ...]:
+        """Search the BetaSeries catalog by title (GET /shows/search).
+
+        Returns an ordered tuple rather than a CollectionShow: the API ranks
+        results, and that ranking is the point of a search - CollectionShow is
+        an id-keyed lookup table with no iteration API, which would lose it.
+
+        The member's own relationship to each result (`in_account`) is only
+        filled in because this client always authenticates its requests; the
+        endpoint returns it "if a token is provided" (OpenAPI wording).
+
+        Args:
+            title (str): The searched title. Sent as-is; the API does the matching.
+            limit (int): Maximum number of results to ask for (API caps it at 100).
+
+        Returns:
+            tuple[Show, ...]: The matching shows, in the order the API ranked them.
+
+        """
+        payload = await self._get(
+            SHOWS_SEARCH_ENDPOINT,
+            "search shows",
+            {"title": title, "nbpp": str(limit), "order": SHOWS_SEARCH_ORDER},
+        )
+
+        # Same singular/plural shape as /shows/display (see _fetch_shows), plus
+        # a third case that endpoint cannot produce: a search matching nothing.
+        if "shows" in payload:
+            shows: list[dict[str, Any]] = payload["shows"] or []
+        elif "show" in payload:
+            shows = [payload["show"]]
+        else:
+            shows = []
+
+        return tuple(self._parse_show(show) for show in shows)
+
+    async def add_show(self, show_id: str) -> None:
+        """Add a show to the member's account (POST /shows/show).
+
+        Raises AlreadyInAccountError (via _post/_raise_for_error) if the show
+        is already followed (verified via Bruno, bruno/Shows/add-show.bru).
+
+        Args:
+            show_id (str): BetaSeries show id to add.
+
+        Returns:
+            None
+
+        """
+        await self._post(SHOWS_SHOW_ENDPOINT, "add show", {"id": show_id})
+
+    async def remove_show(self, show_id: str) -> None:
+        """Remove a show from the member's account (DELETE /shows/show).
+
+        Same endpoint as add_show, opposite verb - and the mirror-image error:
+        NotInAccountError if the show is not followed in the first place
+        (verified via Bruno, bruno/Shows/remove-show.bru).
+
+        Args:
+            show_id (str): BetaSeries show id to remove.
+
+        Returns:
+            None
+
+        """
+        await self._delete(SHOWS_SHOW_ENDPOINT, "remove show", {"id": show_id})
+
     async def mark_episodes_watched(self, episode_ids: Iterable[str]) -> None:
         """Mark one or more episodes as watched (POST /episodes/watched).
 
@@ -887,6 +973,10 @@ class Client:  # pylint: disable=too-many-public-methods
         aliases: dict[str, str] = show.get("aliases") or {}
         notes: dict[str, Any] = show.get("notes") or {}
         themoviedb_id = show.get("themoviedb_id")
+        # "platforms" carries several buckets (svods, svod, vod...); only the
+        # SVOD list is read, and each entry is an object rather than a name.
+        platforms: dict[str, Any] = show.get("platforms") or {}
+        svods: list[dict[str, Any]] = platforms.get("svods") or []
         return ShowAdditionalInformation(
             original_title=show.get("original_title") or "",
             imdb_id=show.get("imdb_id") or None,
@@ -907,6 +997,10 @@ class Client:  # pylint: disable=too-many-public-methods
             trailer_url=_trailer_url(show.get("next_trailer"), show.get("next_trailer_host")),
             resource_url=show.get("resource_url") or "",
             images=Client._parse_show_images(show.get("images") or {}),
+            creation=str(show["creation"]) if show.get("creation") else None,
+            broadcast_status=show.get("status") or None,
+            platforms=tuple(svod["name"] for svod in svods if svod.get("name")),
+            in_account=bool(show.get("in_account")),
         )
 
     @staticmethod

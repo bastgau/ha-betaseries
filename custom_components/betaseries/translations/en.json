@@ -401,6 +401,52 @@
         }
       }
     },
+    "add_show": {
+      "name": "Add show",
+      "description": "Adds a show to the account's list.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        }
+      }
+    },
+    "remove_show": {
+      "name": "Remove show",
+      "description": "Removes a show from the account's list.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        }
+      }
+    },
+    "search_shows": {
+      "name": "Search shows",
+      "description": "Searches the BetaSeries catalog by title and returns the matching shows.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "query": {
+          "name": "Search term",
+          "description": "Title to search for."
+        },
+        "limit": {
+          "name": "Maximum results",
+          "description": "Number of results to return, from 1 to 50."
+        }
+      }
+    },
     "delete_token": {
       "name": "Delete access token",
       "description": "Destroys the account's active access token. Irreversible - the entry will need reauthentication afterward.",
@@ -421,6 +467,12 @@
     },
     "service_call_failed": {
       "message": "BetaSeries rejected the request: {error}"
+    },
+    "already_in_account": {
+      "message": "This show is already in your BetaSeries account."
+    },
+    "not_in_account": {
+      "message": "This show is not in your BetaSeries account."
     }
   }
 }

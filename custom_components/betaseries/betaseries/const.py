@@ -17,6 +17,18 @@ EPISODES_LIST_ENDPOINT = "/episodes/list"
 EPISODES_DISPLAY_ENDPOINT = "/episodes/display"
 SHOWS_DISPLAY_ENDPOINT = "/shows/display"
 SHOWS_EPISODES_ENDPOINT = "/shows/episodes"
+SHOWS_SEARCH_ENDPOINT = "/shows/search"
+# Number of search results requested when the caller does not say (the API
+# itself defaults to 5, too few to fill a card, and caps at 100).
+SHOWS_SEARCH_DEFAULT_LIMIT = 20
+# Ranking asked of /shows/search. The API defaults to "title" (alphabetical),
+# which buries the obvious match behind every series whose name starts
+# earlier; "popularity" puts the show most people mean first. The third
+# accepted value is "followers".
+SHOWS_SEARCH_ORDER = "popularity"
+# POST adds a show to the member's account, DELETE removes it. Only the POST
+# side has a caller today (Client.add_show).
+SHOWS_SHOW_ENDPOINT = "/shows/show"
 TIMELINE_MEMBER_ENDPOINT = "/timeline/member"
 MEMBERS_BADGES_ENDPOINT = "/members/badges"
 EPISODES_WATCHED_ENDPOINT = "/episodes/watched"
@@ -75,3 +87,12 @@ INVALID_CREDENTIALS_ERROR_CODES = frozenset({ERROR_CODE_INVALID_API_KEY, ERROR_C
 # across granularities, error text always mentions "episode" even in a season
 # context.
 ERROR_CODE_NOT_WATCHED = 2005
+
+# BetaSeries returns these two codes (HTTP 400) when a show-membership write
+# contradicts the account's current state - verified via Bruno on both
+# directions of /shows/show (bruno/Shows/add-show.bru, bruno/Shows/remove-show.bru):
+# adding a show already followed, or removing one that is not followed.
+# Like ERROR_CODE_NOT_WATCHED, these are caller-fixable rather than technical
+# failures, hence their own exception types.
+ERROR_CODE_ALREADY_IN_ACCOUNT = 2003
+ERROR_CODE_NOT_IN_ACCOUNT = 2004

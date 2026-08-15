@@ -1,15 +1,23 @@
 #!/bin/bash
 
 # Runs the same five checks as .github/workflows/lint.yml, over the same three
-# scopes, so that a green run here predicts a green run there.
+# scopes, so that a green run here predicts a green run there - plus prettier,
+# which the workflow does not run (the pre-commit hook is what enforces it).
 #
 # Usage: scripts/lint [scope ...]
 #
 #   client        the vendored BetaSeries API client
 #   integration   the Home Assistant side (never descends into the client)
 #   tests         the whole test suite
+#   repo          prettier over the repo's json/yaml/markdown
 #   src           shorthand for: client integration
 #   all           every scope (the default)
+#
+# `repo` sits apart from the other three on purpose: prettier formats
+# CLAUDE.md, strings.json, services.yaml and the translations, none of which
+# belong to a Python scope. It is the one check here that writes: it runs
+# --write, so a commit is not rejected by the hook for a reformat the author
+# could not have predicted (the other five only ever report).
 #
 # Why the scopes exist at all: the client is a standalone library and the rest
 # is a Home Assistant integration (see the client's README), so a failure
@@ -50,11 +58,11 @@ requested=("$@")
 scopes=()
 for arg in "${requested[@]}"; do
   case "$arg" in
-    all) scopes+=(client integration tests) ;;
+    all) scopes+=(repo client integration tests) ;;
     src) scopes+=(client integration) ;;
-    client | integration | tests) scopes+=("$arg") ;;
+    client | integration | tests | repo) scopes+=("$arg") ;;
     *)
-      echo -e "${RED}Unknown scope '$arg'.${NC} Expected: client, integration, tests, src, all." >&2
+      echo -e "${RED}Unknown scope '$arg'.${NC} Expected: client, integration, tests, repo, src, all." >&2
       exit 2
       ;;
   esac
@@ -107,7 +115,65 @@ run_pylint() {
   fi
 }
 
+# prettier is not a Python tool and is not installed in the venv: scripts/setup
+# installs it globally, pinned to the version .pre-commit-config.yaml uses, so
+# this script and the hook cannot drift apart. npx is the fallback for an
+# environment where setup has not run.
+#
+# Deliberately WITHOUT prettier-plugin-sort-json, even though the hook lists it
+# in additional_dependencies: nothing there passes --plugin and the repo has no
+# .prettierrc, so the hook never actually loads it. Enabling it here would sort
+# every JSON key alphabetically and scramble strings.json, whose block order
+# Home Assistant relies on. Matching the hook's real behaviour beats matching
+# its declaration.
+PRETTIER_VERSION="3.6.2"
+# Same exclusions as the hook: bruno/ is generated, card/ is a vendored
+# third-party file kept diffable against upstream.
+PRETTIER_GLOBS=(
+  "**/*.{json,yaml,yml,md}"
+  "!bruno/**"
+  "!card/**"
+)
+
+run_prettier() {
+  local scope_name="$1"
+
+  echo -e "\n${YELLOW}> Format with Prettier :${NC}\n"
+
+  # The globally installed binary when scripts/setup has run, npx otherwise.
+  local runner=(npx --yes "prettier@${PRETTIER_VERSION}")
+  if [ "$(prettier --version 2> /dev/null)" = "$PRETTIER_VERSION" ]; then
+    runner=(prettier)
+  elif ! command -v npx > /dev/null 2>&1; then
+    echo "Neither prettier nor npx found - run scripts/setup (the pre-commit hook is unaffected)."
+    echo -e "\n${BLUE}[Format with Prettier]${NC} ${YELLOW}- Skipped.${NC} ${PURPLE}(${scope_name})${NC}"
+    return
+  fi
+
+  local output status
+  output=$("${runner[@]}" --write --log-level warn "${PRETTIER_GLOBS[@]}" 2>&1)
+  status=$?
+  # npx chatter is noise here; prettier's own findings are not.
+  echo "$output" | grep -vE "^npm (notice|warn)" | grep -v "^$"
+
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[Format with Prettier]${NC} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+  else
+    echo -e "\n${BLUE}[Format with Prettier]${NC} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    exit_code=1
+  fi
+}
+
 for scope in "${scopes[@]}"; do
+  # The repo scope runs one tool over the whole tree, not the five Python ones
+  # over a path list, so it short-circuits the loop body below.
+  if [ "$scope" = "repo" ]; then
+    echo -e "\n${YELLOW}==================== scope: repo ====================${NC}"
+    printf "%s\n" "json/yaml/markdown (excluding bruno/, card/)"
+    run_prettier "repo"
+    continue
+  fi
+
   # Word splitting is wanted here: a scope resolves to one or more paths.
   # shellcheck disable=SC2046,SC2086
   paths=$(scope_paths "$scope")

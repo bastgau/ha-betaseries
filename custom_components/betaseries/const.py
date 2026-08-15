@@ -142,6 +142,13 @@ SERVICE_UNRATE_SEASON = "unrate_season"
 SERVICE_RATE_SHOW = "rate_show"
 SERVICE_UNRATE_SHOW = "unrate_show"
 SERVICE_DELETE_TOKEN = "delete_token"  # noqa: S105
+# Catalog search and its natural follow-up. search_shows is the only service
+# that returns data (SupportsResponse.ONLY): it answers a question instead of
+# changing something, which is also why it is the only one usable from a
+# dashboard card without side effects.
+SERVICE_SEARCH_SHOWS = "search_shows"
+SERVICE_ADD_SHOW = "add_show"
+SERVICE_REMOVE_SHOW = "remove_show"
 
 # Service field names. ATTR_CONFIG_ENTRY targets the BetaSeries account
 # (ConfigEntrySelector, see services.py); episode_id/show_id mirror the
@@ -152,3 +159,12 @@ ATTR_EPISODE_ID = "episode_id"
 ATTR_SHOW_ID = "show_id"
 ATTR_SEASON = "season"
 ATTR_NOTE = "note"
+ATTR_QUERY = "query"
+ATTR_LIMIT = "limit"
+
+# Bounds of search_shows' `limit` field. The API accepts up to 100 per page;
+# 50 is enough for any dashboard use and keeps a single response small enough
+# to travel over the websocket without thought.
+SEARCH_SHOWS_MIN_LIMIT = 1
+SEARCH_SHOWS_MAX_LIMIT = 50
+SEARCH_SHOWS_DEFAULT_LIMIT = 20
