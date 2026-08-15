@@ -148,6 +148,7 @@ SERVICE_DELETE_TOKEN = "delete_token"  # noqa: S105
 # dashboard card without side effects.
 SERVICE_SEARCH_SHOWS = "search_shows"
 SERVICE_ADD_SHOW = "add_show"
+SERVICE_REMOVE_SHOW = "remove_show"
 
 # Service field names. ATTR_CONFIG_ENTRY targets the BetaSeries account
 # (ConfigEntrySelector, see services.py); episode_id/show_id mirror the

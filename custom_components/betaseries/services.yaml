@@ -71,6 +71,10 @@ add_show:
   fields:
     config_entry: *config_entry
     show_id: *show_id
+remove_show:
+  fields:
+    config_entry: *config_entry
+    show_id: *show_id
 search_shows:
   fields:
     config_entry: *config_entry

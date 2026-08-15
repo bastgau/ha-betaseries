@@ -5,7 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, patch
 
-from custom_components.betaseries.betaseries.exceptions import AuthError, Error, NotWatchedError
+from custom_components.betaseries.betaseries.exceptions import (
+    AlreadyInAccountError,
+    AuthError,
+    Error,
+    NotInAccountError,
+    NotWatchedError,
+)
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
@@ -128,6 +134,7 @@ def _client_mock() -> AsyncMock:
         ("rate_show", {"show_id": "38605", "note": 4}, "rate_show", ("38605", 4)),
         ("unrate_show", {"show_id": "38605"}, "unrate_show", ("38605",)),
         ("add_show", {"show_id": "38605"}, "add_show", ("38605",)),
+        ("remove_show", {"show_id": "38605"}, "remove_show", ("38605",)),
         ("delete_token", {}, "delete_token", ()),
     ],
 )
@@ -225,6 +232,7 @@ async def test_delete_token_refreshes_member_but_not_watch_list(hass: HomeAssist
         ("rate_show", {"show_id": "38605", "note": 4}, "rate_show"),
         ("unrate_show", {"show_id": "38605"}, "unrate_show"),
         ("add_show", {"show_id": "38605"}, "add_show"),
+        ("remove_show", {"show_id": "38605"}, "remove_show"),
         ("delete_token", {}, "delete_token"),
     ],
 )
@@ -302,6 +310,46 @@ async def test_add_show_refreshes_member_and_watch_list(hass: HomeAssistant) -> 
 
     assert mock_client.fetch_member_data.await_count > fetch_calls_before
     assert mock_client.fetch_watch_list.await_count > watch_list_calls_before
+
+
+async def test_remove_show_refreshes_member_and_watch_list(hass: HomeAssistant) -> None:
+    """Refresh both coordinators after removing a show, exactly as adding one does."""
+    mock_client = _client_mock()
+    entry = await _async_setup(hass, mock_client)
+    fetch_calls_before = mock_client.fetch_member_data.await_count
+    watch_list_calls_before = mock_client.fetch_watch_list.await_count
+
+    await hass.services.async_call(
+        DOMAIN, "remove_show", {"config_entry": entry.entry_id, "show_id": "38605"}, blocking=True
+    )
+
+    assert mock_client.fetch_member_data.await_count > fetch_calls_before
+    assert mock_client.fetch_watch_list.await_count > watch_list_calls_before
+
+
+@pytest.mark.parametrize(
+    ("service", "method", "error"),
+    [
+        ("add_show", "add_show", AlreadyInAccountError),
+        ("remove_show", "remove_show", NotInAccountError),
+    ],
+)
+async def test_show_membership_conflicts_raise_service_validation_error(
+    hass: HomeAssistant, service: str, method: str, error: type[Error]
+) -> None:
+    """Surface "already followed"/"not followed" as ServiceValidationError, not a generic failure.
+
+    Both are states the caller can see and correct (BetaSeries codes 2003 and
+    2004, verified via Bruno), unlike a rejected token or a server error.
+    """
+    mock_client = _client_mock()
+    getattr(mock_client, method).side_effect = error("conflict", status=400, body="{}")
+    entry = await _async_setup(hass, mock_client)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN, service, {"config_entry": entry.entry_id, "show_id": "38605"}, blocking=True
+        )
 
 
 async def test_search_shows_returns_the_matching_shows(hass: HomeAssistant) -> None:

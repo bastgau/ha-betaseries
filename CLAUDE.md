@@ -41,13 +41,12 @@ Custom component HACS pour un compte membre BetaSeries.
 - Auth par device flow ou login/mot de passe (choix au premier écran, voir §3), reauth, OptionsFlow.
 - **v3** : 10 services (marquer/démarquer vu épisode/saison, noter/dénoter épisode/saison/série) -
   périmètre restreint à Show/Episode/Season (arbitrage #6), routes testées via Bruno avant
-  implémentation. Voir §8. Plus `delete_token`, et `search_shows`/`add_show` (recherche catalogue
-  depuis la card, voir §8) : **13 services au total**.
+  implémentation. Voir §8. Plus `delete_token`, et `search_shows`/`add_show`/`remove_show`
+  (recherche catalogue depuis la card, voir §8) : **14 services au total**, toutes routes
+  vérifiées via Bruno.
 
 **À faire** :
 
-- 🧪 **Vérifier via Bruno les deux routes de la recherche catalogue** (`/shows/search`,
-  `POST /shows/show`) : seul endroit du projet où du code client a été écrit avant le test réel.
 - **v3 - films** : `rate_movie`/`unrate_movie` laissés de côté faute de besoin identifié - à faire
   si le besoin se confirme, même démarche (Bruno d'abord). Voir §8.
 - Pas de v4 prévue ; on avisera selon les retours d'usage (`set_movie_status` reste un candidat si
@@ -593,8 +592,8 @@ custom_components/betaseries/
 ├── calendar.py         # CalendarEntity
 ├── button.py           # 3 boutons de purge de cache (diagnostic)
 ├── diagnostics.py      # export agrégé, credentials redacted
-├── services.py         # 13 services : 10 Show/Episode/Season + delete_token + search/add, voir §8
-├── services.yaml       # champs des 13 services (gabarit habitica)
+├── services.py         # 14 services : 10 Show/Episode/Season + delete_token + search/add/remove, voir §8
+├── services.yaml       # champs des 14 services (gabarit habitica)
 ├── strings.json        # textes config flow + entités + services (EN)
 ├── translations/       # en.json + fr.json
 └── icons.json          # icônes mdi
@@ -702,16 +701,17 @@ obligatoirement par le config flow (device code ou login/mot de passe), il n'y a
 token qui vient d'être détruit, ce qui déclenche immédiatement le reauth plutôt que d'attendre le
 prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme déjà en place, voir §3).
 
-### `search_shows` / `add_show` - recherche catalogue 🧪
+### `search_shows` / `add_show` / `remove_show` - catalogue et appartenance au compte ✅
 
-Douzième et treizième services, ajoutés pour la recherche de séries depuis la card (voir
+Douzième à quatorzième services, ajoutés pour la recherche de séries depuis la card (voir
 `card/README.md`). Ils sortent du périmètre « ce que je suis déjà » de tous les autres : ils
-touchent au **catalogue**, pas au compte.
+touchent au **catalogue** et à l'appartenance d'une série au compte, pas au visionnage.
 
-| Service        | Route               | Paramètres                         | Réponse                            |
-| -------------- | ------------------- | ---------------------------------- | ---------------------------------- |
-| `search_shows` | `GET /shows/search` | `query`, `limit` (1-50, défaut 20) | `{"shows": [...]}` - voir ci-après |
-| `add_show`     | `POST /shows/show`  | `show_id`                          | rien (comme les autres écritures)  |
+| Service        | Route                | Paramètres                         | Réponse                            |
+| -------------- | -------------------- | ---------------------------------- | ---------------------------------- |
+| `search_shows` | `GET /shows/search`  | `query`, `limit` (1-50, défaut 20) | `{"shows": [...]}` - voir ci-après |
+| `add_show`     | `POST /shows/show`   | `show_id`                          | rien (comme les autres écritures)  |
+| `remove_show`  | `DELETE /shows/show` | `show_id`                          | rien (même endpoint, verbe opposé) |
 
 - **`search_shows` est le seul service en `SupportsResponse.ONLY`** : il répond au lieu d'agir, et
   une variante sans réponse ne servirait à rien. La réponse est volontairement **neutre** (dicts
@@ -719,16 +719,28 @@ touchent au **catalogue**, pas au compte.
 poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - le mapping vers
   les items de la card se fait dans la card, seul consommateur qui en a besoin. Aucun refresh de
   coordinator : une recherche ne change rien, et la card l'appelle à chaque frappe débouncée.
-- `add_show` refresh **member + watch list**, comme `mark_episode_watched` et pour la même raison
-  (`shows`, `shows_to_watch` et la liste à rattraper bougent). `add_show` sort donc des candidats
-  v4 listés plus haut.
-- ⚠️ **Les deux routes n'ont pas encore été vérifiées via Bruno** (contrairement aux onze autres) :
-  l'OpenAPI ne documente aucun schéma de réponse pour elles. `bruno/Shows/search.bru` et
-  `bruno/Shows/add.bru` existent, **sans bloc `example`**, et disent quoi vérifier. Le parsing
-  suppose que `/shows/search` renvoie les mêmes objets show que `/shows/display` - hypothèse
-  raisonnable (`in_account`, `creation`, `status`, `platforms.svods[].name`, `notes.mean` y sont
-  vérifiés) mais **non confirmée**. Un `POST /shows/show` sur une série déjà suivie tombe pour
-  l'instant dans le cas générique (`HomeAssistantError`), faute de code d'erreur observé.
+- `add_show` et `remove_show` refreshent **member + watch list**, comme `mark_episode_watched` et
+  pour la même raison (`shows`, `shows_to_watch` et la liste à rattraper bougent). `add_show` sort
+  donc des candidats v4 listés plus haut.
+- ✅ **Les trois routes sont vérifiées via Bruno** (`bruno/Shows/search.bru`,
+  `bruno/Shows/add-show.bru`, `bruno/Shows/remove-show.bru`, tous avec bloc `example` et réponse
+  réelle) - l'OpenAPI n'en documentait aucun schéma de réponse. Ce que ça a confirmé :
+  `/shows/search` renvoie bien les **mêmes objets show que `/shows/display`** (`shows` au pluriel,
+  avec `creation`, `status`, `notes.mean`, `in_account`, `slug`, `resource_url`,
+  `platforms.svods[].name`), donc `_parse_show` est réutilisable tel quel.
+- **Deux codes d'erreur métier, propres à `/shows/show`** (HTTP 400, vérifiés dans les deux
+  directions) : `2003` « L'utilisateur a déjà cette série dans son compte » et `2004`
+  « L'utilisateur n'a pas cette série dans son compte ». Traités comme `ERROR_CODE_NOT_WATCHED`
+  (2005) : détectés dans `Client._raise_for_error`, surfacés en `AlreadyInAccountError` /
+  `NotInAccountError` (`betaseries/exceptions.py`), narrowés en **`ServiceValidationError`** côté
+  `services.py`. C'est le critère déjà retenu pour 2005 - l'appelant peut corriger son appel,
+  contrairement à un token rejeté ou une panne serveur.
+- ⚠️ **Piège de lecture d'un `.bru`** : `add-show.bru` affiche `POST /shows/show?id=29030` dans sa
+  ligne `url:`, ce qui donne à croire que le paramètre passe en query. C'est faux - le bloc
+  faisant foi est `body: formUrlEncoded` + `body:form-urlencoded`, et la query de l'`url:` n'est
+  que le reflet d'affichage maintenu par Bruno. **Vérifié sur les 37 requêtes de la collection** :
+  les 18 GET passent tout en `params:query` (`body: none`), les 17 POST/DELETE tout en
+  form-urlencoded, sans une seule exception.
 - Quatre champs ont été ajoutés à `ShowAdditionalInformation` pour ça (`creation`,
   `broadcast_status`, `platforms`, `in_account`) - tous déjà présents dans le payload
   `/shows/display`, donc gratuits pour les appelants existants.
@@ -797,12 +809,6 @@ poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - l
   service - le plus proche conceptuellement de BetaSeries) croisé avec `tado` pour l'auth.
 
 ## 11. Reste à faire
-
-### À faire en premier
-
-- 🧪 **Vérifier `/shows/search` et `POST /shows/show` via Bruno** (`bruno/Shows/search.bru`,
-  `bruno/Shows/add.bru`, tous deux sans bloc `example`) : c'est la seule dette assumée de la
-  recherche catalogue, et les deux fichiers disent quoi regarder. Voir §8.
 
 ### La prochaine grosse étape
 

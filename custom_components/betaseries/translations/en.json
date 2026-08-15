@@ -415,6 +415,20 @@
         }
       }
     },
+    "remove_show": {
+      "name": "Remove show",
+      "description": "Removes a show from the account's list.",
+      "fields": {
+        "config_entry": {
+          "name": "BetaSeries account",
+          "description": "The BetaSeries account to act on."
+        },
+        "show_id": {
+          "name": "Show ID",
+          "description": "The BetaSeries show id."
+        }
+      }
+    },
     "search_shows": {
       "name": "Search shows",
       "description": "Searches the BetaSeries catalog by title and returns the matching shows.",
@@ -453,6 +467,12 @@
     },
     "service_call_failed": {
       "message": "BetaSeries rejected the request: {error}"
+    },
+    "already_in_account": {
+      "message": "This show is already in your BetaSeries account."
+    },
+    "not_in_account": {
+      "message": "This show is not in your BetaSeries account."
     }
   }
 }

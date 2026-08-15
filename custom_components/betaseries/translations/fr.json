@@ -415,6 +415,20 @@
         }
       }
     },
+    "remove_show": {
+      "name": "Retirer une série",
+      "description": "Retire une série de la liste du compte.",
+      "fields": {
+        "config_entry": {
+          "name": "Compte BetaSeries",
+          "description": "Le compte BetaSeries concerné."
+        },
+        "show_id": {
+          "name": "Identifiant de série",
+          "description": "L'identifiant de la série BetaSeries."
+        }
+      }
+    },
     "search_shows": {
       "name": "Rechercher des séries",
       "description": "Recherche des séries dans le catalogue BetaSeries par titre et renvoie les résultats.",
@@ -453,6 +467,12 @@
     },
     "service_call_failed": {
       "message": "BetaSeries a rejeté la requête : {error}"
+    },
+    "already_in_account": {
+      "message": "Cette série est déjà dans votre compte BetaSeries."
+    },
+    "not_in_account": {
+      "message": "Cette série n'est pas dans votre compte BetaSeries."
     }
   }
 }
