@@ -230,7 +230,11 @@ const UMC_EDITOR_SCHEMA = [
       },
       { name: "sort_ascending", selector: { boolean: {} } },
       { name: "filter", selector: { text: {} } },
-      { name: "enable_search", selector: { boolean: {} } }
+      { name: "enable_search", selector: { boolean: {} } },
+      { name: "search_catalog", selector: { boolean: {} } },
+      { name: "search_min_chars", selector: { number: { min: 1, max: 10, mode: "box" } } },
+      { name: "search_debounce", selector: { number: { min: 0, max: 3000, step: 50, mode: "box" } } },
+      { name: "search_limit", selector: { number: { min: 1, max: 50, mode: "box" } } }
     ]
   },
   {
@@ -268,6 +272,10 @@ const UMC_EDITOR_LABELS = {
   hide_flagged: "Hide Flagged", hide_unflagged: "Hide Unflagged",
   sort_by: "Sort By", sort_ascending: "Sort Ascending",
   filter: "Filter (attribute=value)", enable_search: "Enable Live Search",
+  search_catalog: "Search BetaSeries Catalog",
+  search_min_chars: "Catalog Search: Minimum Characters",
+  search_debounce: "Catalog Search: Debounce (ms)",
+  search_limit: "Catalog Search: Maximum Results",
   url: "Custom URL", icon: "Icon",
   flag: "Show Flag", all_shadows: "All Shadows",
   box_shadows: "Box Shadows", text_shadows: "Text Shadows"
@@ -361,6 +369,7 @@ class UpcomingMediaCardEditor extends HTMLElement {
       'enable_transparency', 'hide_empty',
       'hide_flagged', 'hide_unflagged',
       'sort_by', 'sort_ascending', 'filter', 'enable_search',
+      'search_catalog', 'search_min_chars', 'search_debounce', 'search_limit',
       'url', 'icon', 'flag',
       'box_shadows', 'text_shadows'
     ];
@@ -380,6 +389,10 @@ class UpcomingMediaCardEditor extends HTMLElement {
       watched_button_style: 'dark',
       sort_ascending: false,
       enable_search: false,
+      search_catalog: true,
+      search_min_chars: 3,
+      search_debounce: 400,
+      search_limit: 20,
       clock: 12,
       box_shadows: true,
       text_shadows: true
@@ -497,6 +510,18 @@ class UpcomingMediaCard extends HTMLElement {
     this.deepLinkListeners = new Map();
     this.tooltipListeners = new Map();
     this._searchQuery = '';
+    // Catalog search state. `_catalogSeq` is what makes a slow reply harmless:
+    // every request stamps itself, and a reply whose stamp is no longer the
+    // current one is dropped instead of overwriting fresher results.
+    this._catalogSeq = 0;
+    this._catalogCache = new Map();
+    this._catalogResults = null;
+    this._catalogStatus = null;
+    this._catalogTimer = null;
+    // null = follow the cascade (local when it matches, catalog otherwise);
+    // 'local'/'catalog' once the user has picked a tab for this query.
+    this._catalogView = null;
+    this._searchTabsSignature = null;
   }
   connectedCallback() {
     this.style.position = 'relative';
@@ -504,6 +529,8 @@ class UpcomingMediaCard extends HTMLElement {
     this.style.touchAction = 'manipulation'; // Remove 300ms tap delay; allow pan + pinch zoom
   }
   disconnectedCallback() {
+    clearTimeout(this._catalogTimer);
+    this._catalogTimer = null;
     clearTimeout(this._overflowResizeTimer);
     clearTimeout(this._overflowImageTimer);
     if (this._overflowInitRAF) { cancelAnimationFrame(this._overflowInitRAF); this._overflowInitRAF = null; }
@@ -957,8 +984,189 @@ class UpcomingMediaCard extends HTMLElement {
   }
   _onSearchInput(ev) {
     this._searchQuery = ev.target.value || '';
+    this._scheduleCatalogSearch();
+    this._redraw();
+  }
+
+  // Forces a full redraw: `prev_json` is the card's "nothing changed" guard,
+  // and search results are not part of the entity state it compares.
+  _redraw() {
     this.prev_json = null;
     if (this._hass) this.hass = this._hass;
+  }
+
+  // ── BetaSeries catalog search ──────────────────────────────────────
+  // The local filter above answers "which of the shows I already follow", this
+  // answers "which shows exist" - the cascade the card shows as two sections.
+  _scheduleCatalogSearch() {
+    clearTimeout(this._catalogTimer);
+    // A new query invalidates the tab the user picked for the previous one.
+    this._catalogView = null;
+    const query = this._searchQuery.trim();
+    if (!this.config.enable_search || !this.config.search_catalog
+      || query.length < this.config.search_min_chars) {
+      // Bumping the sequence cancels any reply still in flight: the user has
+      // backed out of catalog territory, its results must not land later.
+      this._catalogSeq++;
+      this._catalogResults = null;
+      this._catalogStatus = null;
+      return;
+    }
+    const cached = this._catalogCache.get(query.toLowerCase());
+    if (cached) {
+      this._catalogSeq++;
+      this._catalogResults = cached;
+      this._catalogStatus = null;
+      return;
+    }
+    this._catalogTimer = setTimeout(() => this._runCatalogSearch(query), this.config.search_debounce);
+  }
+
+  async _runCatalogSearch(query) {
+    const entryId = this._resolveBetaseriesEntry();
+    if (!entryId) {
+      this._catalogResults = null;
+      this._catalogStatus = 'no-entry';
+      this._redraw();
+      return;
+    }
+    const seq = ++this._catalogSeq;
+    this._catalogStatus = 'loading';
+    this._redraw();
+    try {
+      const response = await this._callSearchService(entryId, query);
+      if (seq !== this._catalogSeq) return;
+      const shows = (response && response.response && response.response.shows) || [];
+      this._catalogCache.set(query.toLowerCase(), shows);
+      this._catalogResults = shows;
+      this._catalogStatus = null;
+    } catch (err) {
+      if (seq !== this._catalogSeq) return;
+      console.error('upcoming-media-card: search_shows failed', err);
+      this._catalogResults = null;
+      this._catalogStatus = 'error';
+    }
+    this._redraw();
+  }
+
+  // `hass.callService`'s 6th argument (returnResponse) only exists on recent
+  // frontends; older ones silently drop it and hand back a context with no
+  // response, so fall back to the raw websocket command those do understand.
+  async _callSearchService(entryId, query) {
+    const data = { config_entry: entryId, query, limit: this.config.search_limit };
+    const response = await this._hass.callService('betaseries', 'search_shows', data, undefined, false, true);
+    if (response && response.response) return response;
+    return this._hass.connection.sendMessagePromise({
+      type: 'call_service',
+      domain: 'betaseries',
+      service: 'search_shows',
+      service_data: data,
+      return_response: true
+    });
+  }
+
+  // Maps search results onto the item shape the render loop below expects
+  // (see the `json` contract: element 0 is a template, never an item).
+  _catalogJson() {
+    const template = {
+      title_default: "$title",
+      line1_default: "$channel",
+      line2_default: "$genres",
+      line3_default: "$studio",
+      line4_default: "$rating",
+      icon: "mdi:television-plus"
+    };
+    const items = (this._catalogResults || []).map(show => {
+      // A show is not an episode: it has no air date, and the render loop
+      // skips any item without one (`if (!item("airdate")) continue;`). The
+      // creation year stands in for it, purely to clear that guard - nothing
+      // displays it as a date. The year is shown through `$channel`, a
+      // pass-through text slot, precisely because `$release`/`$date` would
+      // reformat it (and `$year` renders two digits).
+      const year = show.year ? String(show.year) : null;
+      const status = show.status === 'Continuing' ? 'Ongoing' : (show.status === 'Ended' ? 'Ended' : show.status);
+      return {
+        airdate: year ? `${year}-01-01` : new Date().toISOString().slice(0, 10),
+        title: show.title,
+        channel: [year, status].filter(Boolean).join(' · ') || null,
+        genres: show.genres && show.genres.length ? show.genres : null,
+        studio: show.platforms && show.platforms.length ? show.platforms.slice().sort().join(' / ') : null,
+        rating: show.rating || null,
+        poster: show.poster,
+        fanart: show.fanart || show.poster,
+        deep_link: show.resource_url,
+        summary: show.summary,
+        show_id: show.id,
+        // Reused as "already in your account": in catalog mode the card owns
+        // this template, so the flag means what this template says it means.
+        flag: !!show.in_account,
+        in_account: !!show.in_account
+      };
+    });
+    return [template, ...items];
+  }
+
+  // Draws the "My list / BetaSeries" tab row under the search input and
+  // returns whether the catalog tab is the active one. With no explicit
+  // click, the catalog tab takes over exactly when the local filter came back
+  // empty - that automatic hand-off is the cascade.
+  _renderSearchTabs(localCount) {
+    const query = this._searchQuery.trim();
+    const active = this.config.enable_search && this.config.search_catalog
+      && query.length >= this.config.search_min_chars;
+    if (!this._searchTabs) return false;
+    this._searchTabs.style.display = active ? "flex" : "none";
+    if (!active) return false;
+
+    const catalogCount = this._catalogResults ? this._catalogResults.length : null;
+    const onCatalog = this._catalogView === 'catalog'
+      || (this._catalogView === null && localCount === 0);
+
+    const label = (text, count, isActive, view) => {
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.textContent = count === null ? text : `${text} (${count})`;
+      tab.style.flex = "0 0 auto";
+      tab.style.cursor = "pointer";
+      tab.style.padding = "4px 10px";
+      tab.style.borderRadius = "14px";
+      tab.style.fontSize = "12px";
+      tab.style.border = "1px solid var(--divider-color, #ccc)";
+      tab.style.background = isActive ? "var(--primary-color)" : "transparent";
+      tab.style.color = isActive ? "var(--text-primary-color, #fff)" : "var(--secondary-text-color)";
+      tab.addEventListener("click", () => {
+        this._catalogView = view;
+        this._redraw();
+      });
+      return tab;
+    };
+
+    // `set hass` runs on every state change in Home Assistant, not just this
+    // entity's: rebuild the two buttons only when what they say changes.
+    const signature = [localCount, catalogCount, onCatalog, this._catalogStatus].join('|');
+    if (this._searchTabsSignature === signature) return onCatalog;
+    this._searchTabsSignature = signature;
+
+    this._searchTabs.innerHTML = "";
+    this._searchTabs.appendChild(label("My list", localCount, !onCatalog, 'local'));
+    this._searchTabs.appendChild(label(
+      "BetaSeries",
+      this._catalogStatus === 'loading' ? null : (catalogCount === null ? 0 : catalogCount),
+      onCatalog,
+      'catalog'
+    ));
+    return onCatalog;
+  }
+
+  // Renders a one-line message in place of the grid (loading, error, no match).
+  _showSearchMessage(text) {
+    const message = document.createElement("div");
+    message.style.padding = "16px";
+    message.style.textAlign = "center";
+    message.style.color = "var(--secondary-text-color)";
+    message.textContent = text;
+    this.content.innerHTML = "";
+    this.content.appendChild(message);
   }
 
   set hass(hass) {
@@ -987,6 +1195,16 @@ class UpcomingMediaCard extends HTMLElement {
       this._searchInput.style.fontSize = "14px";
       this._searchInput.addEventListener("input", this._onSearchInput.bind(this));
       this._searchBar.appendChild(this._searchInput);
+
+      // Tab row: hidden until the query is long enough to have queried the
+      // catalog (see _renderSearchTabs).
+      this._searchTabs = document.createElement("div");
+      this._searchTabs.style.display = "none";
+      this._searchTabs.style.gap = "6px";
+      this._searchTabs.style.flexWrap = "wrap";
+      this._searchTabs.style.margin = "8px 15px 0";
+      this._searchBar.appendChild(this._searchTabs);
+
       card.appendChild(this._searchBar);
 
       this.content = document.createElement("div");
@@ -1161,20 +1379,37 @@ class UpcomingMediaCard extends HTMLElement {
     }
 
 
+    // Catalog results cannot join the grid above: element 0 is a single
+    // template shared by every item, and a show has nothing to say in an
+    // episode's template. So the two live as two tabs over one grid - the
+    // cascade being that the catalog tab is preselected when the local filter
+    // matched nothing.
+    const localCount = json.length - 1;
+    this._catalogMode = this._renderSearchTabs(localCount);
+    if (this._catalogMode) json = this._catalogJson();
+
     if (!json[1] && this.config.hide_empty && !this._searchQuery) {
       this.style.display = "none";
     } else if (this.style.display === "none") {
       this.style.display = "";
     }
+    if (this._catalogMode && this._catalogStatus) {
+      // Marker rather than the usual json cache key: it keeps an unrelated
+      // state update from redrawing the same message on every hass tick.
+      const marker = 'catalog-status:' + this._catalogStatus;
+      if (this.prev_json !== marker) {
+        this._showSearchMessage(
+          this._catalogStatus === 'loading' ? 'Searching BetaSeries…'
+            : this._catalogStatus === 'no-entry' ? 'Select a BetaSeries device in the card settings to search the catalog.'
+              : 'BetaSeries search failed - see the browser console.'
+        );
+        this.prev_json = marker;
+      }
+      return;
+    }
     if (!json || !json[1]) {
       if (this._searchQuery) {
-        const noResultsMsg = document.createElement("div");
-        noResultsMsg.style.padding = "16px";
-        noResultsMsg.style.textAlign = "center";
-        noResultsMsg.style.color = "var(--secondary-text-color)";
-        noResultsMsg.textContent = `No results for “${this._searchQuery}”`;
-        this.content.innerHTML = "";
-        this.content.appendChild(noResultsMsg);
+        this._showSearchMessage(`No results for “${this._searchQuery}”`);
         this.prev_json = JSON.stringify(json) + '|' + (this.config.image_style || "poster");
       }
       return;
@@ -1909,6 +2144,9 @@ class UpcomingMediaCard extends HTMLElement {
         if (this.config.device_betaseries && item("episode_id")) {
           this._addWatchedButton(containerDiv, item("episode_id"));
         }
+        if (this._catalogMode && item("show_id")) {
+          this._addShowButton(containerDiv, item("show_id"), item("in_account"));
+        }
         if (count <= this.collapse) {
           this.content.appendChild(containerDiv);
         } else {
@@ -1976,6 +2214,9 @@ class UpcomingMediaCard extends HTMLElement {
         }
         if (this.config.device_betaseries && item("episode_id")) {
           this._addWatchedButton(fanartContainerDiv, item("episode_id"));
+        }
+        if (this._catalogMode && item("show_id")) {
+          this._addShowButton(fanartContainerDiv, item("show_id"), item("in_account"));
         }
         let gapWrapperDiv = document.createElement('div');
         gapWrapperDiv.className = `${service}_gap_wrapper_${view}`;
@@ -2445,6 +2686,129 @@ class UpcomingMediaCard extends HTMLElement {
     return btn;
   }
   // END: BetaSeries "mark as watched" button
+
+  // START: BetaSeries "add to my list" button (catalog search results only)
+  // Same disc and same corner as the watched button - a search result is never
+  // shown next to a watch-list item, so the two never compete for the spot.
+  _addShowButton(container, showId, inAccount) {
+    const ICON_PLUS = 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z';
+    const ICON_CHECK = 'M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z';
+    const ICON_ALERT = 'M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 12,2Z';
+    const ERR_BG = 'rgba(198,40,40,0.95)';
+    const SKINS = {
+      dark: { idle: 'rgba(0,0,0,0.55)', hover: 'rgba(0,0,0,0.8)', fg: '#fff', border: 'none' },
+      ring: {
+        idle: 'rgba(0,0,0,0.35)', hover: 'rgba(0,0,0,0.65)',
+        fg: '#fff', border: '1px solid rgba(255,255,255,0.9)'
+      },
+      light: { idle: 'rgba(255,255,255,0.92)', hover: '#fff', fg: '#1c1c1c', border: 'none' }
+    };
+    const skin = SKINS[this.config.watched_button_style] || SKINS.dark;
+
+    const HIT = 22;
+    const DISC = 18;
+    const GLYPH = 13;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'umc-add-show-btn';
+    const label = inAccount ? 'Already in your list' : 'Add to my list';
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    btn.style.cssText = 'position:absolute;right:9px;bottom:9px;'
+      + 'width:' + HIT + 'px;height:' + HIT + 'px;'
+      + 'box-sizing:border-box;padding:0;display:flex;align-items:center;justify-content:center;'
+      + 'border:none;background:none;color:inherit;z-index:6;'
+      + 'cursor:' + (inAccount ? 'default' : 'pointer') + ';'
+      + 'transition:transform .2s,opacity .2s;';
+
+    const disc = document.createElement('span');
+    disc.className = 'umc-add-show-disc';
+    disc.style.cssText = 'width:' + DISC + 'px;height:' + DISC + 'px;'
+      + 'box-sizing:border-box;display:flex;align-items:center;justify-content:center;'
+      + 'border:' + skin.border + ';border-radius:50%;background:' + skin.idle + ';'
+      + 'color:' + skin.fg + ';pointer-events:none;'
+      + 'box-shadow:0 1px 3px rgba(0,0,0,0.5);transition:background .2s;';
+    btn.appendChild(disc);
+
+    const draw = (path) => {
+      disc.innerHTML = '<svg viewBox="0 0 24 24" width="' + GLYPH + '" height="' + GLYPH + '" style="display:block;">'
+        + '<path fill="currentColor" d="' + path + '"/></svg>';
+    };
+    draw(inAccount ? ICON_CHECK : ICON_PLUS);
+
+    // A show already followed gets the check and nothing else: no hover, no
+    // click, no way to send an add the API would only reject.
+    if (inAccount) {
+      container.appendChild(btn);
+      return btn;
+    }
+
+    const reset = () => {
+      draw(ICON_PLUS);
+      disc.style.background = skin.idle;
+      disc.style.color = skin.fg;
+      btn._umcBusy = false;
+    };
+
+    btn.addEventListener('mouseenter', () => {
+      if (!btn._umcBusy) disc.style.background = skin.hover;
+    });
+    btn.addEventListener('mouseleave', () => {
+      if (!btn._umcBusy) disc.style.background = skin.idle;
+    });
+
+    btn.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (btn._umcBusy) return;
+      const entryId = this._resolveBetaseriesEntry();
+      if (!entryId) {
+        console.error('upcoming-media-card: device_betaseries resolves to no config entry');
+        disc.style.background = ERR_BG;
+        disc.style.color = '#fff';
+        draw(ICON_ALERT);
+        setTimeout(reset, 2500);
+        return;
+      }
+      btn._umcBusy = true;
+      // Optimistic, same reasoning as the watched button: the check appears on
+      // press and is put back to a plus if the call fails.
+      draw(ICON_CHECK);
+      try {
+        await this._hass.callService('betaseries', 'add_show', {
+          config_entry: entryId,
+          show_id: String(showId)
+        });
+        // The cached result for this query must agree with what just happened:
+        // switching tabs and back would otherwise offer to add it again.
+        this._markCachedShowAdded(showId);
+      } catch (err) {
+        console.error('upcoming-media-card: add_show failed', err);
+        disc.style.background = ERR_BG;
+        disc.style.color = '#fff';
+        draw(ICON_ALERT);
+        setTimeout(reset, 2500);
+      }
+    });
+
+    ['mousedown', 'pointerdown', 'touchstart'].forEach((type) => {
+      btn.addEventListener(type, (ev) => ev.stopPropagation(), { passive: true });
+    });
+
+    container.appendChild(btn);
+    return btn;
+  }
+
+  // Flips `in_account` on one show wherever the search cache holds it: the same
+  // show can sit in several cached queries.
+  _markCachedShowAdded(showId) {
+    const flip = (shows) => shows.map(show => (
+      String(show.id) === String(showId) ? { ...show, in_account: true } : show
+    ));
+    this._catalogCache.forEach((shows, query) => this._catalogCache.set(query, flip(shows)));
+    if (this._catalogResults) this._catalogResults = flip(this._catalogResults);
+  }
+  // END: BetaSeries "add to my list" button
 
   _applyOverflow() {
     clearTimeout(this._overflowResizeTimer);
@@ -3198,6 +3562,18 @@ class UpcomingMediaCard extends HTMLElement {
         ? config.watched_button_style
         : 'dark';
     this.config.enable_search = config.enable_search !== undefined ? config.enable_search : false;
+    // Catalog search rides on the same bar as the local filter: on by default,
+    // but inert until `enable_search` shows that bar, and until
+    // `device_betaseries` says which account to search as.
+    this.config.search_catalog = config.search_catalog !== undefined ? config.search_catalog : true;
+    const _smc = parseInt(config.search_min_chars, 10);
+    this.config.search_min_chars = !isNaN(_smc) ? Math.max(1, Math.min(10, _smc)) : 3;
+    const _sdb = parseInt(config.search_debounce, 10);
+    this.config.search_debounce = !isNaN(_sdb) ? Math.max(0, Math.min(3000, _sdb)) : 400;
+    // Kept within the service's own 1-50 bound (see services.yaml): a value
+    // outside it would be rejected by Home Assistant, not clamped.
+    const _slm = parseInt(config.search_limit, 10);
+    this.config.search_limit = !isNaN(_slm) ? Math.max(1, Math.min(50, _slm)) : 20;
   }
 
   getCardSize() {
