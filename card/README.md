@@ -12,6 +12,7 @@ This fork adds functionality specific to the [BetaSeries Home Assistant integrat
 - **BetaSeries device selector**: Link the card to your BetaSeries integration for watched button functionality.
 - **Multiple button styles**: Choose from dark, ring, or light themed watched buttons to match your Lovelace design.
 - **Live search**: Optional search bar to filter displayed items in real time by show title or streaming platform.
+- **Hide season premieres**: A filter icon next to the search bar toggles whether items whose next episode is a season premiere (SxxE01) are shown. This is a runtime display choice, not saved between page reloads and not a card configuration option — click it again to show everything.
 - **Catalog search**: On the _Shows to catch up on_ sensor, the same bar also searches the whole BetaSeries catalog. Two tabs appear once the query is long enough — _My list_ (the local filter) and _BetaSeries_ (catalog results) — and the catalog tab is preselected when the local filter matched nothing. Cards bound to a single-item sensor keep the plain local filter, since there is nothing to cascade from.
 - **Add to / remove from my list**: Click the `+` on a catalog result to add that show to your BetaSeries account. Shows you already follow show a check, which turns into a `−` on hover — clicking it removes the show. Removal is immediate, with no confirmation step.
 
