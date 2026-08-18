@@ -1,7 +1,7 @@
 # Runtime: Home Assistant + build tools for the custom component.
 # Default_config requirements moved to .devcontainer/requirements-default-config.txt
 # to exclude them from Dependabot's scan (not relevant to the integration itself).
-homeassistant==2026.8.1
+homeassistant==2026.8.2
 prek==0.4.12
 pylint==4.0.4
 pyright==1.1.411
