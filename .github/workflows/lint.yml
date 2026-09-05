@@ -92,25 +92,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-lint.txt -r requirements.txt ${{ matrix.extra_requirements }}
 
-      # Every check runs even if an earlier one failed: one push should report
-      # every problem at once, rather than making the author fix them one round
-      # trip at a time. The job still fails if any of them did.
+      # Every check runs even if an earlier lint failed, so one push reports
+      # every problem at once instead of a fix-one-round-trip-at-a-time cycle.
+      # But `success()` (not `!cancelled()`) on each: a failed install must
+      # stop the chain, otherwise every tool below fails redundantly with
+      # "command not found" instead of one clear install failure.
       - name: "Lint with Ruff"
         if: "success()"
         run: ruff check --output-format=github ${{ matrix.paths }}
 
       - name: "Format with Ruff"
-        if: "!cancelled()"
+        if: "success()"
         run: ruff format --check --diff ${{ matrix.paths }}
 
       - name: "Lint with Pylint"
-        if: "!cancelled()"
+        if: "success()"
         run: pylint ${{ matrix.paths }}
 
       - name: "Lint with Pyright"
-        if: "!cancelled()"
+        if: "success()"
         run: pyright ${{ matrix.paths }}
 
       - name: "Lint with docstring-linter"
-        if: "!cancelled()"
+        if: "success()"
         run: docstring-linter ${{ matrix.paths }}
