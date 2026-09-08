@@ -3,6 +3,6 @@
 # to exclude them from Dependabot's scan (not relevant to the integration itself).
 homeassistant==2026.8.2
 prek==0.4.12
-pylint==4.0.4
+pylint==4.0.8
 pyright==1.1.411
 ruff==0.16.2
