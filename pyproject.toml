@@ -39,7 +39,7 @@ pytest = "9.0.3"
 pytest-asyncio = "1.4.0"
 pytest-cov = "7.1.0"
 pytest-homeassistant-custom-component = "0.13.365"
-ruff = "0.16.7"
+ruff = "0.16.8"
 
 [tool.ruff]
 # NOTE: runtime target is Python 3.14, but ruff's target-version is intentionally
