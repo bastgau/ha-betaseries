@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NoReturn
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -56,64 +56,64 @@ _NOTE_SELECTOR = NumberSelector(  # pyright: ignore[reportUnknownVariableType]
     NumberSelectorConfig(min=1, max=5, step=1, mode=NumberSelectorMode.BOX)
 )
 
-_EPISODE_IDS_SCHEMA = vol.Schema(
+_EPISODE_IDS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_EPISODE_ID): TextSelector(),
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_EPISODE_ID): TextSelector(),
     }
 )
 
-_RATE_EPISODES_SCHEMA = vol.Schema(
+_RATE_EPISODES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_EPISODE_ID): TextSelector(),
-        vol.Required(ATTR_NOTE): _NOTE_SELECTOR,
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_EPISODE_ID): TextSelector(),
+        probatio.Required(ATTR_NOTE): _NOTE_SELECTOR,
     }
 )
 
-_SEASON_SCHEMA = vol.Schema(
+_SEASON_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_SHOW_ID): TextSelector(),
-        vol.Required(ATTR_SEASON): NumberSelector(NumberSelectorConfig(min=1, mode=NumberSelectorMode.BOX)),
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_SHOW_ID): TextSelector(),
+        probatio.Required(ATTR_SEASON): NumberSelector(NumberSelectorConfig(min=1, mode=NumberSelectorMode.BOX)),
     }
 )
 
-_RATE_SEASON_SCHEMA = vol.Schema(
+_RATE_SEASON_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_SHOW_ID): TextSelector(),
-        vol.Required(ATTR_SEASON): NumberSelector(NumberSelectorConfig(min=1, mode=NumberSelectorMode.BOX)),
-        vol.Required(ATTR_NOTE): _NOTE_SELECTOR,
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_SHOW_ID): TextSelector(),
+        probatio.Required(ATTR_SEASON): NumberSelector(NumberSelectorConfig(min=1, mode=NumberSelectorMode.BOX)),
+        probatio.Required(ATTR_NOTE): _NOTE_SELECTOR,
     }
 )
 
-_SHOW_SCHEMA = vol.Schema(
+_SHOW_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_SHOW_ID): TextSelector(),
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_SHOW_ID): TextSelector(),
     }
 )
 
-_CONFIG_ENTRY_ONLY_SCHEMA = vol.Schema(
+_CONFIG_ENTRY_ONLY_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
     }
 )
 
-_RATE_SHOW_SCHEMA = vol.Schema(
+_RATE_SHOW_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_SHOW_ID): TextSelector(),
-        vol.Required(ATTR_NOTE): _NOTE_SELECTOR,
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_SHOW_ID): TextSelector(),
+        probatio.Required(ATTR_NOTE): _NOTE_SELECTOR,
     }
 )
 
-_SEARCH_SHOWS_SCHEMA = vol.Schema(
+_SEARCH_SHOWS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_QUERY): TextSelector(),
-        vol.Optional(ATTR_LIMIT, default=SEARCH_SHOWS_DEFAULT_LIMIT): NumberSelector(  # pyright: ignore[reportUnknownArgumentType]
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(ATTR_QUERY): TextSelector(),
+        probatio.Optional(ATTR_LIMIT, default=SEARCH_SHOWS_DEFAULT_LIMIT): NumberSelector(  # pyright: ignore[reportUnknownArgumentType]
             NumberSelectorConfig(
                 min=SEARCH_SHOWS_MIN_LIMIT, max=SEARCH_SHOWS_MAX_LIMIT, step=1, mode=NumberSelectorMode.BOX
             )
@@ -530,26 +530,54 @@ def async_setup_services(hass: HomeAssistant) -> None:
         None
 
     """
-    hass.services.async_register(
+    # pyright: ignore[reportUnknownMemberType] throughout this function: HA core's
+    # own VolSchemaType alias (homeassistant/helpers/typing.py) spells one of its
+    # union members as bare `probatio.All` instead of `probatio.All[Any]`, which
+    # makes Pyright treat async_register's whole signature as partially unknown
+    # regardless of what schema is passed - an upstream annotation gap, not
+    # something fixable from a caller passing an already well-typed probatio.Schema.
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
         DOMAIN, SERVICE_MARK_EPISODE_WATCHED, _mark_episode_watched, schema=_EPISODE_IDS_SCHEMA
     )
-    hass.services.async_register(
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
         DOMAIN, SERVICE_MARK_EPISODE_UNWATCHED, _mark_episode_unwatched, schema=_EPISODE_IDS_SCHEMA
     )
-    hass.services.async_register(DOMAIN, SERVICE_RATE_EPISODE, _rate_episode, schema=_RATE_EPISODES_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_UNRATE_EPISODE, _unrate_episode, schema=_EPISODE_IDS_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_MARK_SEASON_WATCHED, _mark_season_watched, schema=_SEASON_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_MARK_SEASON_UNWATCHED, _mark_season_unwatched, schema=_SEASON_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_RATE_SEASON, _rate_season, schema=_RATE_SEASON_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_UNRATE_SEASON, _unrate_season, schema=_SEASON_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_RATE_SHOW, _rate_show, schema=_RATE_SHOW_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_UNRATE_SHOW, _unrate_show, schema=_SHOW_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_ADD_SHOW, _add_show, schema=_SHOW_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_REMOVE_SHOW, _remove_show, schema=_SHOW_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_DELETE_TOKEN, _delete_token, schema=_CONFIG_ENTRY_ONLY_SCHEMA)
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_RATE_EPISODE, _rate_episode, schema=_RATE_EPISODES_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_UNRATE_EPISODE, _unrate_episode, schema=_EPISODE_IDS_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_MARK_SEASON_WATCHED, _mark_season_watched, schema=_SEASON_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_MARK_SEASON_UNWATCHED, _mark_season_unwatched, schema=_SEASON_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_RATE_SEASON, _rate_season, schema=_RATE_SEASON_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_UNRATE_SEASON, _unrate_season, schema=_SEASON_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_RATE_SHOW, _rate_show, schema=_RATE_SHOW_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_UNRATE_SHOW, _unrate_show, schema=_SHOW_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_ADD_SHOW, _add_show, schema=_SHOW_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_REMOVE_SHOW, _remove_show, schema=_SHOW_SCHEMA
+    )
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
+        DOMAIN, SERVICE_DELETE_TOKEN, _delete_token, schema=_CONFIG_ENTRY_ONLY_SCHEMA
+    )
     # ONLY, not OPTIONAL: a search that returns nothing to its caller does
     # nothing at all, so there is no useful response-less form of this call.
-    hass.services.async_register(
+    hass.services.async_register(  # pyright: ignore[reportUnknownMemberType]
         DOMAIN,
         SERVICE_SEARCH_SHOWS,
         _search_shows,

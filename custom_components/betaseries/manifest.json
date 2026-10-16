@@ -8,7 +8,7 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/bastgau/ha-betaseries/issues",
-  "loggers": ["betaseries"],
+  "loggers": ["custom_components.betaseries"],
   "requirements": [],
   "version": "0.1.0"
 }

@@ -513,6 +513,9 @@ class UpcomingMediaCard extends HTMLElement {
     this.deepLinkListeners = new Map();
     this.tooltipListeners = new Map();
     this._searchQuery = '';
+    // Runtime-only toggle (not persisted, not a card config option): hides
+    // items whose next episode is a season premiere (SxxE01).
+    this._hideSeasonPremieres = false;
     // Catalog search state. `_catalogSeq` is what makes a slow reply harmless:
     // every request stamps itself, and a reply whose stamp is no longer the
     // current one is dropped instead of overwriting fresher results.
@@ -991,6 +994,22 @@ class UpcomingMediaCard extends HTMLElement {
     this._redraw();
   }
 
+  _onToggleSeasonPremieres() {
+    this._hideSeasonPremieres = !this._hideSeasonPremieres;
+    this._updateSeasonPremieresButton();
+    this._redraw();
+  }
+
+  // Reflects `_hideSeasonPremieres` on the button's active/inactive style,
+  // same convention as the search tabs (_renderSearchTabs).
+  _updateSeasonPremieresButton() {
+    if (!this._seasonPremieresButton) return;
+    const active = this._hideSeasonPremieres;
+    this._seasonPremieresButton.setAttribute('aria-pressed', String(active));
+    this._seasonPremieresButton.style.background = active ? "var(--primary-color)" : "transparent";
+    this._seasonPremieresButton.style.color = active ? "var(--text-primary-color, #fff)" : "var(--secondary-text-color)";
+  }
+
   // Forces a full redraw: `prev_json` is the card's "nothing changed" guard,
   // and search results are not part of the entity state it compares.
   _redraw() {
@@ -1197,15 +1216,22 @@ class UpcomingMediaCard extends HTMLElement {
 
       this._searchBar = document.createElement("div");
       this._searchBar.style.padding = "0 10px";
+
+      this._searchRow = document.createElement("div");
+      this._searchRow.style.display = "flex";
+      this._searchRow.style.alignItems = "center";
+      this._searchRow.style.gap = "8px";
+      const initialView = this.config.image_style || "poster";
+      this._searchRow.style.margin = initialView == "poster" ? "15px 15px 0" : "15px";
+
       this._searchInput = document.createElement("input");
       this._searchInput.type = "search";
       this._searchInput.autocomplete = "off";
       this._searchInput.spellcheck = false;
       this._searchInput.placeholder = this.config.search_placeholder || "Search title";
-      this._searchInput.style.width = "calc(100% - 30px)";
+      this._searchInput.style.flex = "1 1 auto";
+      this._searchInput.style.minWidth = "0";
       this._searchInput.style.boxSizing = "border-box";
-      const initialView = this.config.image_style || "poster";
-      this._searchInput.style.margin = initialView == "poster" ? "15px 15px 0" : "15px";
       this._searchInput.style.padding = "8px 12px";
       this._searchInput.style.borderRadius = "8px";
       this._searchInput.style.border = "1px solid var(--divider-color, #ccc)";
@@ -1213,7 +1239,29 @@ class UpcomingMediaCard extends HTMLElement {
       this._searchInput.style.color = "var(--primary-text-color)";
       this._searchInput.style.fontSize = "14px";
       this._searchInput.addEventListener("input", this._onSearchInput.bind(this));
-      this._searchBar.appendChild(this._searchInput);
+      this._searchRow.appendChild(this._searchInput);
+
+      // Runtime toggle - hides season premieres (SxxE01); not a card config
+      // option, just a display filter the user can flip per viewing.
+      this._seasonPremieresButton = document.createElement("button");
+      this._seasonPremieresButton.type = "button";
+      this._seasonPremieresButton.title = "Hide season premieres (SxxE01)";
+      this._seasonPremieresButton.setAttribute("aria-label", "Hide season premieres");
+      this._seasonPremieresButton.innerHTML = '<ha-icon icon="mdi:filter-variant"></ha-icon>';
+      this._seasonPremieresButton.style.flex = "0 0 auto";
+      this._seasonPremieresButton.style.display = "flex";
+      this._seasonPremieresButton.style.alignItems = "center";
+      this._seasonPremieresButton.style.justifyContent = "center";
+      this._seasonPremieresButton.style.width = "36px";
+      this._seasonPremieresButton.style.height = "36px";
+      this._seasonPremieresButton.style.cursor = "pointer";
+      this._seasonPremieresButton.style.borderRadius = "8px";
+      this._seasonPremieresButton.style.border = "1px solid var(--divider-color, #ccc)";
+      this._seasonPremieresButton.addEventListener("click", this._onToggleSeasonPremieres.bind(this));
+      this._searchRow.appendChild(this._seasonPremieresButton);
+      this._updateSeasonPremieresButton();
+
+      this._searchBar.appendChild(this._searchRow);
 
       // Tab row: hidden until the query is long enough to have queried the
       // catalog (see _renderSearchTabs).
@@ -1395,6 +1443,17 @@ class UpcomingMediaCard extends HTMLElement {
         return title.includes(q) || studio.includes(q);
       });
       json = [templateItem, ...searched];
+    }
+
+
+    // Hide season premieres (SxxE01) toggle, applied after search, before
+    // catalog handoff. `number` is the only place `data` carries the episode
+    // code (no separate season/episode fields in this format), zero-padding
+    // varies (E01 vs E1) so the suffix match covers both.
+    if (this._hideSeasonPremieres) {
+      const templateItem = json[0];
+      const filtered = json.slice(1).filter(item => !/E0*1$/.test(String(item.number || '')));
+      json = [templateItem, ...filtered];
     }
 
 

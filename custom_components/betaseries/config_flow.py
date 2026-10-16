@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -94,18 +94,18 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
 
-def _locale_schema_entry(default_locale: str) -> dict[vol.Marker, Any]:
+def _locale_schema_entry(default_locale: str) -> dict[probatio.Marker, Any]:
     """Build the locale field shared by every credentials form.
 
     Args:
         default_locale (str): Locale pre-selected in the form (DEFAULT_LOCALE, or the entry's current option during reauth).
 
     Returns:
-        dict[vol.Marker, Any]: A single-entry schema fragment, meant to be spread into a vol.Schema dict.
+        dict[probatio.Marker, Any]: A single-entry schema fragment, meant to be spread into a probatio.Schema dict.
 
     """
     return {
-        vol.Required(CONF_LOCALE, default=default_locale): SelectSelector(
+        probatio.Required(CONF_LOCALE, default=default_locale): SelectSelector(
             SelectSelectorConfig(
                 options=SUPPORTED_LOCALES, mode=SelectSelectorMode.DROPDOWN, translation_key=CONF_LOCALE
             )
@@ -113,40 +113,40 @@ def _locale_schema_entry(default_locale: str) -> dict[vol.Marker, Any]:
     }
 
 
-def _device_data_schema(default_locale: str) -> vol.Schema:
+def _device_data_schema(default_locale: str) -> probatio.Schema:
     """Build the api_key + client_secret + locale form schema for the "device_credentials" step.
 
     Args:
         default_locale (str): Locale pre-selected in the form (DEFAULT_LOCALE, or the entry's current option during reauth).
 
     Returns:
-        vol.Schema: The "device_credentials" step's form schema.
+        probatio.Schema: The "device_credentials" step's form schema.
 
     """
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_API_KEY): str,
-            vol.Required(CONF_CLIENT_SECRET): str,
+            probatio.Required(CONF_API_KEY): str,
+            probatio.Required(CONF_CLIENT_SECRET): str,
             **_locale_schema_entry(default_locale),
         }
     )
 
 
-def _password_data_schema(default_locale: str) -> vol.Schema:
+def _password_data_schema(default_locale: str) -> probatio.Schema:
     """Build the api_key + login + password + locale form schema for the "password_credentials" step.
 
     Args:
         default_locale (str): Locale pre-selected in the form (DEFAULT_LOCALE, or the entry's current option during reauth).
 
     Returns:
-        vol.Schema: The "password_credentials" step's form schema.
+        probatio.Schema: The "password_credentials" step's form schema.
 
     """
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_API_KEY): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_API_KEY): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
             **_locale_schema_entry(default_locale),
         }
     )
@@ -558,12 +558,12 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
             return self.async_create_entry(data=_flatten_sections(user_input))
 
         options = self.config_entry.options
-        options_schema = vol.Schema(
+        options_schema = probatio.Schema(
             {
-                vol.Required(SECTION_MEMBER): section(
-                    vol.Schema(
+                probatio.Required(SECTION_MEMBER): section(
+                    probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 CONF_MEMBER_SCAN_INTERVAL,
                                 default=options.get(CONF_MEMBER_SCAN_INTERVAL, DEFAULT_MEMBER_SCAN_INTERVAL_MINUTES),
                             ): NumberSelector(
@@ -577,10 +577,10 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                     ),
                     {"collapsed": True},
                 ),
-                vol.Required(SECTION_PLANNING): section(
-                    vol.Schema(
+                probatio.Required(SECTION_PLANNING): section(
+                    probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 CONF_PLANNING_SCAN_INTERVAL,
                                 default=options.get(
                                     CONF_PLANNING_SCAN_INTERVAL, DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES
@@ -592,7 +592,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                                     mode=NumberSelectorMode.BOX,
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_PLANNING_MONTHS_BEHIND,
                                 default=options.get(CONF_PLANNING_MONTHS_BEHIND, DEFAULT_PLANNING_MONTHS_BEHIND),
                             ): NumberSelector(
@@ -602,7 +602,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                                     mode=NumberSelectorMode.BOX,
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_PLANNING_MONTHS_AHEAD,
                                 default=options.get(CONF_PLANNING_MONTHS_AHEAD, DEFAULT_PLANNING_MONTHS_AHEAD),
                             ): NumberSelector(
@@ -616,10 +616,10 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                     ),
                     {"collapsed": True},
                 ),
-                vol.Required(SECTION_EPISODES): section(
-                    vol.Schema(
+                probatio.Required(SECTION_EPISODES): section(
+                    probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 CONF_EPISODES_SCAN_INTERVAL,
                                 default=options.get(
                                     CONF_EPISODES_SCAN_INTERVAL, DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES
@@ -631,7 +631,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                                     mode=NumberSelectorMode.BOX,
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_SHOWS_LIMIT,
                                 default=options.get(CONF_SHOWS_LIMIT, DEFAULT_SHOWS_LIMIT),
                             ): NumberSelector(
@@ -639,7 +639,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                                     min=MIN_SHOWS_LIMIT, max=MAX_SHOWS_LIMIT, mode=NumberSelectorMode.BOX
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_EPISODES_LIMIT,
                                 default=options.get(CONF_EPISODES_LIMIT, DEFAULT_EPISODES_LIMIT),
                             ): NumberSelector(
@@ -647,7 +647,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                                     min=MIN_EPISODES_LIMIT, max=MAX_EPISODES_LIMIT, mode=NumberSelectorMode.BOX
                                 )
                             ),
-                            vol.Required(
+                            probatio.Required(
                                 CONF_UPCOMING_MEDIA_CARD,
                                 default=options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD),
                             ): BooleanSelector(),
@@ -655,7 +655,7 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                     ),
                     {"collapsed": True},
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_LOCALE,
                     default=options.get(CONF_LOCALE, DEFAULT_LOCALE),
                 ): SelectSelector(

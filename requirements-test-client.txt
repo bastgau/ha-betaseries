@@ -21,7 +21,7 @@
 # genuinely importable alone means moving it out of custom_components/ (the
 # PyPI extraction contemplated in CLAUDE.md §2). Until then this file records
 # the coupling rather than hiding it.
-aiohttp==3.14.3
+aiohttp==3.14.4
 pytest==9.0.3
 pytest-asyncio==1.4.0
 pytest-cov==7.1.0

@@ -75,7 +75,12 @@ Custom component HACS pour un compte membre BetaSeries.
   qui importe Home Assistant. Contourner en mettant `custom_components/betaseries` sur `sys.path` est
   pire : le `calendar.py` de l'intégration masque alors le `calendar` de la stdlib, qu'aiohttp importe.
   L'extraction PyPI est donc la seule vraie sortie.
-- Cible : **Home Assistant 2026.7.0 minimum**, **Python 3.14** (devcontainer).
+- Cible : **Home Assistant 2026.10.0 minimum**, **Python 3.14** (devcontainer). Relevé depuis
+  2026.7.0 le 2026-10-16 : HA 2026.10.0 a basculé `data_entry_flow.py`/`async_register` de
+  `vol.Schema` vers `probatio.Schema` (nouvelle lib de validation de Frenck, API-compatible avec
+  voluptuous) - `config_flow.py`/`services.py` importent donc `probatio` directement (gabarit
+  `habitica`/`tado`), qui n'est garanti dépendance de `homeassistant` qu'à partir de cette version
+  (vérifié : encore `vol.Schema` en 2026.9.4, déjà `probatio.Schema` en 2026.10.0).
 - Tooling : ruff/pylint/pyright. `ruff target-version = "py313"` **volontairement** (contourne un bug
   formatter ruff 0.15.x qui casse `except (A, B):` sous py314) ; repasser à py314 quand corrigé.
 - Variables d'env : projet non-secret dans `.devcontainer/.common-env` (committé : `PROJECT_NAME`,

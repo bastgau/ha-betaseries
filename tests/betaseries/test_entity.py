@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock
 
 from custom_components.betaseries.betaseries.member_data import MemberData
@@ -22,6 +22,7 @@ from homeassistant.helpers.entity import EntityDescription
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.device_registry import DeviceInfo
 
 ENTITY_DESCRIPTION = EntityDescription(key="episodes_to_watch")
 
@@ -74,11 +75,12 @@ async def test_unique_id_and_device_info(hass: HomeAssistant) -> None:
 
     assert entity.unique_id == "42_episodes_to_watch"
     assert entity.device_info is not None
-    assert entity.device_info["identifiers"] == {(DOMAIN, "42")}
-    assert entity.device_info["name"] == "BetaSeries - test_user"
-    assert entity.device_info["manufacturer"] == "BetaSeries"
-    assert entity.device_info["model"] == "Member Account"
-    assert entity.device_info["configuration_url"] == "https://www.betaseries.com/membre/test_user"
+    device_info = cast("DeviceInfo", entity.device_info)
+    assert device_info["identifiers"] == {(DOMAIN, "42")}
+    assert device_info["name"] == "BetaSeries - test_user"
+    assert device_info["manufacturer"] == "BetaSeries"
+    assert device_info["model"] == "Member Account"
+    assert device_info["configuration_url"] == "https://www.betaseries.com/membre/test_user"
 
 
 async def test_device_info_survives_a_renamed_entry(hass: HomeAssistant) -> None:
@@ -94,5 +96,6 @@ async def test_device_info_survives_a_renamed_entry(hass: HomeAssistant) -> None
     entity = BetaSeriesEntity(entry.runtime_data.member, ENTITY_DESCRIPTION)
 
     assert entity.device_info is not None
-    assert entity.device_info["name"] == "BetaSeries - test_user"
-    assert entity.device_info["configuration_url"] == "https://www.betaseries.com/membre/test_user"
+    device_info = cast("DeviceInfo", entity.device_info)
+    assert device_info["name"] == "BetaSeries - test_user"
+    assert device_info["configuration_url"] == "https://www.betaseries.com/membre/test_user"
