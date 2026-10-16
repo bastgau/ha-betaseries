@@ -22,7 +22,7 @@ This integration connects Home Assistant to your [BetaSeries](https://www.betase
 
 ## Requirements
 
-- Home Assistant **2026.7.0** or newer.
+- Home Assistant **2026.10.0** or newer.
 - A personal **BetaSeries API application** (`client_id` and `client_secret`) created at <https://www.betaseries.com/api/>. The `client_secret` is only required for the device code authentication method below; the login/password method only needs the `client_id`.
 
 > [!WARNING]

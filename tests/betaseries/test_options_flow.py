@@ -18,9 +18,9 @@ from custom_components.betaseries.const import (
     DEFAULT_LOCALE,
     DOMAIN,
 )
+import probatio
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.data_entry_flow import FlowResultType, section
@@ -44,7 +44,7 @@ DEFAULT_USER_INPUT = {
 }
 
 
-def _section_defaults(schema: vol.Schema) -> dict[str, object]:
+def _section_defaults(schema: probatio.Schema) -> dict[str, object]:
     """Collect every field's default, looking inside the form's sections."""
     defaults: dict[str, object] = {}
     for key, value in schema.schema.items():
@@ -176,5 +176,5 @@ async def test_options_flow_rejects_out_of_range_values(
 
     user_input = {**DEFAULT_USER_INPUT, field: value}
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.config_entries.options.async_configure(result["flow_id"], user_input)
