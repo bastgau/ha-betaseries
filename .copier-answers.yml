@@ -1,15 +1,13 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v0.3.0
+_commit: v0.4.0
 _src_path: gh:bastgau/ha-dev-environment
 client_package: betaseries
 client_tests_path: tests/betaseries/betaseries
 description: The BetaSeries integration for Home Assistant lets you monitor your BetaSeries
     account (episodes to watch, stats, upcoming episodes planning) and manage your
     library directly from Home Assistant.
-ha_testing_config: false
 integration_domain: betaseries
 integration_name: BetaSeries
-prettier_excludes: card,custom_components/betaseries/betaseries/bruno
 python_requires: '>=3.14.2,<3.15'
 python_version: '3.14'
 repo_name: ha-betaseries
