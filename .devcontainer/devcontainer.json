@@ -1,5 +1,5 @@
 {
-  "name": "HA Betaseries",
+  "name": "BetaSeries",
   "dockerFile": "./Dockerfile",
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {
@@ -10,20 +10,23 @@
       "nodeGypDependencies": true,
       "version": "lts"
     },
-    "ghcr.io/devcontainers-extra/features/poetry:2": {
-      "version": "latest"
-    },
     "ghcr.io/devcontainers/features/rust:1": {}
   },
   "postCreateCommand": "scripts/setup",
   "mounts": [
     "type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly",
-    "type=volume,source=claude-config-betaseries,target=/home/vscode/.claude"
+    "type=volume,source=claude-config-ha-betaseries,target=/home/vscode/.claude"
   ],
   "runArgs": [
     "--network=host",
     "--env-file=${localWorkspaceFolder}/.devcontainer/.common-env"
   ],
+  "containerEnv": {
+    "UV_LINK_MODE": "copy"
+  },
+  "remoteEnv": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}"
+  },
   "forwardPorts": [8123],
   "portsAttributes": {
     "8123": {
@@ -54,7 +57,7 @@
         },
         "files.eol": "\n",
         "editor.tabSize": 4,
-        "python.pythonPath": "/usr/bin/python3",
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
         "python.analysis.autoSearchPaths": false,
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
@@ -75,5 +78,7 @@
       }
     }
   },
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/ha-betaseries,type=bind",
+  "workspaceFolder": "/workspaces/ha-betaseries"
 }

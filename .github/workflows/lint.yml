@@ -10,15 +10,16 @@ on:
 
 permissions: {}
 
-env:
-  PYTHON_VERSION: "3.14"
-
 jobs:
-  # Required status checks (branch protection) wait forever if the workflow
-  # itself never runs, which is what a top-level `paths:` filter causes on a
-  # PR that touches no .py file. This job always runs and tells the lint
-  # matrix below whether to do actual work or report a no-op success, so the
-  # check always reports instead of staying stuck on "Expected".
+  # A required status check (branch protection) waits forever if its workflow
+  # never runs, which is what a top-level `paths:` filter causes on a PR that
+  # touches no .py file. This job always runs; the real jobs are skipped (and a
+  # skip satisfies a required check) when nothing relevant changed.
+  #
+  # It also asks scripts/lint which scopes exist in this repository, so the
+  # matrix below is never out of step with what a developer runs locally: the
+  # client scope appears only when CLIENT_PACKAGE is set, tests only if tests/
+  # exists.
   changes:
     name: "changes"
     runs-on: "ubuntu-latest"
@@ -26,93 +27,89 @@ jobs:
       contents: read
     outputs:
       python: "${{ steps.filter.outputs.python }}"
+      scopes: "${{ steps.scopes.outputs.scopes }}"
     steps:
       - uses: "actions/checkout@v7"
+
+      - name: "Load the project variables"
+        shell: "bash"
+        # .devcontainer/.common-env is the single source of truth for the
+        # integration domain and the client package; scripts/ read it too.
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      - id: "scopes"
+        run: echo "scopes=$(scripts/lint --list-scopes)" >> "$GITHUB_OUTPUT"
+
       - uses: "dorny/paths-filter@v4"
         id: "filter"
         with:
           filters: |
             python:
-              - "custom_components/betaseries/**/*.py"
+              - "custom_components/**/*.py"
               - "tests/**/*.py"
-              - "requirements-lint.txt"
               - "pyproject.toml"
+              - "uv.lock"
               - ".github/workflows/lint.yml"
 
+  # One job per scope rather than one over everything, so a failure names its
+  # own culprit instead of being buried in a single log.
   lint:
-    name: "${{ matrix.name }}"
+    name: "${{ matrix.scope }}"
     needs: "changes"
     if: "needs.changes.outputs.python == 'true'"
     runs-on: "ubuntu-latest"
-
-    # One job per scope rather than one job over everything: the three have
-    # different reasons to exist, so a failure names its own culprit instead of
-    # being buried in a single log. `client` is the vendored library, which is
-    # meant to stand on its own (see its README) and is therefore checked
-    # without the integration around it; `integration` is the Home Assistant
-    # side; `tests` covers both and was, until this workflow, never checked at
-    # all - scripts/lint only ever walked custom_components/.
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: "client"
-            paths: "custom_components/betaseries/betaseries/*.py"
-            extra_requirements: ""
-          # The glob draws the line between the two custom_components scopes:
-          # it matches the integration's own flat modules and never descends
-          # into betaseries/, which the `client` scope owns.
-          - name: "integration"
-            paths: "custom_components/betaseries/*.py"
-            extra_requirements: ""
-          # This scope needs the test stack on top of the linters: pylint
-          # resolves imports for real, and every test module imports pytest -
-          # the Home Assistant ones pytest_homeassistant_custom_component too.
-          # Without it the job fails on E0401 rather than on anything the code
-          # did wrong.
-          - name: "tests"
-            paths: "tests"
-            extra_requirements: "-r requirements-test-integration.txt"
+        scope: "${{ fromJSON(needs.changes.outputs.scopes) }}"
 
     steps:
       - name: "Check out the repository"
         uses: "actions/checkout@v7"
 
-      - name: "Set up Python"
-        uses: "actions/setup-python@v7"
-        with:
-          python-version: "${{ env.PYTHON_VERSION }}"
-          cache: "pip"
-          cache-dependency-path: |
-            requirements-lint.txt
-            requirements-test-integration.txt
+      - name: "Load the project variables"
+        shell: "bash"
+        # .devcontainer/.common-env is the single source of truth for the
+        # integration domain and the client package; scripts/ read it too.
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
 
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@v7"
+        with:
+          enable-cache: true
+
+      # homeassistant is needed by every scope (pylint and pyright resolve the
+      # integration's imports). The tests scope also needs the test stack: every
+      # test module imports pytest, and pylint resolves imports for real.
+      # The default_config packages are not installed: nothing here reaches them.
       - name: "Install the lint toolchain"
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-lint.txt -r requirements.txt ${{ matrix.extra_requirements }}
+          uv sync --frozen --no-default-groups --group lint --group homeassistant \
+            ${{ matrix.scope == 'tests' && '--group test' || '' }}
 
-      # Every check runs even if an earlier lint failed, so one push reports
-      # every problem at once instead of a fix-one-round-trip-at-a-time cycle.
-      # But `success()` (not `!cancelled()`) on each: a failed install must
-      # stop the chain, otherwise every tool below fails redundantly with
-      # "command not found" instead of one clear install failure.
+      - name: "Resolve the scope's paths"
+        id: "paths"
+        run: echo "paths=$(scripts/lint --paths ${{ matrix.scope }})" >> "$GITHUB_OUTPUT"
+
+      # Every check runs even if an earlier one failed, so one push reports every
+      # problem at once. But `success()` on the first: a failed install must stop
+      # the chain instead of failing every tool with "command not found".
       - name: "Lint with Ruff"
         if: "success()"
-        run: ruff check --output-format=github ${{ matrix.paths }}
+        run: uv run --no-sync ruff check --output-format=github ${{ steps.paths.outputs.paths }}
 
       - name: "Format with Ruff"
-        if: "success()"
-        run: ruff format --check --diff ${{ matrix.paths }}
+        if: "!cancelled()"
+        run: uv run --no-sync ruff format --check --diff ${{ steps.paths.outputs.paths }}
 
       - name: "Lint with Pylint"
-        if: "success()"
-        run: pylint ${{ matrix.paths }}
+        if: "!cancelled()"
+        run: uv run --no-sync pylint ${{ steps.paths.outputs.paths }}
 
       - name: "Lint with Pyright"
-        if: "success()"
-        run: pyright ${{ matrix.paths }}
+        if: "!cancelled()"
+        run: uv run --no-sync pyright ${{ steps.paths.outputs.paths }}
 
       - name: "Lint with docstring-linter"
-        if: "success()"
-        run: docstring-linter ${{ matrix.paths }}
+        if: "!cancelled()"
+        run: uv run --no-sync docstring-linter ${{ steps.paths.outputs.paths }}

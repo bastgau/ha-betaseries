@@ -1,4 +1,6 @@
-PROJECT_NAME=ha-betaseries
-PROJECT_ROOT_PATH=/workspaces/ha-betaseries
 INTEGRATION_DOMAIN=betaseries
 INTEGRATION_NAME=BetaSeries
+CLIENT_PACKAGE=betaseries
+CLIENT_TESTS_PATH=tests/betaseries/betaseries
+PRETTIER_EXCLUDES=card,custom_components/betaseries/betaseries/bruno
+PYTHON_VERSION=3.14
