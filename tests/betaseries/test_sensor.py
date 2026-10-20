@@ -106,7 +106,7 @@ def _end_of_local_day(day: date) -> datetime:
     return dt_util.start_of_local_day(day) + timedelta(days=1) - timedelta(seconds=1)
 
 
-def _episode(  # noqa: PLR0913 -- a test builder, every extra argument is an optional knob
+def _episode(
     episode_id: str,
     air_date: date,
     *,

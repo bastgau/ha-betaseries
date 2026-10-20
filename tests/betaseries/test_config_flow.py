@@ -322,7 +322,7 @@ async def test_already_configured_aborts(hass: HomeAssistant) -> None:
 
 async def test_reauth_flow_success(  # pylint: disable=unused-argument
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,  # noqa: ARG001
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Update the existing entry's token on a successful reauth, preserving its other options."""
     entry = MockConfigEntry(
@@ -364,7 +364,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
 
 async def test_reauth_flow_wrong_account_aborts(  # pylint: disable=unused-argument
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,  # noqa: ARG001
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Abort without touching the entry if reauth completes with a different member id."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data={**SAVED_DATA, "access_token": "old-token"})
@@ -545,7 +545,7 @@ async def test_password_credentials_rejects_invalid_locale(hass: HomeAssistant) 
 
 async def test_password_reauth_flow_success(  # pylint: disable=unused-argument
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,  # noqa: ARG001
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Reauthenticate an existing entry through login/password instead of the device flow."""
     entry = MockConfigEntry(
@@ -573,7 +573,7 @@ async def test_password_reauth_flow_success(  # pylint: disable=unused-argument
 
 async def test_password_reauth_flow_wrong_account_aborts(  # pylint: disable=unused-argument
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,  # noqa: ARG001
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Abort without touching the entry if password reauth completes with a different member id."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42", data={**SAVED_DATA, "access_token": "old-token"})
