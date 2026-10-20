@@ -256,7 +256,7 @@ async def test_cached_episodes_come_back_with_an_unknown_watch_status(
 
 async def test_past_months_are_cached_and_not_refetched(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Fetch past months once, then reuse the stored copy on subsequent refreshes."""
     entry = MockConfigEntry(
@@ -282,7 +282,7 @@ async def test_past_months_are_cached_and_not_refetched(
 
 async def test_past_months_persist_across_coordinator_instances(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Persist the cached past months so a new coordinator instance reuses them."""
     entry = MockConfigEntry(
@@ -307,7 +307,7 @@ async def test_past_months_persist_across_coordinator_instances(
 
 async def test_clear_planning_cache_refetches_cached_past_months(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Force a refetch of every month, including cached past ones, via the "Refresh planning" button."""
@@ -338,7 +338,7 @@ async def test_clear_planning_cache_refetches_cached_past_months(
 async def test_cache_prunes_months_that_slid_out_of_window(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Drop a cached past month once it slides outside months_behind, even with nothing missing.
 
@@ -463,7 +463,7 @@ def _show_with_poster(show_id: str, poster: str | None, rating: float = 0.0) -> 
 
 async def test_show_images_are_fetched_in_a_single_bulk_call(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Resolve every show of the window's poster with one /shows/display call."""
     entry = MockConfigEntry(
@@ -488,7 +488,7 @@ async def test_show_images_are_fetched_in_a_single_bulk_call(
 
 async def test_show_images_are_cached_and_not_refetched(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Fetch a show's poster once, then reuse the stored copy on later refreshes."""
     entry = MockConfigEntry(
@@ -513,7 +513,7 @@ async def test_show_images_are_cached_and_not_refetched(
 
 async def test_shows_without_any_image_are_cached_too(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Remember shows that have no poster, so they are not refetched every time.
 
@@ -639,7 +639,7 @@ async def test_show_cache_entries_without_a_rating_are_refetched(
 
 async def test_show_images_failure_does_not_fail_the_refresh(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Keep the planning usable when only the poster call fails.
 
