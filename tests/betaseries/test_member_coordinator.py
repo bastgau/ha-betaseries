@@ -100,7 +100,7 @@ async def test_update_success(hass: HomeAssistant) -> None:
 
 async def test_first_refresh_fetches_badges(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Fetch badge details on the first refresh, with an empty cache."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
@@ -118,7 +118,7 @@ async def test_first_refresh_fetches_badges(
 
 async def test_unchanged_badge_count_is_not_refetched(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Reuse the cached badge details when stats.badges hasn't changed since the last refresh."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
@@ -139,7 +139,7 @@ async def test_unchanged_badge_count_is_not_refetched(
 
 async def test_changed_badge_count_triggers_refetch(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Refetch badge details when stats.badges differs from the last known count."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
@@ -167,7 +167,7 @@ async def test_changed_badge_count_triggers_refetch(
 
 async def test_badges_persist_across_coordinator_instances(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
 ) -> None:
     """Persist the cached badge details so a new coordinator instance reuses them."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="42")
@@ -221,7 +221,7 @@ async def test_incompatible_badges_cache_version_is_discarded_not_crashed(
 
 async def test_clear_badges_cache_refetches_even_with_unchanged_count(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass_storage: dict[str, Any],  # pylint: disable=unused-argument
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Force a refetch of badge details via the "Refresh badges" button, even if the count is unchanged.
