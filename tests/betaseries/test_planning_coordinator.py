@@ -31,8 +31,8 @@ from custom_components.betaseries.const import (
 )
 from custom_components.betaseries.coordinator import (
     PlanningCoordinator,
-    _past_months,  # pyright: ignore[reportPrivateUsage]
-    _upcoming_months,  # pyright: ignore[reportPrivateUsage]
+    _past_months,
+    _upcoming_months,
 )
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
