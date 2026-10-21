@@ -22,9 +22,9 @@ from custom_components.betaseries.betaseries.exceptions import (
 )
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.const import CONF_LOCALE, CONF_MEMBER_SCAN_INTERVAL, DOMAIN
+import probatio
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, CONF_PASSWORD, CONF_USERNAME
@@ -401,7 +401,7 @@ async def test_device_credentials_rejects_invalid_locale(hass: HomeAssistant) ->
     result = await _open_menu(hass)
     result = await _choose_device(hass, result["flow_id"])
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.config_entries.flow.async_configure(result["flow_id"], {**DEVICE_INPUT, CONF_LOCALE: "es"})
 
 
@@ -422,7 +422,7 @@ async def test_reauth_flow_defaults_locale_to_entrys_current_option(hass: HomeAs
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_credentials"
     # Not a dict comprehension over every key: api_key/client_secret have no
-    # default (vol.UNDEFINED, not callable), unlike the options-flow schema.
+    # default (probatio.UNDEFINED, not callable), unlike the options-flow schema.
     assert result["data_schema"] is not None
     locale_key = next(key for key in result["data_schema"].schema if key.schema == CONF_LOCALE)
     assert locale_key.default() == "en"
@@ -539,7 +539,7 @@ async def test_password_credentials_rejects_invalid_locale(hass: HomeAssistant) 
     result = await _open_menu(hass)
     result = await _choose_password(hass, result["flow_id"])
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.config_entries.flow.async_configure(result["flow_id"], {**PASSWORD_INPUT, CONF_LOCALE: "es"})
 
 
