@@ -179,9 +179,6 @@ class Client:  # pylint: disable=too-many-public-methods
             response (aiohttp.ClientResponse): The response to check.
             action (str): Present-tense description of the request, used in the error message.
 
-        Returns:
-            None
-
         Raises:
             AuthError: If the access token was rejected.
             NotWatchedError: If the target episode/season is not marked as watched.
@@ -288,9 +285,6 @@ class Client:  # pylint: disable=too-many-public-methods
             action (str): Present-tense description of the request, used in error messages.
             data (dict[str, str]): Form-urlencoded body fields for this request.
 
-        Returns:
-            None
-
         Raises:
             Error: If the request failed, BetaSeries being unreachable included. _raise_for_error() narrows a rejected api_key/access token to AuthError, and a failed watched-precondition to NotWatchedError.
 
@@ -317,9 +311,6 @@ class Client:  # pylint: disable=too-many-public-methods
             endpoint (str): Path to request, appended to BASE_URL.
             action (str): Present-tense description of the request, used in error messages.
             data (dict[str, str]): Form-urlencoded body fields for this request.
-
-        Returns:
-            None
 
         Raises:
             Error: If the request failed, BetaSeries being unreachable included. _raise_for_error() narrows a rejected api_key/access token to AuthError, and a failed watched-precondition to NotWatchedError.
@@ -704,9 +695,6 @@ class Client:  # pylint: disable=too-many-public-methods
         Args:
             show_id (str): BetaSeries show id to add.
 
-        Returns:
-            None
-
         """
         await self._post(SHOWS_SHOW_ENDPOINT, "add show", {"id": show_id})
 
@@ -720,9 +708,6 @@ class Client:  # pylint: disable=too-many-public-methods
         Args:
             show_id (str): BetaSeries show id to remove.
 
-        Returns:
-            None
-
         """
         await self._delete(SHOWS_SHOW_ENDPOINT, "remove show", {"id": show_id})
 
@@ -734,9 +719,6 @@ class Client:  # pylint: disable=too-many-public-methods
 
         Args:
             episode_ids (Iterable[str]): BetaSeries episode ids to mark as watched.
-
-        Returns:
-            None
 
         """
         await self._post(EPISODES_WATCHED_ENDPOINT, "mark episodes watched", {"id": ",".join(episode_ids)})
@@ -750,9 +732,6 @@ class Client:  # pylint: disable=too-many-public-methods
 
         Args:
             episode_ids (Iterable[str]): BetaSeries episode ids to mark as unwatched.
-
-        Returns:
-            None
 
         """
         await self._delete(EPISODES_WATCHED_ENDPOINT, "mark episodes unwatched", {"id": ",".join(episode_ids)})
@@ -768,9 +747,6 @@ class Client:  # pylint: disable=too-many-public-methods
             episode_ids (Iterable[str]): BetaSeries episode ids to rate.
             note (int): Rating from 1 to 5.
 
-        Returns:
-            None
-
         """
         await self._post(EPISODES_NOTE_ENDPOINT, "rate episodes", {"id": ",".join(episode_ids), "note": str(note)})
 
@@ -779,9 +755,6 @@ class Client:  # pylint: disable=too-many-public-methods
 
         Args:
             episode_ids (Iterable[str]): BetaSeries episode ids to unrate.
-
-        Returns:
-            None
 
         """
         await self._delete(EPISODES_NOTE_ENDPOINT, "unrate episodes", {"id": ",".join(episode_ids)})
@@ -793,9 +766,6 @@ class Client:  # pylint: disable=too-many-public-methods
             show_id (str): BetaSeries show id.
             season (int): Season number.
 
-        Returns:
-            None
-
         """
         await self._post(SEASONS_WATCHED_ENDPOINT, "mark season watched", {"id": show_id, "season": str(season)})
 
@@ -805,9 +775,6 @@ class Client:  # pylint: disable=too-many-public-methods
         Args:
             show_id (str): BetaSeries show id.
             season (int): Season number.
-
-        Returns:
-            None
 
         """
         await self._delete(SEASONS_WATCHED_ENDPOINT, "mark season unwatched", {"id": show_id, "season": str(season)})
@@ -825,9 +792,6 @@ class Client:  # pylint: disable=too-many-public-methods
             season (int): Season number.
             note (int): Rating from 1 to 5.
 
-        Returns:
-            None
-
         """
         await self._post(
             SEASONS_NOTE_ENDPOINT, "rate season", {"id": show_id, "season": str(season), "note": str(note)}
@@ -843,9 +807,6 @@ class Client:  # pylint: disable=too-many-public-methods
             show_id (str): BetaSeries show id.
             season (int): Season number.
 
-        Returns:
-            None
-
         """
         await self._delete(SEASONS_NOTE_ENDPOINT, "unrate season", {"id": show_id, "season": str(season)})
 
@@ -856,9 +817,6 @@ class Client:  # pylint: disable=too-many-public-methods
             show_id (str): BetaSeries show id.
             note (int): Rating from 1 to 5.
 
-        Returns:
-            None
-
         """
         await self._post(SHOWS_NOTE_ENDPOINT, "rate show", {"id": show_id, "note": str(note)})
 
@@ -868,19 +826,11 @@ class Client:  # pylint: disable=too-many-public-methods
         Args:
             show_id (str): BetaSeries show id.
 
-        Returns:
-            None
-
         """
         await self._delete(SHOWS_NOTE_ENDPOINT, "unrate show", {"id": show_id})
 
     async def delete_token(self) -> None:
-        """Destroy the active access token (POST /members/destroy).
-
-        Returns:
-            None
-
-        """
+        """Destroy the active access token (POST /members/destroy)."""
         await self._post(MEMBERS_DESTROY_ENDPOINT, "delete token", {})
 
     @staticmethod

@@ -122,9 +122,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) 
         hass (HomeAssistant): The Home Assistant instance.
         entry (BetaSeriesConfigEntry): The config entry being removed.
 
-    Returns:
-        None
-
     """
     for version, key_prefix in CACHE_STORES:
         # async_remove() already suppresses FileNotFoundError, so caches this

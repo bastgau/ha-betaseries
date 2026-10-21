@@ -35,9 +35,6 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         entry (BetaSeriesConfigEntry): The config entry being set up.
         async_add_entities (AddEntitiesCallback): Callback to register the new entity.
 
-    Returns:
-        None
-
     """
     async_add_entities([BetaSeriesCalendar(entry.runtime_data.planning, CALENDAR_DESCRIPTION)])
 

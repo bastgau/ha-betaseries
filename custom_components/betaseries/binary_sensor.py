@@ -60,9 +60,6 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         entry (BetaSeriesConfigEntry): The config entry being set up.
         async_add_entities (AddEntitiesCallback): Callback to register the new entities.
 
-    Returns:
-        None
-
     """
     coordinator = entry.runtime_data.member
     async_add_entities(BetaSeriesBinarySensor(coordinator, description) for description in BINARY_SENSOR_DESCRIPTIONS)
