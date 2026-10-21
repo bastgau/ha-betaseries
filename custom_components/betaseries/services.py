@@ -199,9 +199,6 @@ async def _mark_episode_watched(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -218,9 +215,6 @@ async def _mark_episode_unwatched(call: ServiceCall) -> None:
 
     Args:
         call (ServiceCall): The service call data.
-
-    Returns:
-        None
 
     """
     entry = _get_entry(call.hass, call)
@@ -239,9 +233,6 @@ async def _rate_episode(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -256,9 +247,6 @@ async def _unrate_episode(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -272,9 +260,6 @@ async def _mark_season_watched(call: ServiceCall) -> None:
 
     Args:
         call (ServiceCall): The service call data.
-
-    Returns:
-        None
 
     """
     entry = _get_entry(call.hass, call)
@@ -293,9 +278,6 @@ async def _mark_season_unwatched(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -313,9 +295,6 @@ async def _rate_season(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -332,9 +311,6 @@ async def _unrate_season(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -349,9 +325,6 @@ async def _rate_show(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -365,9 +338,6 @@ async def _unrate_show(call: ServiceCall) -> None:
 
     Args:
         call (ServiceCall): The service call data.
-
-    Returns:
-        None
 
     """
     entry = _get_entry(call.hass, call)
@@ -449,9 +419,6 @@ async def _add_show(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -472,9 +439,6 @@ async def _remove_show(call: ServiceCall) -> None:
 
     Args:
         call (ServiceCall): The service call data.
-
-    Returns:
-        None
 
     """
     entry = _get_entry(call.hass, call)
@@ -501,9 +465,6 @@ async def _delete_token(call: ServiceCall) -> None:
     Args:
         call (ServiceCall): The service call data.
 
-    Returns:
-        None
-
     """
     entry = _get_entry(call.hass, call)
     try:
@@ -525,9 +486,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     Args:
         hass (HomeAssistant): The Home Assistant instance.
-
-    Returns:
-        None
 
     """
     # pyright: ignore[reportUnknownMemberType] throughout this function: HA core's

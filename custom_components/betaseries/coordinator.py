@@ -101,9 +101,6 @@ def _log_auth_failure(title: str, err: AuthError) -> None:
         title (str): The config entry's title, to identify which account failed.
         err (AuthError): The error raised by the client, carrying the response's status/body.
 
-    Returns:
-        None
-
     """
     _LOGGER.warning(
         "BetaSeries rejected the stored credentials for %s (%s). A reauthentication "
@@ -457,9 +454,6 @@ class MemberCoordinator(DataUpdateCoordinator["MemberData"]):
         if the count hadn't changed (e.g. a badge's description changed
         without a new badge being earned).
 
-        Returns:
-            None
-
         """
         _LOGGER.debug("Clearing cached badges for %s, forcing a full refetch", self.config_entry.title)
         await self.badges_store.async_remove()
@@ -613,9 +607,6 @@ class PlanningCoordinator(DataUpdateCoordinator[PlanningData]):
         without this, past months (which never change once over) and already
         known show images would keep being served from the store untouched by the
         "Clean planning cache" button.
-
-        Returns:
-            None
 
         """
         _LOGGER.debug("Clearing cached past months for %s, forcing a full refetch", self.config_entry.title)
@@ -839,9 +830,6 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
         need clearing: _async_get_show_images() otherwise serves them from the
         store untouched, and a show whose artwork changed would keep its stale
         one until it left and re-entered the list.
-
-        Returns:
-            None
 
         """
         _LOGGER.debug("Clearing cached show images for %s, forcing a full refetch", self.config_entry.title)

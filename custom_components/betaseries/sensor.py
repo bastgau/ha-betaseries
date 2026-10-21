@@ -415,9 +415,6 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         entry (BetaSeriesConfigEntry): The config entry being set up.
         async_add_entities (AddEntitiesCallback): Callback to register the new entities.
 
-    Returns:
-        None
-
     """
     member_coordinator = entry.runtime_data.member
     planning_coordinator = entry.runtime_data.planning

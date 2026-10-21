@@ -23,7 +23,4 @@ def auto_enable_custom_integrations() -> None:
     dependency for the client tests, which never load a Home Assistant
     instance and would otherwise fail to collect without the plugin.
 
-    Returns:
-        None
-
     """
