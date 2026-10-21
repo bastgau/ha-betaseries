@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/bastgau/ha-betaseries/issues",
   "loggers": ["custom_components.betaseries"],
   "requirements": [],
-  "version": "0.1.0"
+  "version": "0.0.0"
 }
