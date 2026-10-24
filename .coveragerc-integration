@@ -4,11 +4,9 @@
 # --cov can add paths but never remove one, and `omit` is settable from a
 # config file alone.
 #
-# Without it the job measures custom_components/betaseries as a whole, client
-# included, and reports ~82% - not because anything is untested, but because
-# the client is the `client` job's contract and is covered there, to 100%, by
-# its own 153 tests. Measuring it twice would let one job's coverage paper over
-# the other's, which is exactly what splitting them was meant to prevent.
+# The client is the `client` job's contract and is covered there, on its own.
+# Measuring it twice would let one job's coverage paper over the other's, which
+# is exactly what splitting them was meant to prevent.
 [run]
 source = custom_components/betaseries
 branch = True

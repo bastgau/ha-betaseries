@@ -83,11 +83,21 @@ Custom component HACS pour un compte membre BetaSeries.
   (vérifié : encore `vol.Schema` en 2026.9.4, déjà `probatio.Schema` en 2026.10.0).
 - Tooling : ruff/pylint/pyright. `ruff target-version = "py313"` **volontairement** (contourne un bug
   formatter ruff 0.15.x qui casse `except (A, B):` sous py314) ; repasser à py314 quand corrigé.
-- Variables d'env : projet non-secret dans `.devcontainer/.common-env` (committé : `PROJECT_NAME`,
-  `PROJECT_ROOT_PATH`, `INTEGRATION_DOMAIN=betaseries`, `INTEGRATION_NAME=BetaSeries`).
+- Variables d'env : projet non-secret dans `.devcontainer/.common-env` (committé, généré par Copier :
+  `INTEGRATION_DOMAIN=betaseries`, `INTEGRATION_NAME=BetaSeries`, `CLIENT_PACKAGE=betaseries`,
+  `CLIENT_TESTS_PATH`, `PRETTIER_EXCLUDES`, `PYTHON_VERSION`). C'est la source unique que lisent les
+  scripts et les workflows (via `$GITHUB_ENV`).
   **Pas de `.env` racine** (rien ne le consomme ; le `.env` process-env de Bruno vivrait dans `bruno/`,
   et Bruno ne tourne pas dans le devcontainer sauf à installer `@usebruno/cli`). Fichiers statiques
-  (hacs.json, pyproject.toml, manifest.json) + CI = valeurs en dur / bloc `env:` GitHub Actions.
+  (hacs.json, manifest.json) = valeurs en dur.
+- **Environnement de dev partagé** : devcontainer, `scripts/`, workflows `lint`/`test`/`release`/
+  `template-drift`, pre-commit, `pyproject.toml` (groupes uv `homeassistant`, `lint`, `test`,
+  `test-client`) et `.mcp.json` viennent du template Copier
+  [`bastgau/ha-dev-environment`](https://github.com/bastgau/ha-dev-environment) (réponses dans
+  `.copier-answers.yml`). Pour les changer : `copier update`, ou modifier le template - pas à la main
+  dans les fichiers générés, sauf ajout propre à ce dépôt (ex. une entrée de `.mcp.json`). Les
+  dépendances sont gérées par **uv** (`uv.lock`, `scripts/setup`) ; les paquets de `default_config`
+  restent hors du lock, dans `.devcontainer/requirements-default-config.txt`.
 - HACS default store (si soumission) exige : README avec install (HACS + manuel),
   options du config flow, et **table des entités** (entity_id, unité, sens).
 
@@ -123,9 +133,9 @@ chemins, jamais en retrancher un).
   `https://pypi.org/pypi/homeassistant/json`, décrivait l'état **pré**-`9e027ba` et a survécu sans
   être corrigé à la resynchronisation du 2026-08-01, elle-même antérieure). `test.yml` n'appelle
   plus pypi.org et ne passe plus de `homeassistant==<version>` au job : seul
-  `requirements-test-integration.txt` fixe la version, via `pytest-homeassistant-custom-component`
-  **épinglé exactement** (`==0.13.348`, qui tire `homeassistant==2026.7.4` en transitif) plutôt que
-  laissé sans version.
+  `pyproject.toml` fixe la version (groupes `homeassistant` et `test`, qui doivent concorder),
+  avec `pytest-homeassistant-custom-component` **épinglé exactement** (`==0.13.372` au moment de la
+  migration vers uv) plutôt que laissé sans version.
   - Corollaire inversé par rapport à l'ancien texte : **la CI est déterministe** - un run ne rougit
     plus tout seul entre deux commits identiques, mais elle ne dit plus non plus « ça marche-t-il
     avec le HA que les gens font tourner aujourd'hui ». Elle répond « ça marche-t-il avec la version
@@ -139,12 +149,12 @@ chemins, jamais en retrancher un).
     l'est - aucun job ne compare la version pinnée à la dernière stable HA. Vérifier ce fichier
     avant de faire confiance à un run vert comme preuve de compatibilité avec le HA du jour.
 - `scripts/lint [client|integration|tests|src|all]` calque exactement la matrice CI, pour qu'un vert
-  local prédise un vert distant. `scripts/test` lance la suite complète (plancher 95 % via
-  `pyproject.toml`).
+  local prédise un vert distant. `scripts/test` lance les scopes `client` puis `integration`, chacun avec
+  son plancher de 95 % (appliqué par le script : plus d'`addopts` dans `pyproject.toml`).
 - ⚠️ **Toujours valider une modif de CI en venv propre, jamais dans le devcontainer** : celui-ci a
   tout d'installé et masque les dépendances manquantes. C'est exactement comme ça que le périmètre
   `tests` du lint est passé en local tout en étant rouge en CI (ni `pytest` ni
-  `pytest_homeassistant_custom_component` dans `requirements-lint.txt`).
+  `pytest_homeassistant_custom_component` dans le groupe `lint` de l'époque).
 
 ## 3. Authentification - device flow, ou login/mot de passe ✅
 
@@ -605,7 +615,7 @@ custom_components/betaseries/
 ```
 
 Repo root : `hacs.json`, `README.md`, `LICENSE`, `tests/`, `bruno/`, `scripts/`,
-`.coveragerc-integration`, `requirements-{lint,test-client,test-integration}.txt`,
+`.coveragerc-integration`, `pyproject.toml` + `uv.lock`, `.copier-answers.yml`,
 `.github/workflows/` (hassfest, HACS validate, release, **lint, test** - voir §2).
 
 ### manifest.json (réel)

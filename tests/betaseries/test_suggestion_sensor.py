@@ -28,7 +28,7 @@ from custom_components.betaseries.betaseries.watch_list_show import WatchListSho
 from custom_components.betaseries.const import CONF_UPCOMING_MEDIA_CARD, DOMAIN
 from custom_components.betaseries.coordinator import WatchListData
 from custom_components.betaseries.sensor import (
-    _suggestion_of_the_day,  # pyright: ignore[reportPrivateUsage]
+    _suggestion_of_the_day,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 

@@ -56,9 +56,6 @@ async def async_setup_entry(  # pylint: disable=unused-argument
         entry (BetaSeriesConfigEntry): The config entry being set up.
         async_add_entities (AddEntitiesCallback): Callback to register the new entities.
 
-    Returns:
-        None
-
     """
     async_add_entities(
         [
@@ -80,12 +77,7 @@ class BetaSeriesCleanBadgesCacheButton(BetaSeriesEntity, ButtonEntity):  # pyrig
     coordinator: MemberCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     async def async_press(self) -> None:
-        """Clear the cached badge details and refresh now.
-
-        Returns:
-            None
-
-        """
+        """Clear the cached badge details and refresh now."""
         await self.coordinator.async_clear_badges_cache()
 
 
@@ -100,12 +92,7 @@ class BetaSeriesCleanPlanningCacheButton(BetaSeriesEntity, ButtonEntity):  # pyr
     coordinator: PlanningCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     async def async_press(self) -> None:
-        """Clear the cached past months and refresh now.
-
-        Returns:
-            None
-
-        """
+        """Clear the cached past months and refresh now."""
         await self.coordinator.async_clear_planning_cache()
 
 
@@ -120,10 +107,5 @@ class BetaSeriesCleanWatchListCacheButton(BetaSeriesEntity, ButtonEntity):  # py
     coordinator: WatchListCoordinator  # pyright: ignore[reportIncompatibleVariableOverride]
 
     async def async_press(self) -> None:
-        """Clear the cached show images and refresh now.
-
-        Returns:
-            None
-
-        """
+        """Clear the cached show images and refresh now."""
         await self.coordinator.async_clear_watch_list_cache()

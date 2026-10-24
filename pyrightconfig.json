@@ -1,6 +1,7 @@
 {
   "typeCheckingMode": "strict",
   "reportMissingTypeStubs": false,
+  "ignore": ["tests"],
   "executionEnvironments": [
     {
       "root": "tests",
