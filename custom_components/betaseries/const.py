@@ -46,6 +46,14 @@ MIN_SHOWS_LIMIT = 1
 # open dashboard still downloads it.
 MAX_SHOWS_LIMIT = 300
 
+# Show ids sent per GET /shows/display call when fetching artwork, ratings,
+# trailers and genres (see coordinator._async_get_show_details). The API
+# documents no cap on ids per call (none was tested either); 50 was the
+# watch list's own cap before MAX_SHOWS_LIMIT was raised. A larger list thus
+# costs a few more calls - once, since the details are cached - rather than
+# one call whose silently dropped ids would be cached as having no details.
+SHOWS_DISPLAY_BATCH_SIZE = 50
+
 MIN_EPISODES_LIMIT = 1
 MAX_EPISODES_LIMIT = 10
 

@@ -11,7 +11,7 @@ from custom_components.betaseries.betaseries.collection_episode import Collectio
 from custom_components.betaseries.betaseries.collection_show import CollectionShow
 from custom_components.betaseries.betaseries.collection_watch_list_show import CollectionWatchListShow
 from custom_components.betaseries.betaseries.episode import Episode
-from custom_components.betaseries.betaseries.exceptions import Error
+from custom_components.betaseries.betaseries.exceptions import AuthError, Error
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
@@ -25,14 +25,18 @@ from custom_components.betaseries.const import (
     CONF_SHOWS_LIMIT,
     CONF_UPCOMING_MEDIA_CARD,
     DOMAIN,
+    SHOWS_DISPLAY_BATCH_SIZE,
 )
 from custom_components.betaseries.coordinator import WatchListCoordinator
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, STATE_UNAVAILABLE
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from tests.conftest import client_mock
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from homeassistant.core import HomeAssistant
 
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret", "access_token": "token123"}
@@ -178,6 +182,92 @@ async def test_show_images_failure_does_not_fail_the_refresh(hass: HomeAssistant
     assert coordinator.data.images == {}
     assert coordinator.data.total_episodes == 726
     assert coordinator.data.total_shows == 37
+
+
+def _large_watch_list(count: int) -> tuple[CollectionWatchListShow, int, int]:
+    """Build a watch list of `count` shows, more than one /shows/display batch holds."""
+    shows = tuple(
+        WatchListShow(
+            id=str(1000 + index), title=f"Show {index}", remaining=1, poster=None, episodes=CollectionEpisode(())
+        )
+        for index in range(count)
+    )
+    return CollectionWatchListShow(shows), count, count
+
+
+def _shows_for(show_ids: Iterable[str]) -> CollectionShow:
+    """Answer a fetch_shows() call with one show, carrying a poster, per requested id."""
+    return CollectionShow(
+        {
+            show_id: replace(_show_with_images(f"https://pictures.betaseries.com/{show_id}.jpg"), id=show_id)
+            for show_id in show_ids
+        }
+    )
+
+
+async def test_show_details_are_fetched_in_batches(hass: HomeAssistant) -> None:
+    """Split the details of a large watch list into /shows/display calls of SHOWS_DISPLAY_BATCH_SIZE ids."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", options={CONF_SHOWS_LIMIT: 300.0})
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_watch_list.return_value = _large_watch_list(120)
+    mock_client.fetch_shows.side_effect = _shows_for
+
+    coordinator = WatchListCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    batches = [call.args[0] for call in mock_client.fetch_shows.await_args_list]
+    assert [len(batch) for batch in batches] == [SHOWS_DISPLAY_BATCH_SIZE, SHOWS_DISPLAY_BATCH_SIZE, 20]
+    # Every show is asked for exactly once, across all batches.
+    assert sorted(show_id for batch in batches for show_id in batch) == [str(1000 + index) for index in range(120)]
+    assert len(coordinator.data.images) == 120
+
+
+async def test_a_failed_batch_keeps_the_details_of_the_others(hass: HomeAssistant) -> None:
+    """Cache what the successful batches brought, and leave the failed one to be retried."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", options={CONF_SHOWS_LIMIT: 300.0})
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_watch_list.return_value = _large_watch_list(120)
+    mock_client.fetch_shows.side_effect = [
+        _shows_for(str(1000 + index) for index in range(50)),
+        Error("shows endpoint is down"),
+        _shows_for(str(1000 + index) for index in range(100, 120)),
+    ]
+
+    coordinator = WatchListCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is True
+    assert mock_client.fetch_shows.await_count == 3
+    # The second batch is not cached as "no artwork", or it would never be retried.
+    assert set(coordinator.data.images) == {str(1000 + index) for index in (*range(50), *range(100, 120))}
+
+    mock_client.fetch_shows.side_effect = _shows_for
+    await coordinator.async_refresh()
+
+    # Only the batch that failed is asked for again.
+    assert mock_client.fetch_shows.await_args.args[0] == [str(1000 + index) for index in range(50, 100)]
+    assert len(coordinator.data.images) == 120
+
+
+async def test_a_rejected_token_in_a_later_batch_still_asks_for_reauth(hass: HomeAssistant) -> None:
+    """Surface an AuthError from any batch, not only the first, as a reauthentication prompt."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="42", options={CONF_SHOWS_LIMIT: 300.0})
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_watch_list.return_value = _large_watch_list(120)
+    mock_client.fetch_shows.side_effect = [
+        _shows_for(str(1000 + index) for index in range(50)),
+        AuthError("Access token was rejected"),
+    ]
+
+    coordinator = WatchListCoordinator(hass, entry, mock_client)
+    await coordinator.async_refresh()
+
+    assert mock_client.fetch_shows.await_count == 2
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
 
 
 async def _setup(
