@@ -1,0 +1,3 @@
+# The Lovelace card is a fork of a third-party card: left in its upstream layout, so it
+# stays line-comparable with it (see the header of the file).
+custom_components/betaseries/frontend/betaseries-card.js
