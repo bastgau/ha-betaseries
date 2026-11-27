@@ -75,19 +75,19 @@ Custom component HACS pour un compte membre BetaSeries.
   qui importe Home Assistant. Contourner en mettant `custom_components/betaseries` sur `sys.path` est
   pire : le `calendar.py` de l'intégration masque alors le `calendar` de la stdlib, qu'aiohttp importe.
   L'extraction PyPI est donc la seule vraie sortie.
-- Cible : **Home Assistant 2026.10.0 minimum**, **Python 3.14** (devcontainer). Relevé depuis
-  2026.7.0 le 2026-10-16 : HA 2026.10.0 a basculé `data_entry_flow.py`/`async_register` de
+- Cible : **Home Assistant 2026.11.0 minimum** (`hacs.json`), **Python 3.14** (devcontainer).
+  Relevé de 2026.7.0 à 2026.10.0 le 2026-10-16 : HA 2026.10.0 a basculé `data_entry_flow.py`/`async_register` de
   `vol.Schema` vers `probatio.Schema` (nouvelle lib de validation de Frenck, API-compatible avec
   voluptuous) - `config_flow.py`/`services.py` importent donc `probatio` directement (gabarit
   `habitica`/`tado`), qui n'est garanti dépendance de `homeassistant` qu'à partir de cette version
   (vérifié : encore `vol.Schema` en 2026.9.4, déjà `probatio.Schema` en 2026.10.0).
-  - ⚠️ **Ce minimum (`hacs.json`, `"homeassistant": "2026.10.0"`) ne peut plus être testé en CI**
-    (constaté le 2026-11-27). Le job `minimum` de `test.yml` installe
-    `pytest-homeassistant==<version de hacs.json>`, et la première version publiée de
-    `pytest-homeassistant` est **2026.11.0** (vérifié sur PyPI) : l'installation échoue. La réponse
-    Copier `ha_minimum_version` vaut d'ailleurs déjà `2026.11.0` ; `hacs.json` ne l'a pas suivie
-    parce que le template ne le réécrit jamais (`_skip_if_exists`). Relever `hacs.json` à
-    2026.11.0 réglerait la CI, mais c'est une décision produit (on abandonne 2026.10.x) - **non tranchée**.
+  - Puis relevé à **2026.11.0** le 2026-11-27, pour une raison d'outillage et non d'API : le job
+    `minimum` de `test.yml` installe `pytest-homeassistant==<version de hacs.json>`, et la
+    première version publiée de `pytest-homeassistant` est 2026.11.0 (vérifié sur PyPI). Avec
+    2026.10.0, ce job ne pouvait pas s'installer. Aucun code ne requiert 2026.11 : c'est le plus
+    bas minimum qu'on sache **tester**. `hacs.json` étant amorcé une fois par le template
+    (`_skip_if_exists`), il ne suit pas la réponse Copier `ha_minimum_version` (2026.11.0) : à
+    garder alignés à la main.
 - Tooling : ruff/pylint/pyright. `ruff target-version = "py313"` **volontairement** (contourne un bug
   formatter ruff 0.15.x qui casse `except (A, B):` sous py314) ; repasser à py314 quand corrigé.
 - Variables d'env : projet non-secret dans `.devcontainer/.common-env` (committé, généré par Copier :
@@ -138,7 +138,7 @@ comptent au quotidien :
   (`scripts/lint js` : Prettier, `node --check`, ESLint) pour la carte.
 - **`test.yml`** : jobs `client` et `integration`, chacun avec **son propre plancher de
   couverture à 95 %** (`--cov-fail-under=95`). `integration` tourne deux fois : avec le HA du lock
-  (`locked`) et avec le minimum de `hacs.json` (`minimum`) - ce dernier est cassé, voir §2.
+  (`locked`) et avec le minimum de `hacs.json` (`minimum`, voir §2).
 
 ⚠️ **Pas de filtre `paths:` au niveau du workflow, dans ni l'un ni l'autre** (retiré le 2026-08-11).
 Un required status check (branch protection : `client`, `integration`, `tests`) reste bloqué en

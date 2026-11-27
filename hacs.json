@@ -2,7 +2,7 @@
   "name": "BetaSeries",
   "filename": "betaseries.zip",
   "hide_default_branch": true,
-  "homeassistant": "2026.10.0",
+  "homeassistant": "2026.11.0",
   "zip_release": true,
   "render_readme": true
 }
