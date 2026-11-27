@@ -465,6 +465,16 @@ sensors, pas une par sensor.
 montre donc toujours les mêmes séries en A–D (10 sur 38 par défaut). Le paramètre `order`
 (`account` | `smart`) est peut-être la réponse - **non testé**.
 
+`shows_limit` va de 1 à **300** (relevé depuis 50 le 2026-11-27, issue #74 : 71 séries en cours,
+celles regardées n'apparaissaient jamais). 🟡 Hypothèse retenue **sans test** : `/episodes/list`
+accepte `showsLimit` jusqu'à 300 sans plafond caché. Taille mesurée sur l'exemple Bruno (10 séries
+× 2 épisodes) puis **extrapolée** : ~1,4 kB par série, ~2,1 kB avec `upcoming_media_card` - soit
+~400 / ~600 kB à 300 séries, hors recorder mais envoyés à chaque tableau de bord. Relever la borne
+ne change pas l'ordre : c'est une réponse partielle à #74, le tri reste à faire.
+Corollaire : `_async_get_show_details` découpe `/shows/display` en lots de
+`SHOWS_DISPLAY_BATCH_SIZE` (50) identifiants - aucun plafond documenté ni testé, et un id ignoré
+sans erreur serait caché comme « sans détails », jamais refetché.
+
 Arbitrage #1 (amendé) : les sensors « métier » sont tous `enabled` par défaut. Sont **désactivés**
 par défaut : `Calendar event count` et les trois boutons - tous `entity_category: diagnostic`,
 utiles au support, pas à l'usage.
