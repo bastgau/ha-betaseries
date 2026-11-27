@@ -5,7 +5,7 @@
 > Home Assistant. Ce document condense les décisions déjà prises et ce qui reste à faire.
 
 > ⚠️ **Ce fichier est de la prose : il ne casse pas, il ment.** Dernière resynchronisation le
-> **2026-08-01**. Avant lui, il affirmait un `api.py` disparu, un bump de store jamais fait, un
+> **2026-08-01** (§2 resynchronisé le **2026-11-27** : paquet de test, template, carte, CI). Avant lui, il affirmait un `api.py` disparu, un bump de store jamais fait, un
 > capteur qui avait changé de nature et une borne d'options divisée par quatre - le tout sans qu'un
 > seul test ne rougisse. **Sur un point qui décide de quelque chose, vérifier dans le code avant de
 > s'y fier.** Deux erreurs de cette journée viennent exactement de là : un chiffre de trafic
@@ -81,34 +81,64 @@ Custom component HACS pour un compte membre BetaSeries.
   voluptuous) - `config_flow.py`/`services.py` importent donc `probatio` directement (gabarit
   `habitica`/`tado`), qui n'est garanti dépendance de `homeassistant` qu'à partir de cette version
   (vérifié : encore `vol.Schema` en 2026.9.4, déjà `probatio.Schema` en 2026.10.0).
+  - ⚠️ **Ce minimum (`hacs.json`, `"homeassistant": "2026.10.0"`) ne peut plus être testé en CI**
+    (constaté le 2026-11-27). Le job `minimum` de `test.yml` installe
+    `pytest-homeassistant==<version de hacs.json>`, et la première version publiée de
+    `pytest-homeassistant` est **2026.11.0** (vérifié sur PyPI) : l'installation échoue. La réponse
+    Copier `ha_minimum_version` vaut d'ailleurs déjà `2026.11.0` ; `hacs.json` ne l'a pas suivie
+    parce que le template ne le réécrit jamais (`_skip_if_exists`). Relever `hacs.json` à
+    2026.11.0 réglerait la CI, mais c'est une décision produit (on abandonne 2026.10.x) - **non tranchée**.
 - Tooling : ruff/pylint/pyright. `ruff target-version = "py313"` **volontairement** (contourne un bug
   formatter ruff 0.15.x qui casse `except (A, B):` sous py314) ; repasser à py314 quand corrigé.
 - Variables d'env : projet non-secret dans `.devcontainer/.common-env` (committé, généré par Copier :
   `INTEGRATION_DOMAIN=betaseries`, `INTEGRATION_NAME=BetaSeries`, `CLIENT_PACKAGE=betaseries`,
-  `CLIENT_TESTS_PATH`, `PRETTIER_EXCLUDES`, `PYTHON_VERSION`). C'est la source unique que lisent les
-  scripts et les workflows (via `$GITHUB_ENV`).
+  `CLIENT_TESTS_PATH`, `PYTHON_VERSION`, `COVERAGE_FAIL_UNDER`). C'est la source unique que lisent
+  les scripts et les workflows (via `$GITHUB_ENV`). Il n'y a **plus** de `PRETTIER_EXCLUDES` : les
+  exclusions Prettier sont codées en dur dans `scripts/lint` et `.pre-commit-config.yaml` (fichiers
+  du template, qui excluent encore un `card/` disparu), complétées par un `.prettierignore` propre à
+  ce dépôt pour la carte (voir plus bas).
   **Pas de `.env` racine** (rien ne le consomme ; le `.env` process-env de Bruno vivrait dans `bruno/`,
   et Bruno ne tourne pas dans le devcontainer sauf à installer `@usebruno/cli`). Fichiers statiques
   (hacs.json, manifest.json) = valeurs en dur.
-- **Environnement de dev partagé** : devcontainer, `scripts/`, workflows `lint`/`test`/`release`/
-  `template-drift`, pre-commit, `pyproject.toml` (groupes uv `homeassistant`, `lint`, `test`,
-  `test-client`) et `.mcp.json` viennent du template Copier
+- **Environnement de dev partagé** : devcontainer, `scripts/`, les workflows de `.github/workflows/`,
+  pre-commit, `commitlint`, `pyproject.toml` (groupes uv `homeassistant`, `lint`, `test`,
+  `test-client`), `.mcp.json` et `.claude/` viennent du template Copier
   [`bastgau/ha-dev-environment`](https://github.com/bastgau/ha-dev-environment) (réponses dans
-  `.copier-answers.yml`). Pour les changer : `copier update`, ou modifier le template - pas à la main
-  dans les fichiers générés, sauf ajout propre à ce dépôt (ex. une entrée de `.mcp.json`). Les
-  dépendances sont gérées par **uv** (`uv.lock`, `scripts/setup`) ; les paquets de `default_config`
-  restent hors du lock, dans `.devcontainer/requirements-default-config.txt`.
+  `.copier-answers.yml`, version `v0.26.0`). Pour les changer : `copier update`, ou modifier le
+  template - pas à la main dans les fichiers générés, sauf ajout propre à ce dépôt (ex. une entrée de
+  `.mcp.json`). Les dépendances sont gérées par **uv** (`uv.lock`, `scripts/setup`) ; les paquets de
+  `default_config` restent hors du lock, dans `.devcontainer/requirements-default-config.txt`.
+  - **Amorcés une fois puis propres au dépôt** (`_skip_if_exists` du template) : `README.md`,
+    `hacs.json`, `custom_components/betaseries/__init__.py` et `manifest.json`, `card.py`, la carte
+    `frontend/*-card.js`, `tests/conftest.py`, `tests/test_card.py`... Un `copier update` ne les
+    touche plus : une option du template qui les concerne (ex. `has_card`) demande d'y reporter
+    le changement à la main.
+  - **`has_card: true`** depuis le 2026-11-27 (`copier update --trust --skip-tasks --vcs-ref v0.26.0
+-d has_card=true`) : `card.py` sert `frontend/betaseries-card.js` et l'ajoute à tous les
+    tableaux de bord (`add_extra_js_url`), appelé depuis `async_setup` ; `manifest.json` porte
+    `after_dependencies: ["frontend", "http"]`. Ces deux branchements ont été faits à la main (voir
+    ci-dessus). La carte est le fork d'`upcoming-media-card` (doc : `docs/card.md`), déclaré sous
+    `betaseries-card` / `betaseries-card-editor` pour cohabiter avec la carte d'origine - ses
+    classes JS gardent les noms d'origine (`UpcomingMediaCard`, préfixes `umc`), **choix assumé**.
+    Elle est **exclue de Prettier** (`.prettierignore`) pour rester comparable ligne à ligne avec
+    l'original ; ESLint et `node --check` s'y appliquent.
+  - `commitlint` n'accepte **qu'une ligne de titre** `type: sujet` (pas de portée, de corps ni de
+    pied de page) : pas de trailer `Co-Authored-By` possible.
 - HACS default store (si soumission) exige : README avec install (HACS + manuel),
   options du config flow, et **table des entités** (entity_id, unité, sens).
 
 ### CI ✅
 
-Cinq workflows. Les deux qui comptent au quotidien :
+Neuf workflows, tous issus du template (`lint`, `test`, `release`, `stale`, `sync-labels`,
+`template-drift`, `template-update`, `validate-for-hacs`, `validate-with-hassfest`). Les deux qui
+comptent au quotidien :
 
 - **`lint.yml`** : 5 outils (ruff check, ruff format, pylint, pyright, docstring-linter) × 3
-  périmètres (`client`, `integration`, `tests`), en matrice.
-- **`test.yml`** : 2 jobs, `client` et `integration`, chacun avec **son propre plancher de
-  couverture à 95 %** (`--cov-fail-under=95`).
+  périmètres (`client`, `integration`, `tests`), en matrice ; plus un job `javascript`
+  (`scripts/lint js` : Prettier, `node --check`, ESLint) pour la carte.
+- **`test.yml`** : jobs `client` et `integration`, chacun avec **son propre plancher de
+  couverture à 95 %** (`--cov-fail-under=95`). `integration` tourne deux fois : avec le HA du lock
+  (`locked`) et avec le minimum de `hacs.json` (`minimum`) - ce dernier est cassé, voir §2.
 
 ⚠️ **Pas de filtre `paths:` au niveau du workflow, dans ni l'un ni l'autre** (retiré le 2026-08-11).
 Un required status check (branch protection : `client`, `integration`, `tests`) reste bloqué en
@@ -132,23 +162,26 @@ chemins, jamais en retrancher un).
   `9e027ba` - ce que ce paragraphe affirmait avant, une résolution dynamique via
   `https://pypi.org/pypi/homeassistant/json`, décrivait l'état **pré**-`9e027ba` et a survécu sans
   être corrigé à la resynchronisation du 2026-08-01, elle-même antérieure). `test.yml` n'appelle
-  plus pypi.org et ne passe plus de `homeassistant==<version>` au job : seul
-  `pyproject.toml` fixe la version (groupes `homeassistant` et `test`, qui doivent concorder),
-  avec `pytest-homeassistant-custom-component` **épinglé exactement** (`==0.13.372` au moment de la
-  migration vers uv) plutôt que laissé sans version.
-  - Corollaire inversé par rapport à l'ancien texte : **la CI est déterministe** - un run ne rougit
-    plus tout seul entre deux commits identiques, mais elle ne dit plus non plus « ça marche-t-il
-    avec le HA que les gens font tourner aujourd'hui ». Elle répond « ça marche-t-il avec la version
-    de HA fixée dans ce fichier ».
-  - Motif du pin, documenté dans le fichier lui-même : laisser
-    `pytest-homeassistant-custom-component` sans contrainte de version fait remonter des **bêtas**
-    HA non publiées (vérifié historiquement : 0.13.351 exigeait `homeassistant==2026.8.0b3`), donc
-    un pin exact vers une release qui précède ce comportement est le seul moyen d'obtenir du stable.
+  plus pypi.org : `pyproject.toml` fixe la version (groupes `homeassistant` et `test`, qui doivent
+  concorder) - aujourd'hui `homeassistant==2026.11.2` et **`pytest-homeassistant==2026.11.2`**.
+  - Depuis le template v0.26.0, le paquet de test est **`pytest-homeassistant`** (paquet de test
+    de Home Assistant core, versionné comme HA), qui remplace `pytest-homeassistant-custom-component`
+    (épinglé à `==0.13.372` avant). Mêmes helpers, autre nom d'import :
+    `pytest_homeassistant.common`. Les tests ont été migrés le 2026-11-27 (commit `ae33555`) -
+    jusque-là, **plus aucun test d'intégration n'était collecté sur `develop`**.
+  - **La CI est déterministe** - un run ne rougit pas tout seul entre deux commits identiques, mais
+    elle ne dit pas « ça marche-t-il avec le HA que les gens font tourner aujourd'hui ». Elle répond
+    « ça marche-t-il avec la version de HA fixée dans ce fichier » (et, via le job `minimum`, avec
+    celle de `hacs.json`).
+  - Motif historique du pin exact : sans contrainte, l'ancien
+    `pytest-homeassistant-custom-component` faisait remonter des **bêtas** HA (0.13.351 exigeait
+    `homeassistant==2026.8.0b3`). `pytest-homeassistant` publie aussi des bêtas (`2026.12.0b*`
+    vérifié sur PyPI) : le pin exact reste nécessaire.
   - ⚠️ Ce pin est un **entretien manuel récurrent**, pas un `TODO` isolé : le fichier dit
     explicitement de le bumper « quand homeassistant est upgradé », mais rien ne rappelle qu'il
     l'est - aucun job ne compare la version pinnée à la dernière stable HA. Vérifier ce fichier
     avant de faire confiance à un run vert comme preuve de compatibilité avec le HA du jour.
-- `scripts/lint [client|integration|tests|src|all]` calque exactement la matrice CI, pour qu'un vert
+- `scripts/lint [client|integration|tests|repo|js|src|all]` calque exactement la matrice CI, pour qu'un vert
   local prédise un vert distant. `scripts/test` lance les scopes `client` puis `integration`, chacun avec
   son plancher de 95 % (appliqué par le script : plus d'`addopts` dans `pyproject.toml`).
 - ⚠️ **Toujours valider une modif de CI en venv propre, jamais dans le devcontainer** : celui-ci a
