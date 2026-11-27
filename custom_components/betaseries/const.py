@@ -39,7 +39,12 @@ DEFAULT_SHOWS_LIMIT = 10
 DEFAULT_EPISODES_LIMIT = 2
 
 MIN_SHOWS_LIMIT = 1
-MAX_SHOWS_LIMIT = 50
+# High enough to list a whole account (issue #74: 71 shows were cut off by the
+# former cap of 50). The list stays alphabetical, so a low limit still hides
+# the end of it. The `shows` attribute weighs about 1.4 kB per show (about
+# 2.1 kB with upcoming_media_card): it is kept out of the recorder, but every
+# open dashboard still downloads it.
+MAX_SHOWS_LIMIT = 300
 
 MIN_EPISODES_LIMIT = 1
 MAX_EPISODES_LIMIT = 10

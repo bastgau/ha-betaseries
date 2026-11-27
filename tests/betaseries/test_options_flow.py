@@ -178,3 +178,60 @@ async def test_options_flow_rejects_out_of_range_values(
 
     with pytest.raises(probatio.Invalid):
         await hass.config_entries.options.async_configure(result["flow_id"], user_input)
+
+
+def _sectioned_input(**episodes: object) -> dict[str, object]:
+    """Build a valid sectioned form submission, overriding Watch list fields.
+
+    The form nests its fields under sections: a flat submission is rejected
+    whatever its values, so it cannot tell a bound apart from a wrong shape.
+    """
+    return {
+        SECTION_MEMBER: {CONF_MEMBER_SCAN_INTERVAL: 15},
+        SECTION_PLANNING: {
+            CONF_PLANNING_SCAN_INTERVAL: 60,
+            CONF_PLANNING_MONTHS_BEHIND: 2,
+            CONF_PLANNING_MONTHS_AHEAD: 2,
+        },
+        SECTION_EPISODES: {
+            CONF_EPISODES_SCAN_INTERVAL: 30,
+            CONF_SHOWS_LIMIT: 10,
+            CONF_EPISODES_LIMIT: 2,
+            CONF_UPCOMING_MEDIA_CARD: False,
+            **episodes,
+        },
+        CONF_LOCALE: DEFAULT_LOCALE,
+    }
+
+
+@pytest.mark.parametrize("value", [1, 300])
+async def test_options_flow_accepts_shows_limit_bounds(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,  # pylint: disable=redefined-outer-name
+    value: int,
+) -> None:
+    """Accept a shows_limit at either end of its range, up to a whole account (issue #74)."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _sectioned_input(**{CONF_SHOWS_LIMIT: value})
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_SHOWS_LIMIT] == value
+
+
+@pytest.mark.parametrize("value", [0, 301])
+async def test_options_flow_rejects_shows_limit_out_of_range(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,  # pylint: disable=redefined-outer-name
+    value: int,
+) -> None:
+    """Reject a shows_limit just outside its 1-300 range."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    with pytest.raises(probatio.Invalid, match=CONF_SHOWS_LIMIT):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], _sectioned_input(**{CONF_SHOWS_LIMIT: value})
+        )
