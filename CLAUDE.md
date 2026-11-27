@@ -93,10 +93,9 @@ Custom component HACS pour un compte membre BetaSeries.
 - Variables d'env : projet non-secret dans `.devcontainer/.common-env` (committé, généré par Copier :
   `INTEGRATION_DOMAIN=betaseries`, `INTEGRATION_NAME=BetaSeries`, `CLIENT_PACKAGE=betaseries`,
   `CLIENT_TESTS_PATH`, `PYTHON_VERSION`, `COVERAGE_FAIL_UNDER`). C'est la source unique que lisent
-  les scripts et les workflows (via `$GITHUB_ENV`). Il n'y a **plus** de `PRETTIER_EXCLUDES` : les
-  exclusions Prettier sont codées en dur dans `scripts/lint` et `.pre-commit-config.yaml` (fichiers
-  du template, qui excluent encore un `card/` disparu), complétées par un `.prettierignore` propre à
-  ce dépôt pour la carte (voir plus bas).
+  les scripts et les workflows (via `$GITHUB_ENV`). Les exclusions Prettier sont codées en dur dans
+  `scripts/lint` et `.pre-commit-config.yaml` (fichiers du template), complétées par un
+  `.prettierignore` propre à ce dépôt pour la carte (voir plus bas).
   **Pas de `.env` racine** (rien ne le consomme ; le `.env` process-env de Bruno vivrait dans `bruno/`,
   et Bruno ne tourne pas dans le devcontainer sauf à installer `@usebruno/cli`). Fichiers statiques
   (hacs.json, manifest.json) = valeurs en dur.
