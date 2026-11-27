@@ -559,8 +559,8 @@ premier épisode du planning - trié par date, remontant des mois en arrière - 
       fetchés ; mois sortis de la fenêtre → purgés. **`seen` n'est pas persisté** (voir §4).
     - ⚠️ **Les deux directions n'ont pas le même coût** : un mois passé est fetché une fois puis
       servi du disque, un mois futur est refetché **à chaque refresh**. Le coût par refresh est
-      donc `months_ahead + 1`, et `months_behind` n'y entre pas. D'où le plafond bas (3) sur
-      `MAX_PLANNING_MONTHS_AHEAD`.
+      donc `months_ahead + 1`, et `months_behind` n'y entre pas. D'où le plafond bas (2) sur
+      `MAX_PLANNING_MONTHS_AHEAD`, contre 24 pour `MAX_PLANNING_MONTHS_BEHIND`.
   - **`WatchListCoordinator`** : `GET /episodes/list` (+ `excludes=characters`), **30 min** par
     défaut → le capteur `Shows to catch up on`. Séparé du planning à dessein : le planning est borné
     par sa fenêtre de mois, donc une série dont le dernier épisode non vu est ancien en sortirait ;
