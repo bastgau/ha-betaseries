@@ -3765,3 +3765,13 @@ if (!window.customCards.some(card => card.type === 'betaseries-card')) {
     previewImage: 'https://github.com/custom-cards/upcoming-media-card/blob/master/image.png?raw=true',
   });
 }
+
+// Bump by hand on every change to this file, so the browser console tells which card a dashboard
+// actually loaded (a stale browser cache shows up as an older version).
+const CARD_VERSION = "1.0.0";
+
+console.info(
+  `%c 🐼 BETASERIES-CARD %c Version ${CARD_VERSION} `,
+  "color: white; background: #2196f3; font-weight: 700;",
+  "color: #2196f3; background: white; font-weight: 700;",
+);
