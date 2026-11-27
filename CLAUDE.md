@@ -4,21 +4,17 @@
 > pour BetaSeries (suivi de séries/films), en respectant les normes et la philosophie
 > Home Assistant. Ce document condense les décisions déjà prises et ce qui reste à faire.
 
-> ⚠️ **Ce fichier est de la prose : il ne casse pas, il ment.** Dernière resynchronisation le
-> **2026-08-01** (§2 resynchronisé le **2026-11-27** : paquet de test, template, carte, CI). Avant lui, il affirmait un `api.py` disparu, un bump de store jamais fait, un
-> capteur qui avait changé de nature et une borne d'options divisée par quatre - le tout sans qu'un
-> seul test ne rougisse. **Sur un point qui décide de quelque chose, vérifier dans le code avant de
-> s'y fier.** Deux erreurs de cette journée viennent exactement de là : un chiffre de trafic
-> extrapolé d'une note au lieu du code, et un commentaire de `const.py` qui contredisait ses propres
-> constantes une minute après leur modification.
+> ⚠️ **Ce fichier est de la prose : il ne casse pas, il ment.** Il décrit l'état actuel, pas
+> l'historique (celui-ci est dans `git log`). **Sur un point qui décide de quelque chose, vérifier
+> dans le code avant de s'y fier.**
 
 ## Conventions de travail
 
 - Explications en **français**, commentaires de code **en anglais**.
 - Réponses concises ; distinguer toujours **vérifié** (avec preuve/source) de **déduit/supposé**.
 - Ne rien coder qui touche au comportement produit sans validation de l'utilisateur.
-- **Mesurer plutôt qu'estimer.** Les constats qui ont tenu dans la revue du 2026-08-01 sont ceux
-  vérifiés en exécutant quelque chose ; ceux qui sont tombés étaient extrapolés.
+- **Mesurer plutôt qu'estimer.** Un constat vérifié en exécutant quelque chose vaut mieux qu'un
+  chiffre extrapolé d'une note ou d'un commentaire.
 
 ## Légende de statut
 
@@ -26,11 +22,11 @@
 
 ---
 
-## 1. Périmètre - découpage en versions
+## 1. Périmètre
 
 Custom component HACS pour un compte membre BetaSeries.
 
-**Livré** (v1 → v3, tout est en place pour Show/Episode/Season) :
+**Livré** :
 
 - `sensor` : stats du compte (`/members/infos`), les deux capteurs de dates de sortie
   (`/planning/member`), la liste à rattraper (`/episodes/list`), un capteur diagnostic. Voir §5.
@@ -39,28 +35,21 @@ Custom component HACS pour un compte membre BetaSeries.
 - `button` : trois boutons de purge de cache, désactivés par défaut.
 - `diagnostics` : agrégats uniquement, jamais un titre de série (voir `diagnostics.py`).
 - Auth par device flow ou login/mot de passe (choix au premier écran, voir §3), reauth, OptionsFlow.
-- **v3** : 10 services (marquer/démarquer vu épisode/saison, noter/dénoter épisode/saison/série) -
-  périmètre restreint à Show/Episode/Season (arbitrage #6), routes testées via Bruno avant
-  implémentation. Voir §8. Plus `delete_token`, et `search_shows`/`add_show`/`remove_show`
-  (recherche catalogue depuis la card, voir §8) : **14 services au total**, toutes routes
-  vérifiées via Bruno.
+- **14 services** : 10 sur Show/Episode/Season (marquer/démarquer vu épisode/saison,
+  noter/dénoter épisode/saison/série, arbitrage #6), `delete_token`, et
+  `search_shows`/`add_show`/`remove_show` (recherche catalogue depuis la carte). Toutes les routes
+  sont vérifiées via Bruno. Voir §8.
+- Carte Lovelace `custom:betaseries-card`, servie par l'intégration (§2, `docs/card.md`).
 
 **À faire** :
 
-- **v3 - films** : `rate_movie`/`unrate_movie` laissés de côté faute de besoin identifié - à faire
-  si le besoin se confirme, même démarche (Bruno d'abord). Voir §8.
-- Pas de v4 prévue ; on avisera selon les retours d'usage (`set_movie_status` reste un candidat si
-  le besoin se confirme).
-
-> Le découpage v1/v2/v2bis a servi à cadencer le développement ; il n'a plus de valeur descriptive
-> aujourd'hui et le README ne l'utilise plus. Ne pas s'en servir pour raisonner sur l'existant :
-> se référer à §5 (entités) et §6 (architecture), qui décrivent l'état réel.
+- Voir §11.
 
 ## 2. Distribution & environnement ✅
 
 - Cible : **custom component HACS** (pas le core pour l'instant).
 - Client API **bundlé** dans le sous-paquet `custom_components/betaseries/betaseries/`
-  (pas `api.py` : ce fichier unique a été éclaté en un paquet, une classe par fichier, voir §7).
+  (une classe par fichier, voir §7).
   - Justification vérifiée : la règle « lib externe sur PyPI » est une exigence _core_,
     pas imposée en custom/HACS (dev docs + tuto officiel).
   - Si un jour on vise le core → extraire le sous-paquet en package PyPI.
@@ -76,18 +65,16 @@ Custom component HACS pour un compte membre BetaSeries.
   pire : le `calendar.py` de l'intégration masque alors le `calendar` de la stdlib, qu'aiohttp importe.
   L'extraction PyPI est donc la seule vraie sortie.
 - Cible : **Home Assistant 2026.11.0 minimum** (`hacs.json`), **Python 3.14** (devcontainer).
-  Relevé de 2026.7.0 à 2026.10.0 le 2026-10-16 : HA 2026.10.0 a basculé `data_entry_flow.py`/`async_register` de
-  `vol.Schema` vers `probatio.Schema` (nouvelle lib de validation de Frenck, API-compatible avec
-  voluptuous) - `config_flow.py`/`services.py` importent donc `probatio` directement (gabarit
-  `habitica`/`tado`), qui n'est garanti dépendance de `homeassistant` qu'à partir de cette version
-  (vérifié : encore `vol.Schema` en 2026.9.4, déjà `probatio.Schema` en 2026.10.0).
-  - Puis relevé à **2026.11.0** le 2026-11-27, pour une raison d'outillage et non d'API : le job
-    `minimum` de `test.yml` installe `pytest-homeassistant==<version de hacs.json>`, et la
-    première version publiée de `pytest-homeassistant` est 2026.11.0 (vérifié sur PyPI). Avec
-    2026.10.0, ce job ne pouvait pas s'installer. Aucun code ne requiert 2026.11 : c'est le plus
-    bas minimum qu'on sache **tester**. `hacs.json` étant amorcé une fois par le template
-    (`_skip_if_exists`), il ne suit pas la réponse Copier `ha_minimum_version` (2026.11.0) : à
-    garder alignés à la main.
+  - Plancher technique : HA 2026.10.0. `data_entry_flow.py`/`async_register` y utilisent
+    `probatio.Schema` (lib de validation de Frenck, API-compatible avec voluptuous) ;
+    `config_flow.py`/`services.py` importent `probatio` directement (gabarit `habitica`/`tado`),
+    dépendance de `homeassistant` garantie à partir de cette version (vérifié : 2026.9.4 utilise
+    encore `vol.Schema`).
+  - Minimum déclaré 2026.11.0 pour l'outillage, pas pour l'API : le job `minimum` de `test.yml`
+    installe `pytest-homeassistant==<version de hacs.json>`, publié à partir de 2026.11.0 (vérifié
+    sur PyPI). Aucun code ne requiert 2026.11. `hacs.json` est amorcé une fois par le template
+    (`_skip_if_exists`) et ne suit pas la réponse Copier `ha_minimum_version` : les garder alignés
+    à la main.
 - Tooling : ruff/pylint/pyright. `ruff target-version = "py313"` **volontairement** (contourne un bug
   formatter ruff 0.15.x qui casse `except (A, B):` sous py314) ; repasser à py314 quand corrigé.
 - Variables d'env : projet non-secret dans `.devcontainer/.common-env` (committé, généré par Copier :
@@ -112,10 +99,9 @@ Custom component HACS pour un compte membre BetaSeries.
     `frontend/*-card.js`, `tests/conftest.py`, `tests/test_card.py`... Un `copier update` ne les
     touche plus : une option du template qui les concerne (ex. `has_card`) demande d'y reporter
     le changement à la main.
-  - **`has_card: true`** depuis le 2026-11-27 (`copier update --trust --skip-tasks --vcs-ref v0.26.0
--d has_card=true`) : `card.py` sert `frontend/betaseries-card.js` et l'ajoute à tous les
+  - **`has_card: true`** : `card.py` sert `frontend/betaseries-card.js` et l'ajoute à tous les
     tableaux de bord (`add_extra_js_url`), appelé depuis `async_setup` ; `manifest.json` porte
-    `after_dependencies: ["frontend", "http"]`. Ces deux branchements ont été faits à la main (voir
+    `after_dependencies: ["frontend", "http"]`. Ces deux branchements sont manuels (voir
     ci-dessus). La carte est le fork d'`upcoming-media-card` (doc : `docs/card.md`), déclaré sous
     `betaseries-card` / `betaseries-card-editor` pour cohabiter avec la carte d'origine - ses
     classes JS gardent les noms d'origine (`UpcomingMediaCard`, préfixes `umc`), **choix assumé**.
@@ -139,17 +125,14 @@ comptent au quotidien :
   couverture à 95 %** (`--cov-fail-under=95`). `integration` tourne deux fois : avec le HA du lock
   (`locked`) et avec le minimum de `hacs.json` (`minimum`, voir §2).
 
-⚠️ **Pas de filtre `paths:` au niveau du workflow, dans ni l'un ni l'autre** (retiré le 2026-08-11).
-Un required status check (branch protection : `client`, `integration`, `tests`) reste bloqué en
-« Expected — Waiting for status to be reported » si le workflow qui le produit ne se déclenche
-jamais - ce qui arrivait sur toute PR ne touchant aucun `.py` (doc, README, `bruno/`...), puisque
-les deux `on.pull_request.paths` filtraient déjà à ce niveau. Les deux workflows tournent
-maintenant sur chaque push/PR ; un job `changes` (en tête, via `dorny/paths-filter`) calcule si les
-chemins pertinents ont changé et expose `outputs.python`, que `client`/`integration`/`lint`
-consomment via `if: needs.changes.outputs.python == 'true'`. Un job dont le `if` est faux est
-**skipped**, pas absent - GitHub Actions traite un skip comme satisfaisant un required check,
-contrairement à un contexte qui n'est jamais rapporté. La liste de chemins surveillés par
-`paths-filter` dans chaque workflow reprend exactement l'ancien bloc `paths:`.
+⚠️ **Pas de filtre `paths:` au niveau du workflow**, ni dans `lint.yml` ni dans `test.yml`. Un
+required status check (branch protection : `client`, `integration`, `tests`) reste bloqué en
+« Expected — Waiting for status to be reported » si le workflow qui le produit ne se déclenche pas.
+Les deux workflows tournent donc sur chaque push/PR ; un job `changes` (en tête, via
+`dorny/paths-filter`) calcule si les chemins pertinents ont changé et expose ses sorties
+(`python`, `javascript`, `scopes`), que les autres jobs testent dans leur `if:`. Un job dont le `if`
+est faux est **skipped**, pas absent - GitHub Actions traite un skip comme satisfaisant un required
+check, contrairement à un contexte qui n'est jamais rapporté.
 
 Le découpage n'est pas cosmétique : **chaque moitié couvre 100 % de ce qu'elle possède, seule.**
 Si une branche du client finit par n'être atteinte que via un test HA, ça se voit comme une chute
@@ -157,36 +140,26 @@ de couverture au lieu de se noyer dans un run combiné. Le job `integration` uti
 `.coveragerc-integration`, qui soustrait le client de la mesure (`pytest-cov` sait ajouter des
 chemins, jamais en retrancher un).
 
-- **Version de HA épinglée en dur**, pas résolue au run time (bascule faite le 2026-08-06, commit
-  `9e027ba` - ce que ce paragraphe affirmait avant, une résolution dynamique via
-  `https://pypi.org/pypi/homeassistant/json`, décrivait l'état **pré**-`9e027ba` et a survécu sans
-  être corrigé à la resynchronisation du 2026-08-01, elle-même antérieure). `test.yml` n'appelle
-  plus pypi.org : `pyproject.toml` fixe la version (groupes `homeassistant` et `test`, qui doivent
-  concorder) - aujourd'hui `homeassistant==2026.11.2` et **`pytest-homeassistant==2026.11.2`**.
-  - Depuis le template v0.26.0, le paquet de test est **`pytest-homeassistant`** (paquet de test
-    de Home Assistant core, versionné comme HA), qui remplace `pytest-homeassistant-custom-component`
-    (épinglé à `==0.13.372` avant). Mêmes helpers, autre nom d'import :
-    `pytest_homeassistant.common`. Les tests ont été migrés le 2026-11-27 (commit `ae33555`) -
-    jusque-là, **plus aucun test d'intégration n'était collecté sur `develop`**.
+- **Version de HA épinglée en dur** dans `pyproject.toml` (groupes `homeassistant` et `test`, qui
+  doivent concorder) : `homeassistant==2026.11.2` et `pytest-homeassistant==2026.11.2` (paquet de
+  test de Home Assistant core, versionné comme HA ; import `pytest_homeassistant.common`).
+  `test.yml` ne résout aucune version au run time.
   - **La CI est déterministe** - un run ne rougit pas tout seul entre deux commits identiques, mais
     elle ne dit pas « ça marche-t-il avec le HA que les gens font tourner aujourd'hui ». Elle répond
     « ça marche-t-il avec la version de HA fixée dans ce fichier » (et, via le job `minimum`, avec
     celle de `hacs.json`).
-  - Motif historique du pin exact : sans contrainte, l'ancien
-    `pytest-homeassistant-custom-component` faisait remonter des **bêtas** HA (0.13.351 exigeait
-    `homeassistant==2026.8.0b3`). `pytest-homeassistant` publie aussi des bêtas (`2026.12.0b*`
-    vérifié sur PyPI) : le pin exact reste nécessaire.
+  - Pin exact nécessaire : `pytest-homeassistant` publie aussi des bêtas (`2026.12.0b*`, vérifié
+    sur PyPI), qu'une contrainte lâche ferait remonter.
   - ⚠️ Ce pin est un **entretien manuel récurrent**, pas un `TODO` isolé : le fichier dit
     explicitement de le bumper « quand homeassistant est upgradé », mais rien ne rappelle qu'il
     l'est - aucun job ne compare la version pinnée à la dernière stable HA. Vérifier ce fichier
     avant de faire confiance à un run vert comme preuve de compatibilité avec le HA du jour.
 - `scripts/lint [client|integration|tests|repo|js|src|all]` calque exactement la matrice CI, pour qu'un vert
   local prédise un vert distant. `scripts/test` lance les scopes `client` puis `integration`, chacun avec
-  son plancher de 95 % (appliqué par le script : plus d'`addopts` dans `pyproject.toml`).
+  son plancher de 95 % (appliqué par le script, pas par `addopts` dans `pyproject.toml`).
 - ⚠️ **Toujours valider une modif de CI en venv propre, jamais dans le devcontainer** : celui-ci a
-  tout d'installé et masque les dépendances manquantes. C'est exactement comme ça que le périmètre
-  `tests` du lint est passé en local tout en étant rouge en CI (ni `pytest` ni
-  `pytest_homeassistant_custom_component` dans le groupe `lint` de l'époque).
+  tout d'installé et masque les dépendances manquantes d'un groupe uv (un lint vert en local peut
+  être rouge en CI).
 
 ## 3. Authentification - device flow, ou login/mot de passe ✅
 
@@ -210,8 +183,8 @@ Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste minc
 ### Token
 
 - JSON `{access_token, token_type:"bearer"}`, **pas de refresh_token ni expires_in**.
-- **Peut être rejeté** ✅ (vérifié en prod, pas juste supposé) → le reauth flow (déjà prévu, gabarit
-  Tado) prend le relais - voir §3bis pour la signature exacte de ce rejet.
+- **Peut être rejeté** ✅ (vérifié en prod) → le reauth flow (gabarit Tado) prend le relais - voir
+  « Identifiants invalides » ci-dessous pour la signature exacte de ce rejet.
 
 ### Requêtes API (vérifié)
 
@@ -228,8 +201,7 @@ Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste minc
   JSON par défaut** de chaque endpoint (visible seulement en résolvant les `$ref` vers
   `components.parameters`). Envoyé sur chaque requête (`Client._params`), valeur choisie par
   l'utilisateur (`fr`/`en` uniquement, arbitrage #9) - config flow (étape `user`) + OptionsFlow.
-- **Identifiants invalides sur les endpoints authentifiés** ✅ (2 codes vérifiés en prod, via le log
-  ajouté dans `Client._raise_for_error`) : contrairement au device flow (`/oauth/access_token`),
+- **Identifiants invalides sur les endpoints authentifiés** ✅ (2 codes vérifiés en prod) : contrairement au device flow (`/oauth/access_token`),
   un problème d'identifiants sur `/members/infos`, `/planning/member`, `/shows/display`,
   `/shows/episodes`, `/episodes/list` renvoie HTTP **400** (pas 401), avec deux codes distincts
   observés selon la cause :
@@ -249,7 +221,7 @@ Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste minc
   logger d'un module niveau `custom_components.betaseries.betaseries.client` n'est un descendant de
   `custom_components.betaseries` (et donc couvert par le réglage `logger.logs` de l'utilisateur)
   que tant que ce sous-package reste bundlé - si `betaseries/` est un jour extrait en package PyPI
-  (§2, v4), son nom de module changerait complètement (ex. `pybetaseries.client`), cassant cet
+  (§2), son nom de module changerait complètement (ex. `pybetaseries.client`), cassant cet
   héritage ; en gardant tout le logging côté `coordinator.py`, ce risque disparaît.
 - **Rotation de clé/secret** ✅ : BetaSeries ne permet pas de régénérer uniquement le
   `client_secret` d'une application existante - il faut supprimer l'application sur
@@ -290,21 +262,21 @@ Le polling vit dans le client (`betaseries/auth.py`) ; le config flow reste minc
   constructeur, `""` par défaut). Contrairement au device flow, une seule requête bloquante, pas de
   polling - et la réponse porte déjà `user.id`/`user.login`, donc pas de `fetch_member_identity`
   supplémentaire. `config_flow.py` ajoute une première étape `user` en `async_show_menu` (deux
-  options : `device_credentials` - l'ancien formulaire api_key/client_secret/locale, renommé - et
+  options : `device_credentials` - api_key/client_secret/locale - et
   `password_credentials` - api_key/login/password/locale) ; les deux convergent vers
   `_async_create_or_update_entry()` une fois access_token + identité connus. Le menu réapparaît
   aussi bien en reauth qu'après un timeout de device code (plutôt que de retourner directement au
   formulaire device) : un timeout est justement le symptôme qui motive ce second mode, donc autant
   laisser l'utilisateur basculer dessus à ce moment-là plutôt que de ne lui proposer que de
-  réessayer la même chose. Rien n'est persisté de plus qu'avant dans `entry.data` (`api_key` +
-  `access_token` uniquement, quel que soit le mode - ni `client_secret` ni login/mot de passe ne
-  sont stockés).
+  réessayer la même chose. `entry.data` ne contient que `api_key` + `access_token`, quel que
+  soit le mode : ni `client_secret` ni login/mot de passe ne sont stockés.
 
 ### Prérequis utilisateur ✅
 
 - **1 clé API BetaSeries par utilisateur** (`client_id` + `client_secret`), à créer sur le site.
   Non partageable (secret exposé en repo public). À documenter dans le README.
-- Étape 1 du config flow = saisie `api_key` + `client_secret`, avant l'écran de code.
+- Premier écran du config flow : menu device flow / login-mot de passe. Le device flow demande
+  `api_key` + `client_secret` avant l'écran de code.
 
 ### Détails HA vérifiés (source : code HA 2026.8.dev)
 
@@ -333,10 +305,11 @@ movies, streak_days, member_since_days, episodes_per_month, favorite_genre`.
 
 - `date` (`"YYYY-MM-DD"`) → **all-day** (pas d'heure) · `show.title` + `code` (`"S03E04"`) → titre event
 - `title` (nom épisode) → description
-- `user.seen` (bool) → **plus aucune entité ne le lit** (voir le cache ci-dessous). Le calendrier ne l'a jamais filtré (c'est un calendrier de **sorties**), et les deux
+- `user.seen` (bool) → **aucune entité ne le lit** (voir le cache ci-dessous). Le calendrier ne le
+  filtre pas (c'est un calendrier de **sorties**), et les deux
   capteurs `previous_episode_airing` / `next_episode_airing` répondent « qu'est-ce qui est sorti /
-  va sortir », pas « que dois-je regarder ». Seul `diagnostics.py` le compte encore, à titre
-  informatif. La question « que me reste-t-il à voir » est traitée par `/episodes/list` (§4bis)
+  va sortir », pas « que dois-je regarder ». Seul `diagnostics.py` le compte, à titre
+  informatif. La question « que me reste-t-il à voir » est traitée par `/episodes/list` (plus bas).
 - `platform_links[].platform` (`"Netflix"`, `"Apple TV"`) → attribut · `resource_url` → lien
 - `id, show.id, season, episode` → cibles des services
 - `show.description` (synopsis de la série) → présent uniquement sur cet endpoint (absent des
@@ -355,27 +328,24 @@ movies, streak_days, member_since_days, episodes_per_month, favorite_genre`.
   aucun endpoint « episode » ne renvoie directement l'URL de la série elle-même (seulement celle
   de l'épisode, `Episode.resource_url`), d'où ce calcul plutôt qu'une lecture directe.
 - **Cache du planning** (`_episode_to_dict`/`_episode_from_dict`, `PLANNING_STORE_VERSION`) :
-  persiste `show_description`/`show_slug`, et **ne persiste plus `seen`**.
+  persiste `show_description`/`show_slug`, et **ne persiste pas `seen`**.
   - Le cache se justifie par « un mois passé ne change plus » : vrai d'une date de diffusion,
     **faux d'un statut de visionnage**. Un mois caché n'étant jamais refetché, un capteur qui
     lirait `seen` depuis le cache resterait figé sur un épisode déjà regardé pendant toute la
-    fenêtre `months_behind` - d'où le retrait de ce champ de la sérialisation.
+    fenêtre `months_behind` - d'où son absence de la sérialisation.
   - `Episode.seen` est donc `bool | None`, où **`None` veut dire « inconnu », jamais « pas vu »** :
     un filtre doit tester `is False`, pas la véracité. Un mois passé traverse le cycle
     sérialisation → désérialisation **dès le refresh qui le fetch** (écrit puis relu), donc il ne
     porte jamais de `seen`, quelle qu'en soit la provenance.
-  - Pas de bump de version pour ce retrait : les entrées écrites avant portent encore la clé, elle
-    est simplement **ignorée à la lecture** plutôt que crue.
-  - ⚠️ **La discipline de bump n'a jamais été appliquée** : la constante vaut 1 alors que la forme
-    sérialisée a changé au moins deux fois (`episode` → `number`, puis `+show_description/slug`).
-    Le filet (`_CacheStore` jette toute version antérieure) est testé ; le geste qui l'arme ne
-    l'est pas. Y penser à chaque changement de `_episode_to_dict`.
-- ⚠️ Payload lourd (`characters`, `crew`…) et `fields` ne le réduit pas (voir §3) → filtré côté
-  client via `month=YYYY-MM` (vérifié, voir §6/coordinator). Un `month` **antérieur** au mois
-  courant n'est pas supporté par l'API, mais le mois courant lui-même renvoie tout son passé déjà
-  écoulé (vérifié : épisodes datés avant aujourd'hui dans le mois en cours, `seen` vrai ou faux) →
-  le calendrier ne peut pas remonter avant le début du mois courant, mais n'est pas limité au futur
-  strict à l'intérieur de celui-ci.
+  - Une entrée qui porte une clé `seen` la voit **ignorée à la lecture** plutôt que crue.
+  - ⚠️ `PLANNING_STORE_VERSION` vaut 1 alors que la forme sérialisée a déjà changé (`episode` →
+    `number`, ajout de `show_description`/`show_slug`). Le filet (`_CacheStore` jette toute version
+    antérieure) est testé ; le geste qui l'arme ne l'est pas. Bumper la constante à chaque
+    changement de `_episode_to_dict`.
+- ⚠️ Payload lourd (`characters`, `crew`…) et `fields` ne le réduit pas (voir §3) → découpé par
+  mois via `month=YYYY-MM` (vérifié, y compris pour un mois passé : voir §6). Le mois courant
+  renvoie aussi ses jours déjà écoulés (vérifié : épisodes datés avant aujourd'hui, `seen` vrai ou
+  faux).
 
 ### `GET /episodes/list` (vérifié) → repli calendrier / liste à voir.
 
@@ -419,8 +389,8 @@ qui appartient à _quelqu'un d'autre_ (vérifiable à l'en-tête `x-betaseries-k
 URL « publique » juste après un appel authentifié ne prouve rien - forcer un cache MISS.**
 
 Conséquence : **inutilisable en `entity_picture`** (le navigateur du frontend HA charge l'URL sans
-en-tête → image brisée, de façon non déterministe selon l'état du cache Cloudflare). La propriété
-`Episode.images` qui construisait cette URL a été **supprimée** pour cette raison.
+en-tête → image brisée, de façon non déterministe selon l'état du cache Cloudflare). Le client ne
+construit donc **pas** cette URL.
 
 Le seul moyen de servir cette vignette serait un **proxy côté HA** (`HomeAssistantView`, motif de
 `media_player` : `requires_auth = False` + vérification manuelle d'`Entity.access_token`, ~150
@@ -479,9 +449,10 @@ refetchée seulement quand `stats.badges` change - voir §6). Attribut **non enr
 
 ### sensor (source: WatchListCoordinator)
 
-| Entité               | Champ                                                  | state_class | enabled |
-| -------------------- | ------------------------------------------------------ | ----------- | ------- |
-| Shows to catch up on | `total` de `/episodes/list` (nb de séries à rattraper) | measurement | ✅      |
+| Entité                | Champ                                                                   | state_class | enabled |
+| --------------------- | ----------------------------------------------------------------------- | ----------- | ------- |
+| Shows to catch up on  | `total` de `/episodes/list` (nb de séries à rattraper)                  | measurement | ✅      |
+| Suggestion of the day | un épisode à reprendre, tiré une fois par jour parmi les séries listées | -           | ✅      |
 
 Attribut `shows` : les N premières séries avec leurs prochains épisodes (bornes `shows_limit` /
 `episodes_limit`), plus `total_shows` / `total_episodes` qui sont les compteurs **globaux** de
@@ -493,21 +464,17 @@ recorder jette _tous_ les attributs d'une entité au-delà de 16 kB).
 (`entry.options`, défaut `False`) - voir §6/§9 pour le détail. Une seule option pour les cinq
 sensors, pas une par sensor.
 
-⚠️ `/episodes/list` trie les séries **alphabétiquement** et tronque à `shows_limit` : l'attribut
-montre donc toujours les mêmes séries en A–D (10 sur 38 par défaut). Le paramètre `order`
-(`account` | `smart`) est peut-être la réponse - **non testé**.
+⚠️ `/episodes/list` trie les séries **alphabétiquement** et tronque à `shows_limit` : une borne
+inférieure au nombre de séries masque la fin de l'alphabet, et `Suggestion of the day` ne tire que
+parmi les séries listées. Le paramètre `order` (`account` | `smart`) est peut-être la réponse -
+**non testé** (issue #74).
 
-`shows_limit` va de 1 à **300** (relevé depuis 50 le 2026-11-27, issue #74 : 71 séries en cours,
-celles regardées n'apparaissaient jamais). 🟡 Hypothèse retenue **sans test** : `/episodes/list`
-accepte `showsLimit` jusqu'à 300 sans plafond caché. Taille mesurée sur l'exemple Bruno (10 séries
-× 2 épisodes) puis **extrapolée** : ~1,4 kB par série, ~2,1 kB avec `upcoming_media_card` - soit
-~400 / ~600 kB à 300 séries, hors recorder mais envoyés à chaque tableau de bord. Relever la borne
-ne change pas l'ordre : c'est une réponse partielle à #74, le tri reste à faire.
-Corollaire : `_async_get_show_details` découpe `/shows/display` en lots de
-`SHOWS_DISPLAY_BATCH_SIZE` (50) identifiants - aucun plafond documenté ni testé, et un id ignoré
-sans erreur serait caché comme « sans détails », jamais refetché.
+`shows_limit` va de 1 à **300**. 🟡 Hypothèse **non testée** : `/episodes/list` accepte
+`showsLimit` jusqu'à 300 sans plafond caché. Taille mesurée sur l'exemple Bruno (10 séries ×
+2 épisodes) puis **extrapolée** : ~1,4 kB par série, ~2,1 kB avec `upcoming_media_card` - soit
+~400 / ~600 kB à 300 séries, hors recorder mais envoyés à chaque tableau de bord.
 
-Arbitrage #1 (amendé) : les sensors « métier » sont tous `enabled` par défaut. Sont **désactivés**
+Arbitrage #1 : les sensors « métier » sont tous `enabled` par défaut. Sont **désactivés**
 par défaut : `Calendar event count` et les trois boutons - tous `entity_category: diagnostic`,
 utiles au support, pas à l'usage.
 
@@ -515,8 +482,8 @@ utiles au support, pas à l'usage.
 > (pas `total_increasing`) car ils peuvent **diminuer** si on démarque un épisode - `total_increasing`
 > interpréterait toute baisse comme un reset et fausserait les stats. `Membership duration` reste
 > `total_increasing` (strictement monotone).
-> **Note precision** : `Progress` renvoie `77.4699…` → `suggested_display_precision: 1`
-> (idéalement aussi sur `Time to spend` / `Time on TV`).
+> **Note precision** : `suggested_display_precision: 1` sur `Progress` (qui renvoie `77.4699…`),
+> `Time to spend` et `Time on TV`.
 
 ### Les deux capteurs de dates de sortie - miroirs exacts
 
@@ -543,7 +510,8 @@ cachée avec eux (forme `{show_id: {"images": {...}, "rating": 3.89}}`) et ne co
 
 Attributs des deux capteurs : `episode_id`, `show_id`, `code`, `season`, `number`, `title`,
 `show_title`, `platforms`, `resource_url`, plus `show_images` (non enregistré au recorder) et
-`entity_picture` (le poster). `episode_id`/`show_id` sont ce que cibleront les services v3.
+`entity_picture` (le poster). `episode_id`/`show_id` sont les identifiants qu'attendent les
+services (§8).
 Home Assistant n'a pas d'équivalent pour les évènements de `calendar` (`CalendarEvent` n'a pas de
 champ image) : le poster ne s'affiche donc que sur les sensors, pas dans la vue calendrier native.
 
@@ -553,14 +521,14 @@ champ image) : le poster ne s'affiche donc que sur les sensors, pas dans la vue 
 d'un coordinator puis rafraîchit. C'est le **seul** moyen de reforcer un refetch de ce que
 l'intégration considère immuable (détails de badges, mois passés, artwork).
 
-### binary_sensor (source: MemberCoordinator) - v1
+### binary_sensor (source: MemberCoordinator)
 
 | Entité             | Logique                     | enabled                                       |
 | ------------------ | --------------------------- | --------------------------------------------- |
 | Episodes available | stats.episodes_to_watch > 0 | ✅                                            |
 | Movies available   | stats.movies_to_watch > 0   | ✅ (arbitrage #2 : gardé, enabled par défaut) |
 
-### calendar (source: PlanningCoordinator) - v2
+### calendar (source: PlanningCoordinator)
 
 1 event par épisode, all-day, titre `show.title - code`. Ni `async_get_events` (vue calendrier) ni
 la propriété `event` (prochain évènement HA) ne filtrent sur `seen` : c'est un calendrier de
@@ -597,14 +565,16 @@ premier épisode du planning - trié par date, remontant des mois en arrière - 
     défaut → le capteur `Shows to catch up on`. Séparé du planning à dessein : le planning est borné
     par sa fenêtre de mois, donc une série dont le dernier épisode non vu est ancien en sortirait ;
     et cet endpoint porte le `remaining` par série et les totaux globaux, que le planning n'a pas.
-- **Artwork + note + trailer + genres** : helper partagé `_async_get_show_details()`, un appel
-  groupé `GET /shows/display?id=...` pour les séries encore inconnues du cache, par coordinator.
-  Retourne 4 dicts (`images, ratings, trailers, genres`), tous indexés par `show_id`, tous
-  persistés dans le même cache par-show (`_IMAGES_KEY` sert toujours de marqueur « entrée écrite
-  par cette version du cache » - une entrée qui ne l'a pas est retraitée comme manquante,
-  ré-fetchée, sans bump de `*_STORE_VERSION`).
+- **Artwork + note + trailer + genres** : helper partagé `_async_get_show_details()`, qui appelle
+  `GET /shows/display?id=...` pour les séries encore inconnues du cache, par lots de
+  `SHOWS_DISPLAY_BATCH_SIZE` (50) identifiants. Aucun plafond d'ids par appel n'est documenté ni
+  testé, et un id ignoré sans erreur serait caché comme « sans détails », jamais refetché ; un lot
+  en échec n'empêche pas de cacher les autres et sera redemandé. Retourne 4 dicts
+  (`images, ratings, trailers, genres`), tous indexés par `show_id`, tous persistés dans le même
+  cache par-show (`_IMAGES_KEY` marque une entrée au format courant : une entrée qui ne l'a pas
+  est traitée comme manquante et refetchée, sans bump de `*_STORE_VERSION`).
   - ⚠️ **L'appel est dans le `try`** des deux coordinators, et le helper **relaie les `AuthError`**
-    au lieu de les absorber comme les autres `Error` : `AuthError` héritant d'`Error`, tout absorber
+    au lieu de les absorber comme les autres `Error`, quel que soit le lot : `AuthError` héritant d'`Error`, tout absorber
     ferait passer un token rejeté pour un simple souci d'artwork (refresh déclaré réussi, reauth
     jamais demandé).
   - **`trailers`** ✅ : `ShowAdditionalInformation.trailer_url`, déjà une URL HTTPS jouable ou
@@ -640,11 +610,11 @@ custom_components/betaseries/
 ├── manifest.json
 ├── __init__.py         # setup/unload/remove entry, PLATFORMS
 ├── const.py            # options, defauts/bornes, cles + versions de Store
-├── betaseries/         # <- client bundlé, un paquet (pas `api.py`), voir son README
+├── betaseries/         # <- client bundlé, voir son README
 ├── coordinator.py      # Member + Planning + WatchList, _CacheStore, helper shows/display
 ├── config_flow.py      # menu device/password + device flow (gabarit Tado) + timeout + reauth + OptionsFlow
 ├── entity.py           # base entity + DeviceInfo
-├── sensor.py           # 21 sensors (table §5)
+├── sensor.py           # 22 sensors (tables §5)
 ├── binary_sensor.py    # 2 binary sensors
 ├── calendar.py         # CalendarEntity
 ├── button.py           # 3 boutons de purge de cache (diagnostic)
@@ -658,9 +628,9 @@ custom_components/betaseries/
 └── icons.json          # icônes mdi
 ```
 
-Repo root : `hacs.json`, `README.md`, `LICENSE`, `tests/`, `bruno/`, `scripts/`,
-`.coveragerc-integration`, `pyproject.toml` + `uv.lock`, `.copier-answers.yml`,
-`.github/workflows/` (hassfest, HACS validate, release, **lint, test** - voir §2).
+Repo root : `hacs.json`, `README.md`, `LICENSE`, `docs/` (dont `card.md`), `tests/`, `scripts/`,
+`.coveragerc-integration`, `.prettierignore`, `pyproject.toml` + `uv.lock`, `.copier-answers.yml`,
+`.github/workflows/` (voir §2). La collection Bruno vit dans `custom_components/betaseries/betaseries/bruno/`.
 
 ### manifest.json (réel)
 
@@ -668,17 +638,21 @@ Repo root : `hacs.json`, `README.md`, `LICENSE`, `tests/`, `bruno/`, `scripts/`,
 {
   "domain": "betaseries",
   "name": "BetaSeries",
-  "version": "0.1.0",
+  "after_dependencies": ["frontend", "http"],
   "codeowners": ["@bastgau"],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://github.com/bastgau/ha-betaseries",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": []
+  "issue_tracker": "https://github.com/bastgau/ha-betaseries/issues",
+  "loggers": ["custom_components.betaseries"],
+  "requirements": [],
+  "version": "0.0.0"
 }
 ```
 
-## 8. Services - v3 ✅ (Show/Episode/Season livrés, Movies différé)
+## 8. Services ✅
 
 Périmètre : Show, Episode et Season uniquement - Movies laissé de côté (pas de `rate_movie`, pas de
 dossier `bruno/Movies/`) faute de valeur d'automatisation identifiée pour l'instant ; à
@@ -689,7 +663,7 @@ sauvegardée, gabarit `bruno/Planning/member.bru`) avant d'écrire une seule lig
 ce qui a permis de corriger deux points que le spec OpenAPI seul aurait fait supposer à tort
 (voir juste après la table).
 
-| Service (v3)             | Route                      | Paramètres                                                                   | Réponse (succès)                                              |
+| Service                  | Route                      | Paramètres                                                                   | Réponse (succès)                                              |
 | ------------------------ | -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `mark_episode_watched`   | `POST /episodes/watched`   | `episode_id` (**plusieurs**, `id=1,2` séparés par des virgules)              | `{"episodes": [...objets complets...], "errors": []}`         |
 | `mark_episode_unwatched` | `DELETE /episodes/watched` | `episode_id` (plusieurs acceptés côté requête ; réponse toujours singulière) | `{"episode": {...}, "errors": []}`                            |
@@ -726,7 +700,7 @@ identique à un appel réussi juste avant. Tombe dans le cas générique (`HomeA
 
 Arbitrage #8 ✅ : cible uniquement l'`id` BetaSeries (pas de `thetvdb_id` en alternative) - suffisant
 vu que les coordinators exposent déjà cet id pour tout ce qui est actionnable depuis le dashboard
-(cf. v2bis, §5). Ciblage du **compte** via un champ `config_entry` (`ConfigEntrySelector`) sur
+(§5). Ciblage du **compte** via un champ `config_entry` (`ConfigEntrySelector`) sur
 chaque service - pattern standard HA pour une intégration à un device par entrée, calqué sur
 `homeassistant/components/habitica/services.py` (référence déjà citée en §10).
 
@@ -738,17 +712,15 @@ actions de notation (`rate_*`/`unrate_*`) : aucune entité n'affiche la note d'u
 `notes.mean` (moyenne globale) sert au tie-break des deux capteurs de date de sortie, caché avec
 l'artwork sans mécanisme d'invalidation ciblée par série.
 
-Écarté du périmètre v3 (pas de valeur d'automatisation évidente pour un usage HA, cohérent avec
+Hors périmètre (pas de valeur d'automatisation évidente pour un usage HA, cohérent avec
 l'arbitrage #3 de garder le scope serré) : commentaires, tags, collections (premium), sondages,
 amis/blocage, favoris, masquer épisode/saison, marquer téléchargé, et tout ce qui touche aux films
-(voir plus haut). `add_show` (`POST /shows/show`) et `set_movie_status` (`POST /movies/movie`,
-`state`: à voir/vu/pas envie) restent des candidats v4 si le besoin se confirme à l'usage (cas
-d'usage fort identifié : ajouter une série à la liste via une phrase Assist, ex.
-_« Ajoute Severance à ma liste BetaSeries »_).
+(voir plus haut). `set_movie_status` (`POST /movies/movie`, `state`: à voir/vu/pas envie) reste
+un candidat si le besoin se confirme à l'usage.
 
 ### `delete_token` - hors périmètre Show/Episode/Season
 
-Onzième service, à part des dix ci-dessus : il ne cible ni série, ni épisode, ni saison, mais le
+À part des dix ci-dessus : il ne cible ni série, ni épisode, ni saison, mais le
 compte lui-même. `POST /members/destroy` (vérifié via Bruno, `bruno/Members/token-destroy.bru`) -
 détruit le token d'accès actif, sans paramètre. Champ `config_entry` seul (`ConfigEntrySelector`,
 même pattern que les dix autres).
@@ -762,8 +734,7 @@ prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme d�
 
 ### `search_shows` / `add_show` / `remove_show` - catalogue et appartenance au compte ✅
 
-Douzième à quatorzième services, ajoutés pour la recherche de séries depuis la card (voir
-`docs/card.md`). Ils sortent du périmètre « ce que je suis déjà » de tous les autres : ils
+Ils servent la recherche de séries depuis la carte (voir `docs/card.md`). Ils sortent du périmètre « ce que je suis déjà » de tous les autres : ils
 touchent au **catalogue** et à l'appartenance d'une série au compte, pas au visionnage.
 
 | Service        | Route                | Paramètres                         | Réponse                            |
@@ -779,8 +750,7 @@ poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - l
   les items de la card se fait dans la card, seul consommateur qui en a besoin. Aucun refresh de
   coordinator : une recherche ne change rien, et la card l'appelle à chaque frappe débouncée.
 - `add_show` et `remove_show` refreshent **member + watch list**, comme `mark_episode_watched` et
-  pour la même raison (`shows`, `shows_to_watch` et la liste à rattraper bougent). `add_show` sort
-  donc des candidats v4 listés plus haut.
+  pour la même raison (`shows`, `shows_to_watch` et la liste à rattraper bougent).
 - ✅ **Les trois routes sont vérifiées via Bruno** (`bruno/Shows/search.bru`,
   `bruno/Shows/add-show.bru`, `bruno/Shows/remove-show.bru`, tous avec bloc `example` et réponse
   réelle) - l'OpenAPI n'en documentait aucun schéma de réponse. Ce que ça a confirmé :
@@ -800,27 +770,25 @@ poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - l
   que le reflet d'affichage maintenu par Bruno. **Vérifié sur les 37 requêtes de la collection** :
   les 18 GET passent tout en `params:query` (`body: none`), les 17 POST/DELETE tout en
   form-urlencoded, sans une seule exception.
-- Quatre champs ont été ajoutés à `ShowAdditionalInformation` pour ça (`creation`,
-  `broadcast_status`, `platforms`, `in_account`) - tous déjà présents dans le payload
-  `/shows/display`, donc gratuits pour les appelants existants.
+- `ShowAdditionalInformation` porte pour eux `creation`, `broadcast_status`, `platforms` et
+  `in_account` - tous présents dans le payload `/shows/display`, donc gratuits pour les autres
+  appelants.
 
 ## 9. Arbitrages - tous tranchés ✅
 
 1. **Enabled par défaut** : tous les sensors sont `enabled` par défaut (pas de noyau restreint).
-2. **Binary `Movies available`** : gardé en v1, `enabled` par défaut (même traitement que `Episodes available`).
-3. **Périmètre services** : aucun service en v1/v2 ; les services prévus sont livrés en v3.
-4. **Intervalles** : 15 min (member) / 60 min (planning) par défaut, réglables via OptionsFlow.
+2. **Binary `Movies available`** : gardé, `enabled` par défaut (même traitement que `Episodes available`).
+3. **Périmètre services serré** : seulement des actions à valeur d'automatisation (§8).
+4. **Intervalles** : 15 min (member) / 60 min (planning) / 30 min (watch list) par défaut, réglables via OptionsFlow.
 5. **integration_type** : `service` (retenu).
-6. **Périmètre services v3** : livré pour Show/Episode/Season - `mark_episode_watched`/
-   `mark_episode_unwatched`, `rate_episode`/`unrate_episode`, `mark_season_watched`/
-   `mark_season_unwatched`, `rate_season`/`unrate_season`, `rate_show`/`unrate_show`. Movies
-   (`rate_movie`) et `add_show`/`set_movie_status` écartés pour l'instant (candidats v4 selon
-   usage, voir §8).
+6. **Périmètre des services de visionnage** : Show/Episode/Season (les 10 services du tableau
+   §8). Films (`rate_movie`, `set_movie_status`) hors périmètre tant que le besoin n'est pas
+   confirmé.
 7. **Pas de flag `bulk` distinct** : aucune réponse Bruno n'en montre trace (§8) ; "bulk" décrit la
    capacité à passer plusieurs ids par virgules, pas un paramètre séparé.
 8. **Identifiant cible des services** : `id` BetaSeries uniquement, pas de `thetvdb_id` en
    alternative - suffisant vu que les coordinators exposent déjà cet id pour tout ce qui est
-   actionnable (v2bis, §5).
+   actionnable (§5).
 9. **Locale (langue des réponses)** : uniquement `fr`/`en` proposés (`SelectSelector`, pas de champ
    texte libre) - les seules langues où le contenu BetaSeries est fiablement localisé. Collectée à
    l'ajout du compte (étape `device_credentials` ou `password_credentials` du config flow selon le
@@ -850,8 +818,8 @@ poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - l
       qu'à 20+ épisodes tous en A-D.
     - **`flag`** distingue le sens : `True` constant sur les sensors qui listent du non-vu (watch
       list, suggestion), **absent** sur les sensors qui listent des dates de sortie
-      (`Previous/Next episode airing`, `Calendar event count`) - ce dernier groupe n'a d'ailleurs
-      plus `seen` disponible pour les mois servis du cache (§4), un `flag` y serait faux la moitié
+      (`Previous/Next episode airing`, `Calendar event count`) - ce dernier groupe n'a pas
+      `seen` pour les mois servis du cache (§4), un `flag` y serait faux la moitié
       du temps.
     - **`studio` détourné** pour porter les plateformes de streaming (`platforms`, triées
       alphabétiquement, jointes par `" / "`) - la card n'a pas de clé dédiée pour ça, et cette
@@ -869,8 +837,11 @@ poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - l
 
 ## 11. Reste à faire
 
-### La prochaine grosse étape
-
-- **v3 - services pour les films** : `rate_movie`/`unrate_movie` (et `set_movie_status` en v4
-  candidat) restent à faire si le besoin se confirme - voir §8. Même démarche que pour
-  Show/Episode/Season : tester via Bruno (créer `bruno/Movies/`) avant d'écrire une ligne de client.
+- **Tri de la liste à rattraper** (issue #74) : tester `order=smart` sur `/episodes/list` via
+  Bruno - classe-t-il les séries regardées récemment en premier, et avant la coupe `showsLimit` ?
+  Si oui, l'exposer en option (`account` par défaut).
+- **Vérifier via Bruno** les deux hypothèses de §5/§6 : `showsLimit=300` sans plafond caché, et
+  `/shows/display` avec 50 ids par appel.
+- **Services films** : `rate_movie`/`unrate_movie` (et `set_movie_status`) si le besoin se
+  confirme - même démarche : tester via Bruno (créer `bruno/Movies/`) avant d'écrire une ligne de
+  client.
