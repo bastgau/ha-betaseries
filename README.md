@@ -75,7 +75,7 @@ From the integration options, you can adjust afterwards:
 
 - The member stats / planning polling intervals.
 - How many past and future months of episodes the calendar and sensors load (2 months each way by default; up to 24 months back, 2 months ahead).
-- How many shows, and how many episodes per show, the "Shows to catch up on" sensor lists (10 shows x 2 episodes by default).
+- How many shows, and how many episodes per show, the "Shows to catch up on" sensor lists (10 shows x 2 episodes by default, up to 300 shows). Shows are listed alphabetically, so a limit below your number of shows hides the end of the alphabet. A high limit makes the sensor's attributes heavier (about 1.4 kB per show), which every open dashboard downloads.
 - Whether the "Shows to catch up on" and "Calendar event count" sensors expose a `data` attribute for the [upcoming-media-card](https://github.com/custom-cards/upcoming-media-card) Lovelace card (off by default). See [Lovelace cards](#lovelace-cards) below.
 - The preferred language for BetaSeries responses (French or English).
 

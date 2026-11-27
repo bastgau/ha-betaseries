@@ -101,7 +101,7 @@ about an air date, not a watch status.
 **Name:** sensor.betaseries_shows_to_catch_up_on
 **Description:** Number of shows with at least one unseen episode.
 **Unit:** shows
-**Attributes:** The shows themselves, up to the configured `shows_limit` / `episodes_limit` options.
+**Attributes:** The shows themselves, up to the configured `shows_limit` (1–300) / `episodes_limit` options. Shows come in alphabetical order, so a `shows_limit` below `total_shows` leaves out the end of the alphabet. Each listed show weighs about 1.4 kB of attributes (about 2.1 kB with the `upcoming_media_card` option); they are not written to the recorder, but every open dashboard downloads them.
 
 ```json
 {
