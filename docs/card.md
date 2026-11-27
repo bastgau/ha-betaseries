@@ -1,10 +1,10 @@
-# Upcoming Media Card (BetaSeries Fork)
+# BetaSeries card (Upcoming Media Card fork)
 
 A fork of the [Upcoming Media Card](https://github.com/custom-cards/upcoming-media-card) by [Custom Cards for Home Assistant](https://github.com/custom-cards) and contributors.
 
 ## What's different in this fork
 
-This fork adds functionality specific to the [BetaSeries Home Assistant integration](../):
+This fork adds functionality specific to the [BetaSeries Home Assistant integration](../README.md), which serves it as `custom:betaseries-card` - no Lovelace resource to add (see [the README](../README.md#betaseries-card-bundled-fork-of-upcoming-media-card)):
 
 - **Mark episodes as watched**: Click the eye icon to instantly mark an episode as watched in your BetaSeries account.
 - **Unbounded display**: Remove the viewport height restriction that limited card content. Display as many rows as needed without being capped by screen size.
@@ -21,7 +21,7 @@ This fork adds functionality specific to the [BetaSeries Home Assistant integrat
 ### Basic example
 
 ```yaml
-type: custom:upcoming-media-card
+type: custom:betaseries-card
 entity: sensor.betaseries_shows_to_catch_up_on
 device_betaseries: 0a1b2c3d4e5f # Your BetaSeries device (or a config entry id)
 watched_button_style: dark

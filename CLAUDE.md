@@ -616,6 +616,8 @@ custom_components/betaseries/
 ├── binary_sensor.py    # 2 binary sensors
 ├── calendar.py         # CalendarEntity
 ├── button.py           # 3 boutons de purge de cache (diagnostic)
+├── card.py             # sert frontend/betaseries-card.js et l'ajoute a chaque tableau de bord (template, has_card)
+├── frontend/           # betaseries-card.js : fork de upcoming-media-card, hors Prettier (.prettierignore)
 ├── diagnostics.py      # export agrégé, credentials redacted
 ├── services.py         # 14 services : 10 Show/Episode/Season + delete_token + search/add/remove, voir §8
 ├── services.yaml       # champs des 14 services (gabarit habitica)
@@ -729,7 +731,7 @@ prochain cycle planifié (`AuthError` → `ConfigEntryAuthFailed`, mécanisme d�
 ### `search_shows` / `add_show` / `remove_show` - catalogue et appartenance au compte ✅
 
 Douzième à quatorzième services, ajoutés pour la recherche de séries depuis la card (voir
-`card/README.md`). Ils sortent du périmètre « ce que je suis déjà » de tous les autres : ils
+`docs/card.md`). Ils sortent du périmètre « ce que je suis déjà » de tous les autres : ils
 touchent au **catalogue** et à l'appartenance d'une série au compte, pas au visionnage.
 
 | Service        | Route                | Paramètres                         | Réponse                            |

@@ -353,7 +353,7 @@ def _show_to_response(show: Show) -> dict[str, Any]:
     Deliberately neutral - flat scalars and lists, no upcoming-media-card
     vocabulary: a service response is as much for a template, an automation or
     an Assist sentence as for the card, and the card is the one consumer that
-    can afford to do its own mapping (see card/upcoming-media-card.js).
+    can afford to do its own mapping (see frontend/betaseries-card.js).
 
     Args:
         show (Show): A show returned by Client.search_shows().
