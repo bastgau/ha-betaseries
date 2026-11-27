@@ -22,7 +22,7 @@ const UMC_EDITOR_SCHEMA = [
     schema: [
       {
         name: "max",
-        selector: { number: { min: 1, max: 50, mode: "box" } }
+        selector: { number: { min: 1, max: 300, mode: "box" } }
       },
       {
         name: "clock",
@@ -54,7 +54,7 @@ const UMC_EDITOR_SCHEMA = [
   },
   {
     name: "collapse",
-    selector: { number: { min: 1, max: 50, mode: "box" } }
+    selector: { number: { min: 1, max: 300, mode: "box" } }
   },
   {
     // The options this fork adds, kept together and folded away so the editor
