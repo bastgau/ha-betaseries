@@ -20,7 +20,7 @@ from custom_components.betaseries.betaseries.show_additional_information import 
 from custom_components.betaseries.betaseries.show_images import ShowImages
 from custom_components.betaseries.const import DOMAIN
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError

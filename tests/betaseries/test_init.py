@@ -12,7 +12,7 @@ from custom_components.betaseries.betaseries.member_identity import MemberIdenti
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import CACHE_STORES, CONF_LOCALE, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, STATE_UNAVAILABLE

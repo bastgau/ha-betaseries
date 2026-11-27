@@ -20,7 +20,7 @@ from custom_components.betaseries.const import (
 )
 import probatio
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.data_entry_flow import FlowResultType, section

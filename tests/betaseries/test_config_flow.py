@@ -24,7 +24,7 @@ from custom_components.betaseries.betaseries.member_identity import MemberIdenti
 from custom_components.betaseries.const import CONF_LOCALE, CONF_MEMBER_SCAN_INTERVAL, DOMAIN
 import probatio
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, CONF_PASSWORD, CONF_USERNAME

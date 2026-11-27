@@ -14,7 +14,7 @@ from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.const import CONF_PLANNING_MONTHS_BEHIND, DOMAIN
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from homeassistant.util import dt as dt_util

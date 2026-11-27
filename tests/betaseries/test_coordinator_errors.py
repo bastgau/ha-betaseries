@@ -20,7 +20,7 @@ from custom_components.betaseries.betaseries.watch_list_show import WatchListSho
 from custom_components.betaseries.const import DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
