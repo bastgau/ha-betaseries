@@ -3009,7 +3009,6 @@ class UpcomingMediaCard extends HTMLElement {
       }
 
       let visibleBottom = window.innerHeight;
-      const _ancestorLog = [];
       let ancestor = this;
       while (ancestor) {
         if (ancestor !== this) {
@@ -3024,10 +3023,6 @@ class UpcomingMediaCard extends HTMLElement {
             const isGridConstrained = gridRows && gridRows !== 'none' && gridRows !== 'auto';
             const isBounded = hasOverflowClip || hasExplicitHeight || hasMaxHeight || isGridConstrained;
             if (isBounded && aRect.bottom < visibleBottom - 1) {
-              _ancestorLog.push({
-                tag: ancestor.tagName, id: ancestor.id, cls: (ancestor.className || '').toString().slice(0, 40),
-                overflow: oy, height: cs.height, maxH: cs.maxHeight, gridRows: gridRows || '', bottom: Math.round(aRect.bottom)
-              });
               visibleBottom = Math.min(visibleBottom, aRect.bottom);
             }
           } catch (e) { /* skip inaccessible elements */ }
@@ -3048,15 +3043,6 @@ class UpcomingMediaCard extends HTMLElement {
       const bottomSafetyMargin = 8;
       const availableHeight = visibleBottom - contentRect.top - contentPadTop - contentPadBottom - bottomSafetyMargin;
 
-      console.warn('🔲 UMC recalculate:', {
-        windowInnerH: window.innerHeight,
-        visibleBottom: Math.round(visibleBottom),
-        contentTop: Math.round(contentRect.top),
-        padTop: contentPadTop, padBot: contentPadBottom,
-        availableHeight: Math.round(availableHeight),
-        itemCount: items.length,
-        ancestors: _ancestorLog
-      });
       if (availableHeight < 100 && !growWithContent) {
         this.content.style.height = Math.max(200, window.innerHeight - 120) + 'px';
         this.content.style.overflowY = 'hidden';
@@ -3089,13 +3075,6 @@ class UpcomingMediaCard extends HTMLElement {
           this._overflowProvenAvailH = null;
           this._overflowProvenWidth = null;
           this._overflowProvenColWidth = null;
-          console.warn('🔲 UMC overflow state RESET (dims changed)');
-        } else {
-          console.warn('🔲 UMC overflow state PRESERVED (dims stable)', {
-            minCols: this._overflowMinCols,
-            provenCap: this._overflowProvenCapacity,
-            reducedColWidth: this._overflowReducedColWidth
-          });
         }
       }
 
@@ -3224,24 +3203,12 @@ class UpcomingMediaCard extends HTMLElement {
             capacity++;
           } else break;
         }
-        console.warn('🔲 UMC measureCapacity:', {
-          targetCols,
-          measured: capacity,
-          clipBottom: Math.round(clipBottom),
-          safeClip: Math.round(safeClip),
-          cBCR_bottom: Math.round(cBCR.bottom),
-          cPadBot,
-          firstItemBot: children.length > 0 ? Math.round(children[0].getBoundingClientRect().bottom) : 'N/A',
-          lastFitBot: capacity > 0 ? Math.round(children[capacity - 1].getBoundingClientRect().bottom) : 'N/A',
-          firstRejectBot: capacity < children.length ? Math.round(children[capacity].getBoundingClientRect().bottom) : 'all fit'
-        });
         const provenCap = this._overflowProvenCapacity;
         const provenStale = !provenCap
           || Math.abs(availableHeight - (this._overflowProvenAvailH || 0)) > 10
           || Math.abs(containerWidth - (this._overflowProvenWidth || 0)) > 10
           || Math.abs(maxColWidth - (this._overflowProvenColWidth || maxColWidth)) > 10;
         if (!provenStale && capacity > provenCap) {
-          console.warn('🔲 UMC measureCapacity: capped', capacity, '→', provenCap, '(proven)');
           capacity = provenCap;
         }
         return Math.max(capacity, 1);
@@ -3267,11 +3234,6 @@ class UpcomingMediaCard extends HTMLElement {
             }
           }
         });
-        if (trimLog.length > 0) {
-          console.warn('🔲 UMC trimOverflow [' + (label || 'sync') + ']:', { clipBottom: Math.round(clipBottom), tolerantClip: Math.round(tolerantClip), cBCR_bottom: Math.round(cBCR.bottom), cPadBot, trimCount: trimLog.length, trimmed: trimLog.map(t => 'c' + t.col + 'i' + t.item + ':bot=' + t.bottom + '>clip=' + t.tolerantClip).join(', ') });
-        } else {
-          console.warn('🔲 UMC trimOverflow [' + (label || 'sync') + ']: nothing trimmed', { clipBottom: Math.round(clipBottom), tolerantClip: Math.round(tolerantClip), cBCR_bottom: Math.round(cBCR.bottom), cPadBot });
-        }
         return trimLog.length;
       };
 
@@ -3293,12 +3255,6 @@ class UpcomingMediaCard extends HTMLElement {
         const newHeight = Math.min(tallestH, maxHeight);
         if (Math.abs(newHeight - availableHeight) > 0.5) {
           this.content.style.height = newHeight + 'px';
-          console.warn('🔲 UMC tightenHeight:', {
-            tallestH: Math.round(tallestH),
-            availableHeight: Math.round(availableHeight),
-            newHeight: Math.round(newHeight),
-            action: newHeight < availableHeight ? 'shrunk' : 'expanded'
-          });
         }
       };
 
@@ -3350,16 +3306,11 @@ class UpcomingMediaCard extends HTMLElement {
               const cols = this.content.querySelectorAll('.umc-overflow-col');
               let maxVisible = 0;
               let totalHiddenDeferred = 0;
-              const colInfo = Array.from(cols).map((c, i) => {
+              cols.forEach(c => {
                 const kids = Array.from(c.children);
                 const visible = kids.filter(k => !k._umcOverflowHidden);
-                const lastVis = visible.length > 0 ? visible[visible.length - 1] : null;
                 if (visible.length > maxVisible) maxVisible = visible.length;
                 totalHiddenDeferred += kids.filter(k => k._umcOverflowHidden).length;
-                return {
-                  col: i, total: kids.length, visible: visible.length,
-                  lastVisBot: lastVis ? Math.round(lastVis.getBoundingClientRect().bottom) : 'none'
-                };
               });
               if (maxVisible > 0) {
                 this._overflowProvenCapacity = maxVisible;
@@ -3367,7 +3318,6 @@ class UpcomingMediaCard extends HTMLElement {
                 this._overflowProvenWidth = containerWidth;
                 this._overflowProvenColWidth = maxColWidth;
               }
-              console.warn('🔲 UMC POST-PAINT state:', { cols: colInfo, provenCap: this._overflowProvenCapacity, stableAfter: attempts, contentHeight: this.content.style.height });
 
               if (totalHiddenDeferred > 0
                 && this._overflowRecoveryCount < maxPossibleCols + 5) {
@@ -3388,15 +3338,6 @@ class UpcomingMediaCard extends HTMLElement {
                     && targetColWidth < actualColWidth - 10) {
                     this._overflowReducedColWidth = targetColWidth;
                     this._overflowProvenCapacity = null;
-                    console.warn('🔲 UMC RECOVERY: trying narrower columns before escalating', {
-                      attempt: this._overflowRecoveryCount,
-                      currentCols: currentColCount,
-                      actualColWidth,
-                      targetColWidth,
-                      maxVisible,
-                      neededPerCol,
-                      hidden: totalHiddenDeferred
-                    });
                     recalculate(true);
                     return;
                   }
@@ -3407,12 +3348,6 @@ class UpcomingMediaCard extends HTMLElement {
                   this._overflowMinCols = currentColCount + 1;
                 }
                 this._overflowProvenCapacity = null;
-                console.warn('🔲 UMC RECOVERY: items hidden after paint, need more columns', {
-                  attempt: this._overflowRecoveryCount,
-                  nextMinCols: this._overflowMinCols,
-                  hidden: totalHiddenDeferred,
-                  totalItems: items.length
-                });
                 recalculate(true);
                 return;
               }
@@ -3430,7 +3365,6 @@ class UpcomingMediaCard extends HTMLElement {
 
         const capacity = measureCapacity(targetCols);
         if (capacity < perCol) {
-          console.warn('🔲 UMC pre-check SKIP:', { targetCols, perCol, capacity });
           continue;
         }
 
@@ -3441,21 +3375,8 @@ class UpcomingMediaCard extends HTMLElement {
         const syncTrimmed = trimOverflow('sync');
 
         if (syncTrimmed > 0) {
-          console.warn('🔲 UMC sync verify REJECTED:', { targetCols, perCol, trimmed: syncTrimmed, items: items.length, capacity });
           continue;
         }
-
-        const cols = this.content.querySelectorAll('.umc-overflow-col');
-        const colInfo = Array.from(cols).map((c, i) => {
-          const kids = Array.from(c.children);
-          const visible = kids.filter(k => !k._umcOverflowHidden);
-          const lastVis = visible.length > 0 ? visible[visible.length - 1] : null;
-          return {
-            col: i, total: kids.length, visible: visible.length,
-            lastVisBot: lastVis ? Math.round(lastVis.getBoundingClientRect().bottom) : 'none'
-          };
-        });
-        console.warn('🔲 UMC FINAL layout [sync]:', { cols: colInfo, maxColWidth, contentHeight: this.content.style.height });
 
         scheduleDeferredTrim();
         this._overflowPending = false;
@@ -3470,7 +3391,6 @@ class UpcomingMediaCard extends HTMLElement {
             maxColWidth = tryWidth;
             const capacity = measureCapacity(targetCols);
             if (capacity < perCol) {
-              console.warn('🔲 UMC width-reduce pre-check SKIP:', { targetCols, maxColWidth, perCol, capacity });
               continue;
             }
             const packed = buildPackedPartition(items.length, targetCols, perCol);
@@ -3479,21 +3399,9 @@ class UpcomingMediaCard extends HTMLElement {
             const syncTrimmed = trimOverflow('sync-narrowed');
 
             if (syncTrimmed > 0) {
-              console.warn('🔲 UMC sync verify REJECTED [narrowed]:', { targetCols, maxColWidth, perCol, trimmed: syncTrimmed, items: items.length });
               continue;
             }
 
-            const cols = this.content.querySelectorAll('.umc-overflow-col');
-            const colInfo = Array.from(cols).map((c, i) => {
-              const kids = Array.from(c.children);
-              const visible = kids.filter(k => !k._umcOverflowHidden);
-              const lastVis = visible.length > 0 ? visible[visible.length - 1] : null;
-              return {
-                col: i, total: kids.length, visible: visible.length,
-                lastVisBot: lastVis ? Math.round(lastVis.getBoundingClientRect().bottom) : 'none'
-              };
-            });
-            console.warn('🔲 UMC FINAL layout [sync-narrowed]:', { cols: colInfo, maxColWidth, contentHeight: this.content.style.height });
             scheduleDeferredTrim();
             this._overflowPending = false;
             return 'applied';
@@ -3507,12 +3415,6 @@ class UpcomingMediaCard extends HTMLElement {
       applyPartition(finalPacked);
       void this.content.offsetHeight;
       trimOverflow('sync-fallback');
-      const fallbackCols = this.content.querySelectorAll('.umc-overflow-col');
-      let fallbackVisible = 0;
-      fallbackCols.forEach(c => {
-        fallbackVisible += Array.from(c.children).filter(k => !k._umcOverflowHidden).length;
-      });
-      console.warn('🔲 UMC FALLBACK layout:', { cols: fallbackCols.length, visible: fallbackVisible, total: items.length, maxColWidth });
       scheduleDeferredTrim();
       this._overflowPending = false;
       return 'applied';
