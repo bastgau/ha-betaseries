@@ -108,11 +108,11 @@
               "episodes_scan_interval": "Watch list refresh interval in minutes (5–120)",
               "shows_limit": "Shows listed in the watch list (1–300)",
               "episodes_limit": "Episodes listed per show (1–10)",
-              "upcoming_media_card": "Expose watch list data for the upcoming-media-card"
+              "upcoming_media_card_format": "Expose watch list data for the upcoming-media-card or a compatible card like the integrated betaseries-card"
             },
             "data_description": {
               "shows_limit": "Shows are listed in alphabetical order. A high value makes the sensor's attributes heavier (about 1.4 kB per show), which every open dashboard downloads.",
-              "upcoming_media_card": "Adds a `data` attribute shaped for the custom-cards/upcoming-media-card Lovelace card (off by default)."
+              "upcoming_media_card_format": "Adds a `data` attribute shaped for the custom-cards/upcoming-media-card Lovelace card, also read by the betaseries-card served by this integration (on by default for new configurations)."
             }
           }
         }

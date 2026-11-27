@@ -10,8 +10,15 @@ from custom_components.betaseries.betaseries.exceptions import Error
 from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
-from custom_components.betaseries.const import CACHE_STORES, CONF_LOCALE, DOMAIN
+from custom_components.betaseries.const import (
+    CACHE_STORES,
+    CONF_LOCALE,
+    CONF_UPCOMING_MEDIA_CARD_FORMAT,
+    DOMAIN,
+    LEGACY_CONF_UPCOMING_MEDIA_CARD,
+)
 from custom_components.betaseries.coordinator import MemberCoordinator, PlanningCoordinator
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
@@ -269,3 +276,72 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def _setup_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Add and set up an entry against a mocked client."""
+    entry.add_to_hass(hass)
+    mock_client = client_mock()
+    mock_client.fetch_member_data.return_value = MEMBER_DATA
+    mock_client.fetch_badges.return_value = MEMBER_DATA.badges
+    mock_client.fetch_planning.return_value = ()
+    with patch("custom_components.betaseries.Client", return_value=mock_client):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("options", "expected"),
+    [
+        ({}, False),
+        ({LEGACY_CONF_UPCOMING_MEDIA_CARD: True}, True),
+        ({LEGACY_CONF_UPCOMING_MEDIA_CARD: False}, False),
+        ({CONF_UPCOMING_MEDIA_CARD_FORMAT: True}, True),
+    ],
+)
+async def test_migrate_entry_renames_the_upcoming_media_card_option(
+    hass: HomeAssistant, options: dict[str, Any], expected: bool
+) -> None:
+    """Keep a pre-2 entry's value under the new key, the old default (off) when it was never saved."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**SAVED_DATA, "access_token": "token123"},
+        options={CONF_LOCALE: "fr", **options},
+        version=1,
+        minor_version=1,
+    )
+    await _setup_entry(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    assert entry.options == {CONF_LOCALE: "fr", CONF_UPCOMING_MEDIA_CARD_FORMAT: expected}
+
+
+async def test_migrate_entry_leaves_a_current_entry_untouched(hass: HomeAssistant) -> None:
+    """Leave an entry already at minor version 2 alone, so the new default (on) applies."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**SAVED_DATA, "access_token": "token123"},
+        options={CONF_LOCALE: "fr"},
+        version=1,
+        minor_version=2,
+    )
+    await _setup_entry(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.options == {CONF_LOCALE: "fr"}
+
+
+async def test_migrate_entry_refuses_a_newer_major_version(hass: HomeAssistant) -> None:
+    """Refuse to load an entry written by a newer major version (downgrade)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="42",
+        data={**SAVED_DATA, "access_token": "token123"},
+        version=2,
+    )
+    await _setup_entry(hass, entry)
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

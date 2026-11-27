@@ -23,7 +23,7 @@ from custom_components.betaseries.const import (
     CONF_EPISODES_LIMIT,
     CONF_EPISODES_SCAN_INTERVAL,
     CONF_SHOWS_LIMIT,
-    CONF_UPCOMING_MEDIA_CARD,
+    CONF_UPCOMING_MEDIA_CARD_FORMAT,
     DOMAIN,
     SHOWS_DISPLAY_BATCH_SIZE,
 )
@@ -400,7 +400,7 @@ async def test_data_attribute_shapes_the_list_for_upcoming_media_card(hass: Home
         hass,
         WATCH_LIST_RESPONSE,
         CollectionShow({"38605": _show_with_images("https://pictures.betaseries.com/poster.jpg")}),
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
 
     state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
@@ -485,7 +485,7 @@ async def test_data_attribute_reports_the_rating_and_sorted_platforms(hass: Home
         hass,
         (watch_list, 1, 1),
         CollectionShow({"38605": show}),
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
 
     state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
@@ -531,7 +531,7 @@ async def test_data_attribute_reports_genres_and_a_youtube_trailer(hass: HomeAss
         hass,
         WATCH_LIST_RESPONSE,
         CollectionShow({"38605": show}),
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
 
     state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
@@ -578,7 +578,7 @@ async def test_data_attribute_leaves_out_a_trailer_from_an_unconfirmed_host(hass
         hass,
         WATCH_LIST_RESPONSE,
         CollectionShow({"38605": show}),
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
 
     state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
@@ -609,7 +609,7 @@ async def test_data_attribute_skips_a_show_with_no_listed_episode(hass: HomeAssi
         hass,
         (empty_watch_list, 37, 726),
         CollectionShow({}),
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
 
     state = hass.states.get("sensor.betaseries_test_user_shows_to_catch_up_on")
@@ -638,7 +638,7 @@ async def test_data_attribute_is_absent_when_the_watch_list_failed(hass: HomeAss
         unique_id="42",
         title="test_user",
         data=USER_INPUT,
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
     entry.add_to_hass(hass)
 

@@ -14,7 +14,7 @@ from custom_components.betaseries.const import (
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
     CONF_SHOWS_LIMIT,
-    CONF_UPCOMING_MEDIA_CARD,
+    CONF_UPCOMING_MEDIA_CARD_FORMAT,
     DEFAULT_LOCALE,
     DOMAIN,
 )
@@ -43,7 +43,7 @@ _FIELD_SECTIONS = {
     CONF_EPISODES_SCAN_INTERVAL: SECTION_EPISODES,
     CONF_SHOWS_LIMIT: SECTION_EPISODES,
     CONF_EPISODES_LIMIT: SECTION_EPISODES,
-    CONF_UPCOMING_MEDIA_CARD: SECTION_EPISODES,
+    CONF_UPCOMING_MEDIA_CARD_FORMAT: SECTION_EPISODES,
 }
 
 
@@ -57,7 +57,7 @@ def _form_input(**overrides: object) -> dict[str, Any]:
         CONF_EPISODES_SCAN_INTERVAL: 30,
         CONF_SHOWS_LIMIT: 10,
         CONF_EPISODES_LIMIT: 2,
-        CONF_UPCOMING_MEDIA_CARD: False,
+        CONF_UPCOMING_MEDIA_CARD_FORMAT: False,
         CONF_LOCALE: DEFAULT_LOCALE,
         **overrides,
     }
@@ -103,7 +103,7 @@ async def test_options_flow_shows_current_defaults(hass: HomeAssistant, config_e
     assert schema_defaults[CONF_EPISODES_SCAN_INTERVAL] == 30
     assert schema_defaults[CONF_SHOWS_LIMIT] == 10
     assert schema_defaults[CONF_EPISODES_LIMIT] == 2
-    assert schema_defaults[CONF_UPCOMING_MEDIA_CARD] is False
+    assert schema_defaults[CONF_UPCOMING_MEDIA_CARD_FORMAT] is True
     assert schema_defaults[CONF_PLANNING_MONTHS_BEHIND] == 2
     assert schema_defaults[CONF_PLANNING_MONTHS_AHEAD] == 2
     assert schema_defaults[CONF_LOCALE] == DEFAULT_LOCALE
@@ -125,7 +125,7 @@ async def test_options_flow_updates_intervals(hass: HomeAssistant, config_entry:
             CONF_EPISODES_SCAN_INTERVAL: 45,
             CONF_SHOWS_LIMIT: 5,
             CONF_EPISODES_LIMIT: 3,
-            CONF_UPCOMING_MEDIA_CARD: True,
+            CONF_UPCOMING_MEDIA_CARD_FORMAT: True,
         },
         CONF_LOCALE: "en",
     }
@@ -142,7 +142,7 @@ async def test_options_flow_updates_intervals(hass: HomeAssistant, config_entry:
         CONF_EPISODES_SCAN_INTERVAL: 45,
         CONF_SHOWS_LIMIT: 5,
         CONF_EPISODES_LIMIT: 3,
-        CONF_UPCOMING_MEDIA_CARD: True,
+        CONF_UPCOMING_MEDIA_CARD_FORMAT: True,
         CONF_LOCALE: "en",
     }
 
@@ -157,7 +157,7 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
             CONF_EPISODES_SCAN_INTERVAL: 60,
             CONF_SHOWS_LIMIT: 20,
             CONF_EPISODES_LIMIT: 1,
-            CONF_UPCOMING_MEDIA_CARD: True,
+            CONF_UPCOMING_MEDIA_CARD_FORMAT: True,
             CONF_PLANNING_MONTHS_BEHIND: 1,
             CONF_PLANNING_MONTHS_AHEAD: 4,
             CONF_LOCALE: "en",
@@ -170,7 +170,7 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
     schema_defaults = _section_defaults(result["data_schema"])
     assert schema_defaults[CONF_MEMBER_SCAN_INTERVAL] == 45
     assert schema_defaults[CONF_PLANNING_SCAN_INTERVAL] == 180
-    assert schema_defaults[CONF_UPCOMING_MEDIA_CARD] is True
+    assert schema_defaults[CONF_UPCOMING_MEDIA_CARD_FORMAT] is True
     assert schema_defaults[CONF_PLANNING_MONTHS_BEHIND] == 1
     assert schema_defaults[CONF_PLANNING_MONTHS_AHEAD] == 4
     assert schema_defaults[CONF_LOCALE] == "en"

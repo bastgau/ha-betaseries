@@ -808,7 +808,7 @@ class WatchListCoordinator(DataUpdateCoordinator[WatchListData]):
                 shows_limit, episodes_limit, exclude_characters=True
             )
             # The rating/trailer/genres are cached alongside the images by the
-            # shared helper - no extra request. Read by the upcoming_media_card
+            # shared helper - no extra request. Read by the upcoming_media_card_format
             # `data` shape (see sensor.py); no other entity of this coordinator
             # uses them.
             images, ratings, trailers, genres = await _async_get_show_details(

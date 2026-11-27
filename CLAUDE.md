@@ -459,10 +459,16 @@ Attribut `shows` : les N premières séries avec leurs prochains épisodes (born
 l'endpoint et **ignorent ces bornes**. `shows` est **non enregistré au recorder** (~8,5 kB ; le
 recorder jette _tous_ les attributs d'une entité au-delà de 16 kB).
 
-**Attribut `data` (opt-in)** ✅ : sur `Shows to catch up on`, `Calendar event count`,
-`Previous/Next episode airing` et `Suggestion of the day`, derrière l'option `upcoming_media_card`
-(`entry.options`, défaut `False`) - voir §6/§9 pour le détail. Une seule option pour les cinq
-sensors, pas une par sensor.
+**Attribut `data`** ✅ : sur `Shows to catch up on`, `Calendar event count`,
+`Previous/Next episode airing` et `Suggestion of the day`, derrière l'option
+`upcoming_media_card_format` (`entry.options`, défaut `True` - la `betaseries-card` intégrée lit
+ce même attribut) - voir §6/§9 pour le détail. Une seule option pour les cinq sensors, pas une par
+sensor.
+
+- ⚠️ Ce défaut ne vaut que pour les **nouvelles** entrées. L'option s'appelait
+  `upcoming_media_card` (défaut `False`) avant la version 1.2 de l'entrée (`MINOR_VERSION = 2`) :
+  `async_migrate_entry` (`__init__.py`) la renomme et écrit explicitement l'ancienne valeur
+  (`False` si jamais enregistrée), pour qu'une entrée existante ne change pas de comportement.
 
 ⚠️ `/episodes/list` trie les séries **alphabétiquement** et tronque à `shows_limit` : une borne
 inférieure au nombre de séries masque la fin de l'alphabet, et `Suggestion of the day` ne tire que
@@ -471,7 +477,7 @@ parmi les séries listées. Le paramètre `order` (`account` | `smart`) est peut
 
 `shows_limit` va de 1 à **300**. 🟡 Hypothèse **non testée** : `/episodes/list` accepte
 `showsLimit` jusqu'à 300 sans plafond caché. Taille mesurée sur l'exemple Bruno (10 séries ×
-2 épisodes) puis **extrapolée** : ~1,4 kB par série, ~2,1 kB avec `upcoming_media_card` - soit
+2 épisodes) puis **extrapolée** : ~1,4 kB par série, ~2,1 kB avec `upcoming_media_card_format` - soit
 ~400 / ~600 kB à 300 séries, hors recorder mais envoyés à chaque tableau de bord.
 
 Arbitrage #1 : les sensors « métier » sont tous `enabled` par défaut. Sont **désactivés**
@@ -802,12 +808,12 @@ poster, fanart, summary, resource_url`), pas au format `upcoming-media-card` - l
     self-service, le compromis n'est pas clair-cut. Le menu et le formulaire `password_credentials`
     portent chacun un avertissement (`strings.json`/`translations/{en,fr}.json`) sur le token non
     révoqué, pour que le choix reste informé plutôt qu'implicite.
-11. **`data` pour `upcoming-media-card`, opt-in** : intégration tierce avec la card
+11. **`data` pour `upcoming-media-card`, activé par défaut (nouvelles entrées)** : intégration tierce avec la card
     Lovelace [`custom-cards/upcoming-media-card`](https://github.com/custom-cards/upcoming-media-card),
     dont le contrat de données a été vérifié dans son propre source (pas sa doc) - nom d'attribut
     `data` figé en dur, élément 0 = objet gabarit (`title_default`/`line1_default`.../`icon`),
     chaque item exige `airdate` ou la card le saute silencieusement. Décisions :
-    - **Une option unique** (`upcoming_media_card`, `entry.options`, défaut `False`, section Watch
+    - **Une option unique** (`upcoming_media_card_format`, `entry.options`, défaut `True`, section Watch
       list de l'OptionsFlow) active `data` sur les **cinq** sensors concernés à la fois -
       `Shows to catch up on`, `Calendar event count`, `Previous/Next episode airing`,
       `Suggestion of the day`. Pas d'option par sensor : coût de construction/mémoire jugé trop

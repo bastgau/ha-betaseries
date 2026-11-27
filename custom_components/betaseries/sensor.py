@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD
+from .const import CONF_UPCOMING_MEDIA_CARD_FORMAT, DEFAULT_UPCOMING_MEDIA_CARD_FORMAT
 from .entity import BetaSeriesEntity
 
 if TYPE_CHECKING:
@@ -487,7 +487,7 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
     # Artwork URLs are for rendering a card now, never for looking at history:
     # what mattered about a past state is which episode it pointed at, and the
     # identifiers below carry that. See BetaSeriesWatchListSensor. "data" joins
-    # it for the same reason once upcoming_media_card is on: a reshaping of
+    # it for the same reason once upcoming_media_card_format is on: a reshaping of
     # attributes already listed here, not new information worth recording.
     _unrecorded_attributes = frozenset({"show_images", "data"})
 
@@ -591,7 +591,9 @@ class BetaSeriesPlanningSensor(BetaSeriesEntity, SensorEntity):  # pyright: igno
             "platforms": list(episode.platforms),
             "resource_url": episode.resource_url,
         }
-        if self.coordinator.config_entry.options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD):
+        if self.coordinator.config_entry.options.get(
+            CONF_UPCOMING_MEDIA_CARD_FORMAT, DEFAULT_UPCOMING_MEDIA_CARD_FORMAT
+        ):
             attributes["data"] = self._upcoming_media_card_data(episode)
         return attributes
 
@@ -652,7 +654,7 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
 
     """
 
-    # "data" only exists once the upcoming_media_card option turns it on (see
+    # "data" only exists once the upcoming_media_card_format option turns it on (see
     # extra_state_attributes); kept out of the recorder for the same reason
     # as BetaSeriesWatchListSensor's own "data" - it is a list rebuilt from
     # scratch on every refresh, not a value with a history worth keeping.
@@ -683,7 +685,9 @@ class BetaSeriesCalendarEventCountSensor(BetaSeriesEntity, SensorEntity):  # pyr
         if not self.coordinator.last_update_success:
             return {}
         attributes: dict[str, Any] = _episode_counts_by_month(self.coordinator.data.episodes)
-        if self.coordinator.config_entry.options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD):
+        if self.coordinator.config_entry.options.get(
+            CONF_UPCOMING_MEDIA_CARD_FORMAT, DEFAULT_UPCOMING_MEDIA_CARD_FORMAT
+        ):
             attributes["data"] = self._upcoming_media_card_data()
         return attributes
 
@@ -783,7 +787,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
     # This only governs what is written to the database: cards, templates and
     # automations still read the full attribute from the live state.
     #
-    # "data" joins it for the same reason, once the upcoming_media_card option
+    # "data" joins it for the same reason, once the upcoming_media_card_format option
     # turns it on: it is the same list again, reshaped for a third-party card.
     _unrecorded_attributes = frozenset({"shows", "data"})
 
@@ -848,7 +852,7 @@ class BetaSeriesWatchListSensor(BetaSeriesEntity, SensorEntity):  # pyright: ign
                 ],
             }
         if self.coordinator.last_update_success and self.coordinator.config_entry.options.get(
-            CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD
+            CONF_UPCOMING_MEDIA_CARD_FORMAT, DEFAULT_UPCOMING_MEDIA_CARD_FORMAT
         ):
             attributes["data"] = self._upcoming_media_card_data()
         return attributes
@@ -941,7 +945,7 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
     """
 
     # Artwork URLs are for rendering a card now, never for looking at history.
-    # "data" joins it for the same reason once upcoming_media_card is on: a
+    # "data" joins it for the same reason once upcoming_media_card_format is on: a
     # reshaping of attributes already listed here, not new information.
     _unrecorded_attributes = frozenset({"show_images", "data"})
 
@@ -1031,7 +1035,9 @@ class BetaSeriesSuggestionSensor(BetaSeriesEntity, SensorEntity):  # pyright: ig
             "platforms": list(episode.platforms),
             "resource_url": episode.resource_url,
         }
-        if self.coordinator.config_entry.options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD):
+        if self.coordinator.config_entry.options.get(
+            CONF_UPCOMING_MEDIA_CARD_FORMAT, DEFAULT_UPCOMING_MEDIA_CARD_FORMAT
+        ):
             attributes["data"] = self._upcoming_media_card_data(show, episode)
         return attributes
 

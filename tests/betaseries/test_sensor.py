@@ -20,7 +20,7 @@ from custom_components.betaseries.betaseries.show_images import ShowImages
 from custom_components.betaseries.const import (
     CONF_PLANNING_MONTHS_AHEAD,
     CONF_PLANNING_MONTHS_BEHIND,
-    CONF_UPCOMING_MEDIA_CARD,
+    CONF_UPCOMING_MEDIA_CARD_FORMAT,
     DOMAIN,
 )
 import pytest
@@ -301,7 +301,7 @@ async def test_previous_episode_airing_data_attribute_shapes_the_single_episode(
         hass,
         (_episode("1001", yesterday, seen=False),),
         shows=_rated_shows({"55": 3.89}),
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
 
     state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
@@ -360,7 +360,7 @@ async def test_previous_episode_airing_data_attribute_truncates_a_long_summary(h
         resource_url="https://www.betaseries.com/episode/1001",
         show=Show(id="55", title="Example Show"),
     )
-    await _setup_with_planning(hass, (episode,), options={CONF_UPCOMING_MEDIA_CARD: True})
+    await _setup_with_planning(hass, (episode,), options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True})
 
     state = hass.states.get("sensor.betaseries_test_user_previous_episode_airing")
     assert state is not None
@@ -747,7 +747,7 @@ async def test_calendar_event_count_data_attribute_lists_only_upcoming_episodes(
         unique_id="42",
         title="test_user",
         data=USER_INPUT,
-        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0, CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_PLANNING_MONTHS_BEHIND: 0, CONF_PLANNING_MONTHS_AHEAD: 0, CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
     entry.add_to_hass(hass)
 

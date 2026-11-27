@@ -330,6 +330,7 @@ async def test_reauth_flow_success(  # pylint: disable=unused-argument
         unique_id="42",
         data={**SAVED_DATA, "access_token": "old-token"},
         options={CONF_MEMBER_SCAN_INTERVAL: 30},
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -553,6 +554,7 @@ async def test_password_reauth_flow_success(  # pylint: disable=unused-argument
         unique_id="42",
         data={**SAVED_DATA, "access_token": "old-token"},
         options={CONF_MEMBER_SCAN_INTERVAL: 30},
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 

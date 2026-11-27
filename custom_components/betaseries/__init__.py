@@ -11,7 +11,14 @@ from homeassistant.helpers.storage import Store
 
 from .betaseries import Client
 from .card import async_register_card
-from .const import CACHE_STORES, CONF_LOCALE, DEFAULT_LOCALE, DOMAIN
+from .const import (
+    CACHE_STORES,
+    CONF_LOCALE,
+    CONF_UPCOMING_MEDIA_CARD_FORMAT,
+    DEFAULT_LOCALE,
+    DOMAIN,
+    LEGACY_CONF_UPCOMING_MEDIA_CARD,
+)
 from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 from .services import async_setup_services
 
@@ -46,6 +53,34 @@ async def async_setup(  # pylint: disable=unused-argument
     """
     async_setup_services(hass)
     await async_register_card(hass)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: BetaSeriesConfigEntry) -> bool:
+    """Migrate a config entry to the current version.
+
+    Minor version 2 renamed the upcoming_media_card option to
+    upcoming_media_card_format and turned it on by default. An entry created
+    before that keeps the value it had - including the old default (off) when
+    the option was never saved - so only new entries get the new default.
+
+    Home Assistant only calls this for an entry older than the flow's
+    VERSION/MINOR_VERSION (it refuses a newer major version itself), and 1.1
+    is the only older version that exists, so the step is unconditional. A
+    future step must check entry.minor_version before applying its change.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (BetaSeriesConfigEntry): The config entry to migrate.
+
+    Returns:
+        bool: Always True.
+
+    """
+    options = dict(entry.options)
+    legacy_value = options.pop(LEGACY_CONF_UPCOMING_MEDIA_CARD, False)
+    options.setdefault(CONF_UPCOMING_MEDIA_CARD_FORMAT, legacy_value)
+    hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
     return True
 
 

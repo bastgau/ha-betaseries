@@ -25,7 +25,7 @@ from custom_components.betaseries.betaseries.member_identity import MemberIdenti
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.betaseries.show import Show
 from custom_components.betaseries.betaseries.watch_list_show import WatchListShow
-from custom_components.betaseries.const import CONF_UPCOMING_MEDIA_CARD, DOMAIN
+from custom_components.betaseries.const import CONF_UPCOMING_MEDIA_CARD_FORMAT, DOMAIN
 from custom_components.betaseries.coordinator import WatchListData
 from custom_components.betaseries.sensor import (
     _suggestion_of_the_day,
@@ -330,7 +330,7 @@ async def test_sensor_data_attribute_shapes_the_single_suggestion(
     await _setup_with_watch_list(
         hass,
         _show("70", episodes=(_episode("7001", season=2, number=3, title="Urlaub"),)),
-        options={CONF_UPCOMING_MEDIA_CARD: True},
+        options={CONF_UPCOMING_MEDIA_CARD_FORMAT: True},
     )
 
     state = hass.states.get(ENTITY_ID)

@@ -108,11 +108,11 @@
               "episodes_scan_interval": "Intervalle de rafraîchissement de la liste à voir en minutes (5–120)",
               "shows_limit": "Séries listées dans la liste à voir (1–300)",
               "episodes_limit": "Épisodes listés par série (1–10)",
-              "upcoming_media_card": "Exposer les données de la liste à voir pour la carte upcoming-media-card"
+              "upcoming_media_card_format": "Exposer les données de la liste à voir pour la carte upcoming-media-card ou une carte compatible comme la betaseries-card intégrée"
             },
             "data_description": {
               "shows_limit": "Les séries sont listées par ordre alphabétique. Une valeur élevée alourdit les attributs du capteur (environ 1,4 ko par série), que chaque tableau de bord ouvert télécharge.",
-              "upcoming_media_card": "Ajoute un attribut `data` au format attendu par la carte Lovelace tierce custom-cards/upcoming-media-card (désactivé par défaut)."
+              "upcoming_media_card_format": "Ajoute un attribut `data` au format attendu par la carte Lovelace tierce custom-cards/upcoming-media-card, également lu par la betaseries-card servie par cette intégration (activé par défaut sur les nouvelles configurations)."
             }
           }
         }

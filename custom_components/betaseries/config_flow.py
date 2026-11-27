@@ -59,7 +59,7 @@ from .const import (
     CONF_PLANNING_MONTHS_BEHIND,
     CONF_PLANNING_SCAN_INTERVAL,
     CONF_SHOWS_LIMIT,
-    CONF_UPCOMING_MEDIA_CARD,
+    CONF_UPCOMING_MEDIA_CARD_FORMAT,
     DEFAULT_EPISODES_LIMIT,
     DEFAULT_EPISODES_SCAN_INTERVAL_MINUTES,
     DEFAULT_LOCALE,
@@ -68,7 +68,7 @@ from .const import (
     DEFAULT_PLANNING_MONTHS_BEHIND,
     DEFAULT_PLANNING_SCAN_INTERVAL_MINUTES,
     DEFAULT_SHOWS_LIMIT,
-    DEFAULT_UPCOMING_MEDIA_CARD,
+    DEFAULT_UPCOMING_MEDIA_CARD_FORMAT,
     DOMAIN,
     MAX_EPISODES_LIMIT,
     MAX_EPISODES_SCAN_INTERVAL_MINUTES,
@@ -195,6 +195,11 @@ class BetaSeriesConfigFlow(ConfigFlow, domain=DOMAIN):
         locale (str): Preferred response language ("fr" or "en") selected by the user.
 
     """
+
+    # Minor version 2 renamed the upcoming_media_card option (see
+    # async_migrate_entry in __init__.py).
+    VERSION = 1
+    MINOR_VERSION = 2
 
     login_task: asyncio.Task[str] | None = None
     auth: BetaSeriesAuth | None = None
@@ -648,8 +653,10 @@ class BetaSeriesOptionsFlow(OptionsFlowWithReload):
                                 )
                             ),
                             probatio.Required(
-                                CONF_UPCOMING_MEDIA_CARD,
-                                default=options.get(CONF_UPCOMING_MEDIA_CARD, DEFAULT_UPCOMING_MEDIA_CARD),
+                                CONF_UPCOMING_MEDIA_CARD_FORMAT,
+                                default=options.get(
+                                    CONF_UPCOMING_MEDIA_CARD_FORMAT, DEFAULT_UPCOMING_MEDIA_CARD_FORMAT
+                                ),
                             ): BooleanSelector(),
                         }
                     ),

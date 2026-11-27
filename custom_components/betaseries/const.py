@@ -42,7 +42,7 @@ MIN_SHOWS_LIMIT = 1
 # High enough to list a whole account (issue #74: 71 shows were cut off by the
 # former cap of 50). The list stays alphabetical, so a low limit still hides
 # the end of it. The `shows` attribute weighs about 1.4 kB per show (about
-# 2.1 kB with upcoming_media_card): it is kept out of the recorder, but every
+# 2.1 kB with upcoming_media_card_format): it is kept out of the recorder, but every
 # open dashboard still downloads it.
 MAX_SHOWS_LIMIT = 300
 
@@ -58,11 +58,16 @@ MIN_EPISODES_LIMIT = 1
 MAX_EPISODES_LIMIT = 10
 
 # Whether the watch list sensor also exposes a `data` attribute shaped for
-# third-party media cards (e.g. custom-cards/upcoming-media-card). Off by
-# default: building it costs one extra pass over the listed shows and ~8 kB
-# on the entity's state, for users who never installed such a card.
-CONF_UPCOMING_MEDIA_CARD = "upcoming_media_card"
-DEFAULT_UPCOMING_MEDIA_CARD = False
+# media cards (custom-cards/upcoming-media-card, or the bundled betaseries-card
+# that reads the same contract). On by default for new entries since the
+# integration now serves betaseries-card itself; entries created before
+# config entry minor version 2 keep their previous value (see
+# async_migrate_entry in __init__.py). It costs one extra pass over the listed
+# shows and ~8 kB on the entity's state.
+CONF_UPCOMING_MEDIA_CARD_FORMAT = "upcoming_media_card_format"
+DEFAULT_UPCOMING_MEDIA_CARD_FORMAT = True
+# Option key before config entry minor version 2, renamed by the migration.
+LEGACY_CONF_UPCOMING_MEDIA_CARD = "upcoming_media_card"
 
 # Number of months fetched per planning refresh, both directions around the
 # current month (see CLAUDE.md §4/§6). Configurable via OptionsFlow like the

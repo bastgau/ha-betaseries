@@ -61,7 +61,7 @@ Your BetaSeries account statistics (episodes/movies watched, progress, badges...
 
 > The poster (`show_images`) is also set as the entity picture, so both sensors render as-is in a `picture-entity` card. How far back "previous" can see is bounded by the calendar's own window (2 months by default).
 
-With the `upcoming_media_card` integration option turned on (see
+With the `upcoming_media_card_format` integration option turned on (see
 [Lovelace cards](../README.md#lovelace-cards) in the README), each sensor also carries a `data`
 attribute: the single episode it points at, shaped for the third-party
 [upcoming-media-card](https://github.com/custom-cards/upcoming-media-card). No `flag`: this is
@@ -101,7 +101,7 @@ about an air date, not a watch status.
 **Name:** sensor.betaseries_shows_to_catch_up_on
 **Description:** Number of shows with at least one unseen episode.
 **Unit:** shows
-**Attributes:** The shows themselves, up to the configured `shows_limit` (1–300) / `episodes_limit` options. Shows come in alphabetical order, so a `shows_limit` below `total_shows` leaves out the end of the alphabet. Each listed show weighs about 1.4 kB of attributes (about 2.1 kB with the `upcoming_media_card` option); they are not written to the recorder, but every open dashboard downloads them.
+**Attributes:** The shows themselves, up to the configured `shows_limit` (1–300) / `episodes_limit` options. Shows come in alphabetical order, so a `shows_limit` below `total_shows` leaves out the end of the alphabet. Each listed show weighs about 1.4 kB of attributes (about 2.1 kB with the `upcoming_media_card_format` option); they are not written to the recorder, but every open dashboard downloads them.
 
 ```json
 {
@@ -130,7 +130,7 @@ about an air date, not a watch status.
 
 > `total_shows` / `total_episodes` are the endpoint's own counters and ignore the `shows_limit` / `episodes_limit` options - only the `shows` list itself is bounded by them.
 
-With the `upcoming_media_card` integration option turned on (see
+With the `upcoming_media_card_format` integration option turned on (see
 [Lovelace cards](../README.md#lovelace-cards) in the README), this sensor also carries a `data`
 attribute: one item per show that has a next unseen episode, shaped for the third-party
 [upcoming-media-card](https://github.com/custom-cards/upcoming-media-card). `flag` is always
@@ -182,7 +182,7 @@ attribute: one item per show that has a next unseen episode, shaped for the thir
 
 > A show is what gets drawn; the episode is always the oldest one you have not seen of it. The pick changes once a day, and in between only when you act on it: watch the suggested episode and it moves to the next one of that show, or to another show once you have finished it.
 
-With the `upcoming_media_card` integration option turned on (see
+With the `upcoming_media_card_format` integration option turned on (see
 [Lovelace cards](../README.md#lovelace-cards) in the README), this sensor also carries a `data`
 attribute: today's suggested episode, shaped for the third-party
 [upcoming-media-card](https://github.com/custom-cards/upcoming-media-card). `flag` is always
@@ -231,7 +231,7 @@ attribute: today's suggested episode, shaped for the third-party
 }
 ```
 
-With the `upcoming_media_card` integration option turned on (see
+With the `upcoming_media_card_format` integration option turned on (see
 [Lovelace cards](../README.md#lovelace-cards) in the README), this sensor also carries a `data`
 attribute: one item per episode airing today or later, within the configured calendar window -
 already-aired episodes are left out, since this lists releases rather than a backlog. No `flag`:
