@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from itertools import batched
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -39,6 +40,7 @@ from .const import (
     PLANNING_SHOW_IMAGES_STORE_VERSION,
     PLANNING_STORE_KEY_PREFIX,
     PLANNING_STORE_VERSION,
+    SHOWS_DISPLAY_BATCH_SIZE,
 )
 
 if TYPE_CHECKING:
@@ -254,9 +256,15 @@ async def _async_get_show_details(
     missing = show_ids - cached.keys()
 
     if missing:
+        _LOGGER.debug("Fetching details for %s new show(s) of %s from BetaSeries", len(missing), title)
+    # Batched because the watch list can now hold up to MAX_SHOWS_LIMIT shows,
+    # and the endpoint's cap on ids per call is undocumented: a show the API
+    # silently left out would be cached below as having no details at all,
+    # and never refetched. Each batch stands alone, so one failing keeps
+    # what the others brought.
+    for batch in batched(sorted(missing), SHOWS_DISPLAY_BATCH_SIZE, strict=False):
         try:
-            _LOGGER.debug("Fetching details for %s new show(s) of %s from BetaSeries", len(missing), title)
-            shows = await client.fetch_shows(sorted(missing))
+            shows = await client.fetch_shows(list(batch))
         except AuthError:
             # Rejected credentials are not this call's problem to absorb: they
             # invalidate the whole entry, and the caller answers them with a
@@ -266,16 +274,16 @@ async def _async_get_show_details(
             raise
         except Error as err:
             _LOGGER.debug("Fetching show details for %s failed (%s)", title, _cause(err))
-        else:
-            for show_id in missing:
-                show = shows.for_show(show_id)
-                information = show.additional_information if show is not None else None
-                cached[show_id] = {
-                    _IMAGES_KEY: _images_to_dict(information.images) if information is not None else {},
-                    _RATING_KEY: information.notes_mean if information is not None else 0.0,
-                    _TRAILER_KEY: information.trailer_url if information is not None else None,
-                    _GENRES_KEY: list(information.genres) if information is not None else [],
-                }
+            continue
+        for show_id in batch:
+            show = shows.for_show(show_id)
+            information = show.additional_information if show is not None else None
+            cached[show_id] = {
+                _IMAGES_KEY: _images_to_dict(information.images) if information is not None else {},
+                _RATING_KEY: information.notes_mean if information is not None else 0.0,
+                _TRAILER_KEY: information.trailer_url if information is not None else None,
+                _GENRES_KEY: list(information.genres) if information is not None else [],
+            }
 
     if cached != stored:
         # Either new shows were fetched, or shows left the caller's set and
