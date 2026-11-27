@@ -74,8 +74,8 @@ CONF_PLANNING_MONTHS_BEHIND = "planning_months_behind"
 DEFAULT_PLANNING_MONTHS_AHEAD = 2
 DEFAULT_PLANNING_MONTHS_BEHIND = 2
 
-# Same ceiling both ways, but the two directions do not cost the same thing,
-# which is what makes this ceiling matter on one side only. A past month is
+# Different ceilings each way (2 ahead, 24 behind), because the two
+# directions do not cost the same thing. A past month is
 # fetched once and then served from the Store forever, so months_behind costs
 # that many requests on the first refresh and ~1 per month elapsed afterwards.
 # Future months are refetched on *every* refresh (their schedule still moves),
