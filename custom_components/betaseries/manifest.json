@@ -1,6 +1,7 @@
 {
   "domain": "betaseries",
   "name": "BetaSeries",
+  "after_dependencies": ["frontend", "http"],
   "codeowners": ["@bastgau"],
   "config_flow": true,
   "dependencies": [],

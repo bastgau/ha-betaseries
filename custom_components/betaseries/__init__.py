@@ -10,6 +10,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 
 from .betaseries import Client
+from .card import async_register_card
 from .const import CACHE_STORES, CONF_LOCALE, DEFAULT_LOCALE, DOMAIN
 from .coordinator import BetaSeriesData, MemberCoordinator, PlanningCoordinator, WatchListCoordinator
 from .services import async_setup_services
@@ -28,11 +29,12 @@ async def async_setup(  # pylint: disable=unused-argument
     hass: HomeAssistant,
     config: ConfigType,  # noqa: ARG001
 ) -> bool:
-    """Register the BetaSeries services, once per Home Assistant run.
+    """Register the BetaSeries services and serve the Lovelace card, once per Home Assistant run.
 
     Services are registered at the domain level (see services.py), not per
     config entry: a single call here covers every BetaSeries account that
-    gets added afterward.
+    gets added afterward. The card is served and added to every dashboard
+    the same way (see card.py), so it needs no dashboard resource.
 
     Args:
         hass (HomeAssistant): The Home Assistant instance.
@@ -43,6 +45,7 @@ async def async_setup(  # pylint: disable=unused-argument
 
     """
     async_setup_services(hass)
+    await async_register_card(hass)
     return True
 
 
