@@ -9,6 +9,15 @@
 //
 // Kept out of Prettier (.prettierignore) so it stays line-comparable with the upstream card.
 
+// The text a line's HTML reads as (entities decoded, tags dropped, no-break
+// spaces as spaces), for the full-text tooltip of a cut line. DOMParser builds
+// an inert document: unlike innerHTML on a detached element, nothing in it
+// loads or runs.
+function umcPlainText(html) {
+  const doc = new window.DOMParser().parseFromString(String(html || ''), 'text/html');
+  return (doc.body.textContent || '').replace(/ /g, ' ').trim();
+}
+
 // ── Visual Editor ──────────────────────────────────────────────────
 const UMC_EDITOR_SCHEMA = [
   {
@@ -2041,6 +2050,9 @@ class UpcomingMediaCard extends HTMLElement {
         $empty: ''
       };
 
+      // Full text of each non-empty line, by index: { text, cut }.
+      const lineFull = [];
+
       // Replace keywords in lines
       for (let i = 0; i < line.length; i++) {
         line[i] = line[i].replace(" - ", "-");
@@ -2072,13 +2084,17 @@ class UpcomingMediaCard extends HTMLElement {
             i == 0 ? `x="12" y="${y}" dy="1.3em" ` : `x="12" dy="${lineDy}" `;
 
         // Build lines HTML or empty line
-        line[i] = line[i].match("empty")
-          ? `<tspan class="${service}_line${i}_${view}" style="fill:transparent;text-shadow:0 0 transparent;" ${svgshift}>.</tspan>`
-          : `<tspan class="${service}_line${i}_${view}" ${svgshift}>${truncate(
-            text,
-            char[i],
-            i === 0
-          ).replace(/,\s[^,]*\.\.\.$/g, '').replace(/★(?=\s*\d)/g, `<tspan fill="${adjustedStar}">★</tspan>`)}</tspan>`;
+        if (line[i].match("empty")) {
+          line[i] = `<tspan class="${service}_line${i}_${view}" style="fill:transparent;text-shadow:0 0 transparent;" ${svgshift}>.</tspan>`;
+        } else {
+          const shown = truncate(text, char[i], i === 0).replace(/,\s[^,]*\.\.\.$/g, '');
+          // Full text of the line for its tooltip (see lineTextAt), and
+          // whether truncate() cut it. A line it kept whole can still be
+          // clipped by the SVG's width: that is checked on hover.
+          const full = umcPlainText(text);
+          if (full) lineFull[i] = { text: full, cut: umcPlainText(shown) !== full };
+          line[i] = `<tspan class="${service}_line${i}_${view}" ${svgshift}>${shown.replace(/★(?=\s*\d)/g, `<tspan fill="${adjustedStar}">★</tspan>`)}</tspan>`;
+        }
       }
 
       let l4FOData = null;
@@ -2111,6 +2127,8 @@ class UpcomingMediaCard extends HTMLElement {
           const foX = view === "poster" ? 12 : 0;
           const l4Shadow = txtshdw ? `text-shadow:${txtshdw} rgba(0,0,0,0.9);` : '';
           line[4] = line[4].replace('<tspan ', '<tspan data-umc-l4 ');
+          // Drawn as HTML over the tspan (see applyLine4FO): no line tooltip.
+          lineFull[4] = undefined;
           l4FOData = { l4Html, foX, l4Shadow, fontSize: size[4], color: line4_color };
         }
       }
@@ -2140,6 +2158,26 @@ class UpcomingMediaCard extends HTMLElement {
             if (wasHidden) { container.style.display = 'none'; container.style.visibility = ''; }
           }
         });
+      };
+
+      // Text of the tooltip at the pointer (x, y) when it is over a line that
+      // is cut short - by truncate() or by the SVG's width - else null. The
+      // lines sit under the item's clickable overlay, so they never get the
+      // pointer events themselves: the hit test is done on their boxes.
+      const lineTextAt = (container) => (x, y) => {
+        const svg = container.querySelector('svg[class*="_svg_"]');
+        if (!svg) return null;
+        const svgRect = svg.getBoundingClientRect();
+        for (let i = 0; i < lineFull.length; i++) {
+          const entry = lineFull[i];
+          if (!entry) continue;
+          const tspan = svg.querySelector(`.${service}_line${i}_${view}`);
+          if (!tspan) continue;
+          const rect = tspan.getBoundingClientRect();
+          if (y < rect.top || y > rect.bottom || x < rect.left || x > svgRect.right) continue;
+          return entry.cut || rect.right > svgRect.right + 1 ? entry.text : null;
+        }
+        return null;
       };
 
       let deepLink = item("deep_link");
@@ -2177,9 +2215,10 @@ class UpcomingMediaCard extends HTMLElement {
 
       if (view == "poster") {
         let containerDiv = document.createElement('div');
-        if (this.config.enable_tooltips) {
-          this.addTooltipHandlers(containerDiv, item("summary"));
-        }
+        // The summary needs enable_tooltips; the full text of a cut line does not.
+        this.addTooltipHandlers(
+          containerDiv, this.config.enable_tooltips ? item("summary") : null, lineTextAt(containerDiv)
+        );
         containerDiv.id = 'main';
         containerDiv.className = `${service}_${view}`;
         containerDiv.style.cssText = top;
@@ -2246,9 +2285,10 @@ class UpcomingMediaCard extends HTMLElement {
         applyLine4FO(containerDiv);
       } else {
         let fanartContainerDiv = document.createElement('div');
-        if (this.config.enable_tooltips) {
-          this.addTooltipHandlers(fanartContainerDiv, item("summary"));
-        }
+        // The summary needs enable_tooltips; the full text of a cut line does not.
+        this.addTooltipHandlers(
+          fanartContainerDiv, this.config.enable_tooltips ? item("summary") : null, lineTextAt(fanartContainerDiv)
+        );
         fanartContainerDiv.className = `${service}_${view}`;
         fanartContainerDiv.style.cssText = `${top} ${shiftimg}background-image:url('${image}');background-position:100% center;`;
         fanartContainerDiv.style.setProperty('--background-size', '53% auto');
@@ -2472,8 +2512,11 @@ class UpcomingMediaCard extends HTMLElement {
   }
 
   // Tooltip feature
-  addTooltipHandlers(element, summary) {
-    if (!summary) return;
+  // `summary` is shown anywhere over the item; `textAt(x, y)`, when given,
+  // returns a text that takes precedence at that point (the full text of a
+  // cut line), or null to fall back to the summary.
+  addTooltipHandlers(element, summary, textAt) {
+    if (!summary && !textAt) return;
     element.style.webkitTapHighlightColor = 'transparent';
     element.style.webkitUserSelect = 'none';
     element.style.userSelect = 'none';
@@ -2515,10 +2558,17 @@ class UpcomingMediaCard extends HTMLElement {
       }
       return { finalX, finalY };
     };
+    let shownText = null;
     const showTooltip = (x, y, isTouch = false) => {
       clearTimeout(removalTimeoutId);
       if (tooltipTimeoutId) clearTimeout(tooltipTimeoutId);
+      const text = (textAt && textAt(x, y)) || summary;
+      // Moving onto another text (or onto none) drops the bubble at once
+      // instead of leaving the previous one up for the whole delay.
+      if (tooltip && text !== shownText) removeTooltip();
+      if (!text) return;
       tooltipTimeoutId = setTimeout(() => {
+        shownText = text;
         if (tooltip) removeTooltip();
         tooltip = document.createElement('div');
         tooltip.style.position = 'fixed';
@@ -2553,7 +2603,7 @@ class UpcomingMediaCard extends HTMLElement {
         tooltip.style.color = 'white';
         tooltip.style.backdropFilter = 'blur(4px)';
         const tooltipText = document.createElement('div');
-        tooltipText.textContent = summary;
+        tooltipText.textContent = text;
         tooltip.appendChild(tooltipText);
         tooltip.style.left = `-9999px`;
         tooltip.style.top = `-9999px`;
@@ -2568,7 +2618,8 @@ class UpcomingMediaCard extends HTMLElement {
           tooltip.style.fontSize = '12px';
           tooltip.style.lineHeight = '1.45';
           tooltip.style.maxWidth = 'min(340px, calc(100vw - 32px))';
-          tooltip.style.minWidth = 'min(240px, calc(100vw - 32px))';
+          // A summary gets a readable paragraph width; a line fits its text.
+          if (text === summary) tooltip.style.minWidth = 'min(240px, calc(100vw - 32px))';
           tooltip.style.borderRadius = '8px';
           requestAnimationFrame(() => {
             const rect = tooltip.getBoundingClientRect();
@@ -3670,7 +3721,7 @@ if (!window.customCards.some(card => card.type === 'betaseries-card')) {
 
 // Bump by hand on every change to this file, so the browser console tells which card a dashboard
 // actually loaded (a stale browser cache shows up as an older version).
-const CARD_VERSION = "1.0.0";
+const CARD_VERSION = "1.1.0";
 
 console.info(
   `%c 🐼 BETASERIES-CARD %c Version ${CARD_VERSION} `,
