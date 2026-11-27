@@ -16,7 +16,7 @@ from custom_components.betaseries.coordinator import (
     WatchListCoordinator,
 )
 from custom_components.betaseries.entity import BetaSeriesEntity
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.helpers.entity import EntityDescription
 

@@ -27,7 +27,7 @@ from custom_components.betaseries.const import (
     DOMAIN,
 )
 from custom_components.betaseries.coordinator import WatchListCoordinator
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, STATE_UNAVAILABLE
 from tests.conftest import client_mock

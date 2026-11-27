@@ -10,7 +10,7 @@ from custom_components.betaseries.betaseries.member_identity import MemberIdenti
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import DOMAIN
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET, STATE_OFF, STATE_ON
 

@@ -9,7 +9,7 @@ from custom_components.betaseries.betaseries.member_data import MemberData
 from custom_components.betaseries.betaseries.member_identity import MemberIdentity
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import DOMAIN
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET

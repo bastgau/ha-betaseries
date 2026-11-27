@@ -30,7 +30,7 @@ from custom_components.betaseries.coordinator import WatchListData
 from custom_components.betaseries.sensor import (
     _suggestion_of_the_day,
 )
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_SECRET
 from tests.conftest import client_mock

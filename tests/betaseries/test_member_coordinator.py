@@ -19,7 +19,7 @@ from custom_components.betaseries.betaseries.member_identity import MemberIdenti
 from custom_components.betaseries.betaseries.member_stats import MemberStats
 from custom_components.betaseries.const import BADGES_STORE_KEY_PREFIX, CONF_MEMBER_SCAN_INTERVAL, DOMAIN
 from custom_components.betaseries.coordinator import MemberCoordinator
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from typing import Any
