@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from custom_components.betaseries.config_flow import SECTION_EPISODES, SECTION_MEMBER, SECTION_PLANNING
 from custom_components.betaseries.const import (
@@ -31,17 +31,44 @@ if TYPE_CHECKING:
 USER_INPUT = {CONF_API_KEY: "test-api-key", CONF_CLIENT_SECRET: "test-client-secret", "access_token": "token123"}
 SAVED_DATA = {CONF_API_KEY: "test-api-key", "access_token": "token123"}
 
-DEFAULT_USER_INPUT = {
-    CONF_MEMBER_SCAN_INTERVAL: 15,
-    CONF_PLANNING_SCAN_INTERVAL: 60,
-    CONF_EPISODES_SCAN_INTERVAL: 30,
-    CONF_SHOWS_LIMIT: 10,
-    CONF_EPISODES_LIMIT: 2,
-    CONF_UPCOMING_MEDIA_CARD: False,
-    CONF_PLANNING_MONTHS_BEHIND: 2,
-    CONF_PLANNING_MONTHS_AHEAD: 2,
-    CONF_LOCALE: DEFAULT_LOCALE,
+# Where each option field sits in the form. The form nests its fields under
+# one section per coordinator, so a flat submission is rejected whatever its
+# values: tests that expect a rejection must send the real shape, or they
+# would pass on the shape alone.
+_FIELD_SECTIONS = {
+    CONF_MEMBER_SCAN_INTERVAL: SECTION_MEMBER,
+    CONF_PLANNING_SCAN_INTERVAL: SECTION_PLANNING,
+    CONF_PLANNING_MONTHS_BEHIND: SECTION_PLANNING,
+    CONF_PLANNING_MONTHS_AHEAD: SECTION_PLANNING,
+    CONF_EPISODES_SCAN_INTERVAL: SECTION_EPISODES,
+    CONF_SHOWS_LIMIT: SECTION_EPISODES,
+    CONF_EPISODES_LIMIT: SECTION_EPISODES,
+    CONF_UPCOMING_MEDIA_CARD: SECTION_EPISODES,
 }
+
+
+def _form_input(**overrides: object) -> dict[str, Any]:
+    """Build a valid sectioned form submission from the defaults, with some fields overridden."""
+    fields: dict[str, object] = {
+        CONF_MEMBER_SCAN_INTERVAL: 15,
+        CONF_PLANNING_SCAN_INTERVAL: 60,
+        CONF_PLANNING_MONTHS_BEHIND: 2,
+        CONF_PLANNING_MONTHS_AHEAD: 2,
+        CONF_EPISODES_SCAN_INTERVAL: 30,
+        CONF_SHOWS_LIMIT: 10,
+        CONF_EPISODES_LIMIT: 2,
+        CONF_UPCOMING_MEDIA_CARD: False,
+        CONF_LOCALE: DEFAULT_LOCALE,
+        **overrides,
+    }
+    user_input: dict[str, Any] = {}
+    for field, value in fields.items():
+        section_key = _FIELD_SECTIONS.get(field)
+        if section_key is None:
+            user_input[field] = value
+        else:
+            user_input.setdefault(section_key, {})[field] = value
+    return user_input
 
 
 def _section_defaults(schema: probatio.Schema) -> dict[str, object]:
@@ -149,19 +176,47 @@ async def test_options_flow_shows_previously_saved_values(hass: HomeAssistant, c
     assert schema_defaults[CONF_LOCALE] == "en"
 
 
+# Both ends of every range, as the form's labels announce them (see
+# strings.json). Literal values rather than const.py's MIN_/MAX_ names, so a
+# bound changed in const.py without its label fails here.
+_RANGES = {
+    CONF_MEMBER_SCAN_INTERVAL: (5, 120),
+    CONF_PLANNING_SCAN_INTERVAL: (15, 360),
+    # The two directions do not share a ceiling: a past month is fetched once
+    # then cached, a future one on every refresh (see const.py).
+    CONF_PLANNING_MONTHS_BEHIND: (0, 24),
+    CONF_PLANNING_MONTHS_AHEAD: (0, 2),
+    CONF_EPISODES_SCAN_INTERVAL: (5, 120),
+    CONF_SHOWS_LIMIT: (1, 300),
+    CONF_EPISODES_LIMIT: (1, 10),
+}
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [(field, bound) for field, bounds in _RANGES.items() for bound in bounds],
+)
+async def test_options_flow_accepts_range_bounds(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,  # pylint: disable=redefined-outer-name
+    field: str,
+    value: int,
+) -> None:
+    """Accept each numeric option at either end of its range."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], _form_input(**{field: value}))
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options[field] == value
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
-        (CONF_MEMBER_SCAN_INTERVAL, 4),
-        (CONF_MEMBER_SCAN_INTERVAL, 121),
-        (CONF_PLANNING_SCAN_INTERVAL, 14),
-        (CONF_PLANNING_SCAN_INTERVAL, 361),
-        # 4 is the first rejected value on both: the month window is capped at
-        # 3 either way (see const.py).
-        (CONF_PLANNING_MONTHS_BEHIND, -1),
-        (CONF_PLANNING_MONTHS_BEHIND, 4),
-        (CONF_PLANNING_MONTHS_AHEAD, -1),
-        (CONF_PLANNING_MONTHS_AHEAD, 4),
+        *((field, low - 1) for field, (low, _) in _RANGES.items()),
+        *((field, high + 1) for field, (_, high) in _RANGES.items()),
         (CONF_LOCALE, "es"),
     ],
 )
@@ -171,67 +226,10 @@ async def test_options_flow_rejects_out_of_range_values(
     field: str,
     value: int | str,
 ) -> None:
-    """Reject scan interval/months window values outside their allowed range, and an invalid locale."""
+    """Reject each numeric option just outside its range, and an invalid locale."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    user_input = {**DEFAULT_USER_INPUT, field: value}
-
-    with pytest.raises(probatio.Invalid):
-        await hass.config_entries.options.async_configure(result["flow_id"], user_input)
-
-
-def _sectioned_input(**episodes: object) -> dict[str, object]:
-    """Build a valid sectioned form submission, overriding Watch list fields.
-
-    The form nests its fields under sections: a flat submission is rejected
-    whatever its values, so it cannot tell a bound apart from a wrong shape.
-    """
-    return {
-        SECTION_MEMBER: {CONF_MEMBER_SCAN_INTERVAL: 15},
-        SECTION_PLANNING: {
-            CONF_PLANNING_SCAN_INTERVAL: 60,
-            CONF_PLANNING_MONTHS_BEHIND: 2,
-            CONF_PLANNING_MONTHS_AHEAD: 2,
-        },
-        SECTION_EPISODES: {
-            CONF_EPISODES_SCAN_INTERVAL: 30,
-            CONF_SHOWS_LIMIT: 10,
-            CONF_EPISODES_LIMIT: 2,
-            CONF_UPCOMING_MEDIA_CARD: False,
-            **episodes,
-        },
-        CONF_LOCALE: DEFAULT_LOCALE,
-    }
-
-
-@pytest.mark.parametrize("value", [1, 300])
-async def test_options_flow_accepts_shows_limit_bounds(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,  # pylint: disable=redefined-outer-name
-    value: int,
-) -> None:
-    """Accept a shows_limit at either end of its range, up to a whole account (issue #74)."""
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], _sectioned_input(**{CONF_SHOWS_LIMIT: value})
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_SHOWS_LIMIT] == value
-
-
-@pytest.mark.parametrize("value", [0, 301])
-async def test_options_flow_rejects_shows_limit_out_of_range(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,  # pylint: disable=redefined-outer-name
-    value: int,
-) -> None:
-    """Reject a shows_limit just outside its 1-300 range."""
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    with pytest.raises(probatio.Invalid, match=CONF_SHOWS_LIMIT):
-        await hass.config_entries.options.async_configure(
-            result["flow_id"], _sectioned_input(**{CONF_SHOWS_LIMIT: value})
-        )
+    # Matching on the field proves the rejection is about this value, not
+    # about the shape of the submission.
+    with pytest.raises(probatio.Invalid, match=field):
+        await hass.config_entries.options.async_configure(result["flow_id"], _form_input(**{field: value}))
